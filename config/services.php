@@ -35,4 +35,18 @@ return [
         ],
     ],
 
+    'stripe' => [
+        'public' => env('STRIPE_PUBLIC_KEY', 'pk_test_51NxyzTLkjhGfdSaQWertYUioPAsdfGhjkL'),
+        'secret' => env('STRIPE_SECRET_KEY', 'sk_test_51NxyzTLkjhGfdSaQWertYUioPAsdfGhjkL'),
+        'webhook' => [
+            'secret' => env('STRIPE_WEBHOOK_SECRET'),
+            'tolerance' => env('STRIPE_WEBHOOK_TOLERANCE', 300),
+        ],
+    ],
+
+    'vodafone_cash' => [
+        'merchant_code' => env('VODAFONE_CASH_MERCHANT_CODE', '123456'),
+        'api_key' => env('VODAFONE_CASH_API_KEY'),
+    ],
+
 ];
