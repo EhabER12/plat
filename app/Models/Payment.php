@@ -31,7 +31,8 @@ class Payment extends Model
         'payment_date',
         'status',
         'transaction_id',
-        'notes'
+        'notes',
+        'payment_details'
     ];
 
     /**
@@ -43,7 +44,8 @@ class Payment extends Model
         'amount' => 'decimal:2',
         'payment_date' => 'datetime',
         'created_at' => 'datetime',
-        'updated_at' => 'datetime'
+        'updated_at' => 'datetime',
+        'payment_details' => 'array'
     ];
 
     /**
@@ -76,6 +78,14 @@ class Payment extends Model
     public function ledgerEntries(): HasMany
     {
         return $this->hasMany(FinancialLedger::class, 'payment_id', 'payment_id');
+    }
+
+    /**
+     * Get the instructor earnings for this payment.
+     */
+    public function instructorEarnings(): HasMany
+    {
+        return $this->hasMany(InstructorEarning::class, 'payment_id', 'payment_id');
     }
 
     /**

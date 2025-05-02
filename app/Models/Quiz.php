@@ -27,13 +27,15 @@ class Quiz extends Model
         'course_id',
         'title',
         'description',
-        'time_limit_minutes',
-        'passing_score',
+        'duration_minutes',
+        'passing_percentage',
+        'is_active',
         'is_published',
         'created_by',
-        'question_count',
-        'attempts_allowed',
-        'show_answers_after'
+        'start_date',
+        'end_date',
+        'questions_json',
+        'max_attempts'
     ];
 
     /**
@@ -42,12 +44,14 @@ class Quiz extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'time_limit_minutes' => 'integer',
-        'passing_score' => 'integer',
+        'duration_minutes' => 'integer',
+        'passing_percentage' => 'float',
+        'is_active' => 'boolean',
         'is_published' => 'boolean',
-        'question_count' => 'integer',
-        'attempts_allowed' => 'integer',
-        'show_answers_after' => 'boolean',
+        'start_date' => 'datetime',
+        'end_date' => 'datetime',
+        'questions_json' => 'array',
+        'max_attempts' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
@@ -61,7 +65,7 @@ class Quiz extends Model
     }
 
     /**
-     * Get the instructor who created the quiz.
+     * Get the user who created the quiz.
      */
     public function creator(): BelongsTo
     {
@@ -69,16 +73,7 @@ class Quiz extends Model
     }
 
     /**
-     * Get the questions for this quiz.
-     */
-    public function questions(): HasMany
-    {
-        return $this->hasMany(QuizQuestion::class, 'quiz_id', 'quiz_id')
-                    ->orderBy('question_order');
-    }
-
-    /**
-     * Get the attempts made by students on this quiz.
+     * Get the attempts made on this quiz.
      */
     public function attempts(): HasMany
     {
@@ -86,81 +81,137 @@ class Quiz extends Model
     }
 
     /**
-     * Check if a student has already taken this quiz.
+     * Check if the quiz is available.
      */
-    public function isAttemptedBy($studentId)
+    public function isAvailable()
     {
-        return $this->attempts()
-                    ->where('student_id', $studentId)
-                    ->exists();
+        $now = now();
+        return $this->is_active &&
+            $this->is_published &&
+            ($this->start_date === null || $now->gte($this->start_date)) &&
+            ($this->end_date === null || $now->lte($this->end_date));
     }
 
     /**
-     * Check if a student has passed this quiz.
+     * Get the number of questions in the quiz.
      */
-    public function isPassedBy($studentId)
+    public function getQuestionsCountAttribute()
     {
-        return $this->attempts()
-                    ->where('student_id', $studentId)
-                    ->where('score', '>=', $this->passing_score)
-                    ->exists();
+        return count($this->questions_json ?? []);
     }
 
     /**
-     * Get the number of attempts made by a student.
+     * Get the total possible score for the quiz.
      */
-    public function getAttemptsCountForStudent($studentId)
+    public function getTotalPossibleScoreAttribute()
     {
-        return $this->attempts()
-                    ->where('student_id', $studentId)
-                    ->count();
+        return collect($this->questions_json ?? [])->sum('points');
     }
 
     /**
-     * Check if a student can take this quiz again.
+     * Get the passing score for the quiz.
      */
-    public function canBeAttemptedBy($studentId)
+    public function getPassingScoreAttribute()
     {
-        if (!$this->attempts_allowed) {
-            return true; // Unlimited attempts
+        return round($this->total_possible_score * ($this->passing_percentage / 100), 1);
+    }
+
+    /**
+     * Check if a student can attempt the quiz.
+     */
+    public function canBeAttemptedBy($userId)
+    {
+        if (!$this->isAvailable()) {
+            return false;
         }
-        
-        $attemptsCount = $this->getAttemptsCountForStudent($studentId);
-        return $attemptsCount < $this->attempts_allowed;
+
+        $attemptsCount = $this->attempts()
+            ->where('user_id', $userId)
+            ->count();
+
+        return $this->max_attempts === null || $attemptsCount < $this->max_attempts;
     }
 
     /**
-     * Get the best score for a student on this quiz.
+     * Check if the quiz hasn't started yet.
      */
-    public function getBestScoreForStudent($studentId)
+    public function hasNotStarted()
     {
-        $attempt = $this->attempts()
-                        ->where('student_id', $studentId)
-                        ->orderBy('score', 'desc')
-                        ->first();
-        
-        return $attempt ? $attempt->score : 0;
+        return $this->start_date !== null && now()->lt($this->start_date);
     }
 
     /**
-     * Get the average score for all attempts on this quiz.
+     * Check if the quiz has ended.
      */
-    public function getAverageScoreAttribute()
+    public function hasEnded()
     {
-        $attempts = $this->attempts;
-        
-        if ($attempts->isEmpty()) {
-            return 0;
+        return $this->end_date !== null && now()->gt($this->end_date);
+    }
+
+    /**
+     * Check if the quiz is currently active (started but not ended).
+     */
+    public function isActive()
+    {
+        $now = now();
+        return $this->is_published &&
+            ($this->start_date === null || $now->gte($this->start_date)) &&
+            ($this->end_date === null || $now->lte($this->end_date));
+    }
+
+    /**
+     * Get the status badge HTML for the quiz.
+     */
+    public function getStatusBadgeHtml()
+    {
+        if (!$this->is_published) {
+            return '<span class="badge bg-secondary">مسودة</span>';
+        } elseif ($this->hasNotStarted()) {
+            return '<span class="badge bg-info">سيبدأ قريباً</span>';
+        } elseif ($this->hasEnded()) {
+            return '<span class="badge bg-danger">انتهى</span>';
+        } elseif ($this->isActive()) {
+            return '<span class="badge bg-success">نشط</span>';
+        } else {
+            return '<span class="badge bg-warning">غير متاح</span>';
         }
-        
-        return round($attempts->avg('score'), 1);
     }
 
     /**
-     * Scope a query to only include published quizzes.
+     * Get the remaining time for the quiz as a formatted string.
      */
-    public function scopePublished($query)
+    public function getTimeStatus()
     {
-        return $query->where('is_published', true);
+        if ($this->hasNotStarted()) {
+            $diffInDays = now()->diffInDays($this->start_date, false);
+            if ($diffInDays > 0) {
+                return "يبدأ بعد $diffInDays " . ($diffInDays == 1 ? "يوم" : "أيام");
+            } else {
+                $diffInHours = now()->diffInHours($this->start_date, false);
+                if ($diffInHours > 0) {
+                    return "يبدأ بعد $diffInHours " . ($diffInHours == 1 ? "ساعة" : "ساعات");
+                } else {
+                    $diffInMinutes = now()->diffInMinutes($this->start_date, false);
+                    return "يبدأ بعد $diffInMinutes " . ($diffInMinutes == 1 ? "دقيقة" : "دقائق");
+                }
+            }
+        } elseif ($this->hasEnded()) {
+            return "انتهى";
+        } elseif ($this->end_date !== null) {
+            $diffInDays = now()->diffInDays($this->end_date, false);
+            if ($diffInDays > 0) {
+                return "ينتهي بعد $diffInDays " . ($diffInDays == 1 ? "يوم" : "أيام");
+            } else {
+                $diffInHours = now()->diffInHours($this->end_date, false);
+                if ($diffInHours > 0) {
+                    return "ينتهي بعد $diffInHours " . ($diffInHours == 1 ? "ساعة" : "ساعات");
+                } else {
+                    $diffInMinutes = now()->diffInMinutes($this->end_date, false);
+                    return "ينتهي بعد $diffInMinutes " . ($diffInMinutes == 1 ? "دقيقة" : "دقائق");
+                }
+            }
+        } else {
+            return "غير محدد";
+        }
     }
 }

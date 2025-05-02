@@ -67,5 +67,7 @@ class Kernel extends HttpKernel
         'admin' => \App\Http\Middleware\AdminMiddleware::class,
         'instructor' => \App\Http\Middleware\InstructorMiddleware::class,
         'student' => \App\Http\Middleware\StudentMiddleware::class,
+        'video.access' => \App\Http\Middleware\VideoAccessMiddleware::class,
+        'prevent.download' => \App\Http\Middleware\PreventVideoDownload::class,
     ];
-} 
+}

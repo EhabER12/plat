@@ -1,9 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Laravel App')</title>
+    <!-- Vite Assets -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -12,9 +15,87 @@
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Arabic Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Animate.css -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <!-- Bootstrap RTL CSS (conditionally loaded) -->
+    @if(app()->getLocale() == 'ar')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    @endif
+    <!-- Custom CSS -->
+    <link href="{{ asset('css/style.css') }}" rel="stylesheet">
     <style>
+        /* Dark mode styles */
+        .dark-mode {
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+
+        .dark-mode .navbar:not(.navbar-transparent) {
+            background-color: #1e1e1e !important;
+            color: #e0e0e0;
+        }
+
+        .dark-mode .navbar:not(.navbar-transparent) .nav-link {
+            color: #e0e0e0 !important;
+        }
+
+        .dark-mode .card, .dark-mode .feature-card, .dark-mode .testimonial {
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+        }
+
+        .dark-mode .text-dark {
+            color: #e0e0e0 !important;
+        }
+
+        .dark-mode .bg-white, .dark-mode .bg-light {
+            background-color: #1e1e1e !important;
+        }
+
+        .dark-mode .border {
+            border-color: #333 !important;
+        }
+
+        /* Fix for navbar visibility */
+        .navbar {
+            z-index: 1030;
+            padding: 0.5rem 1rem;
+        }
+        
+        .navbar-nav {
+            margin: 0 !important;
+        }
+        
+        .navbar .nav-link {
+            padding: 0.5rem 0.75rem !important;
+            font-weight: 500;
+        }
+        
+        .navbar .nav-item {
+            margin-bottom: 0 !important;
+        }
+        
+        @media (max-width: 768px) {
+            .navbar .container {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 0.5rem;
+            }
+            
+            .navbar-nav {
+                flex-wrap: wrap;
+                margin-top: 0.5rem !important;
+            }
+            
+            .navbar .navbar-brand {
+                margin-bottom: 0.5rem;
+            }
+        }
+
         :root {
             --primary-color: #4361ee;
             --secondary-color: #3bc454;
@@ -26,30 +107,57 @@
             --shadow-elevated: 0 10px 30px rgba(0,0,0,0.15);
             --transition-standard: all 0.3s ease;
             --teal-gradient: linear-gradient(135deg, #41cdcd 0%, #2bc9c9 50%, #20b7b7 100%);
+            --font-arabic: 'Cairo', 'Tajawal', 'IBM Plex Sans Arabic', sans-serif;
         }
-        
+
         body {
-            padding-top: 0; /* Remove top padding to allow hero to start at the top */
+            padding-top: 60px; /* Add padding to account for fixed navbar */
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Poppins', var(--font-arabic), sans-serif;
             overflow-x: hidden;
             background-color: #fcfcfc;
             color: #333;
         }
-        
+
+        /* RTL specific adjustments */
+        html[dir="rtl"] body {
+            font-family: var(--font-arabic), 'Poppins', sans-serif;
+            text-align: right;
+        }
+
+        html[dir="rtl"] .me-auto {
+            margin-right: 0 !important;
+            margin-left: auto !important;
+        }
+
+        html[dir="rtl"] .ms-auto {
+            margin-left: 0 !important;
+            margin-right: auto !important;
+        }
+
+        html[dir="rtl"] .me-2, html[dir="rtl"] .me-3 {
+            margin-right: 0 !important;
+            margin-left: 0.5rem !important;
+        }
+
+        html[dir="rtl"] .ms-2, html[dir="rtl"] .ms-3 {
+            margin-left: 0 !important;
+            margin-right: 0.5rem !important;
+        }
+
         main {
             flex: 1;
             position: relative;
         }
-        
+
         footer {
             padding: 30px 0;
             background-color: var(--dark-color);
             color: var(--light-color);
         }
-        
+
         /* Transparent navbar styling */
         .navbar-transparent {
             background-color: transparent !important;
@@ -59,64 +167,97 @@
             z-index: 1000;
             padding-top: 20px;
             padding-bottom: 20px;
+            transition: all 0.4s ease;
         }
-        
+
         .navbar-transparent .navbar-brand {
             color: #fff;
             font-weight: 700;
+            font-size: 1.8rem;
             position: relative;
             z-index: 1001;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        
+
         .navbar-transparent .nav-link {
             color: rgba(255, 255, 255, 0.9) !important;
             position: relative;
             z-index: 1001;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            margin: 0 0.2rem;
+            transition: all 0.3s ease;
         }
-        
+
         .navbar-transparent .nav-link:hover,
         .navbar-transparent .nav-link.active {
             color: #fff !important;
+            transform: translateY(-2px);
         }
-        
+
         .navbar-transparent .navbar-toggler {
             border-color: rgba(255, 255, 255, 0.5);
             position: relative;
             z-index: 1001;
         }
-        
+
         .navbar-transparent .navbar-toggler-icon {
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.9%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
         }
-        
+
         /* Buttons in transparent navbar */
-        .navbar-transparent .btn-outline-primary {
+        .navbar-transparent .btn-outline-light {
             color: #fff;
-            border-color: #fff;
+            border-color: rgba(255, 255, 255, 0.5);
             position: relative;
             z-index: 1001;
+            transition: all 0.3s ease;
+            border-radius: 30px;
+            font-weight: 500;
         }
-        
-        .navbar-transparent .btn-primary {
+
+        .navbar-transparent .btn-outline-light:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: #fff;
+            transform: translateY(-2px);
+        }
+
+        .navbar-transparent .btn-light {
             background-color: #fff;
-            color: #20b7b7;
+            color: var(--primary-color);
             border-color: #fff;
             position: relative;
             z-index: 1001;
+            transition: all 0.3s ease;
+            border-radius: 30px;
+            font-weight: 500;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
-        
+
+        .navbar-transparent .btn-light:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+        }
+
+        /* Language dropdown in navbar */
+        .navbar-transparent .language-dropdown .btn {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.875rem;
+            border-radius: 30px;
+        }
+
         /* For pages other than home, we'll apply a solid navbar background */
         .navbar-solid {
             background-color: white !important;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
         }
-        
+
         .navbar {
             box-shadow: var(--shadow-standard);
             transition: var(--transition-standard);
             background: #fff;
         }
-        
+
         .navbar-brand {
             font-weight: 700;
             font-size: 1.5rem;
@@ -124,12 +265,13 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        
+
         .nav-link {
             position: relative;
             margin: 0 5px;
+            transition: all 0.3s ease;
         }
-        
+
         .nav-link:after {
             content: '';
             position: absolute;
@@ -140,11 +282,30 @@
             bottom: -2px;
             transition: width 0.3s ease;
         }
-        
+
         .nav-link:hover:after, .nav-link.active:after {
             width: 100%;
         }
-        
+
+        /* Navbar sticky effect */
+        .navbar-sticky {
+            padding-top: 10px;
+            padding-bottom: 10px;
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+            animation: slideDown 0.35s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+
         /* Card styling */
         .card {
             border: none;
@@ -153,12 +314,12 @@
             transition: var(--transition-standard);
             overflow: hidden;
         }
-        
+
         .card:hover {
             box-shadow: var(--shadow-elevated);
             transform: translateY(-5px);
         }
-        
+
         /* Button styling */
         .btn-primary {
             background: var(--gradient-primary);
@@ -169,32 +330,32 @@
             box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
             transition: var(--transition-standard);
         }
-        
+
         .btn-primary:hover {
             box-shadow: 0 6px 20px rgba(67, 97, 238, 0.4);
             transform: translateY(-2px);
         }
-        
+
         /* Animation classes */
         .zoom-in {
             transition: transform 0.3s ease;
         }
-        
+
         .zoom-in:hover {
             transform: scale(1.05);
         }
-        
+
         .fade-up {
             opacity: 0;
             transform: translateY(20px);
             transition: opacity 0.8s ease, transform 0.8s ease;
         }
-        
+
         .fade-up.visible {
             opacity: 1;
             transform: translateY(0);
         }
-        
+
         /* Jumbotron styling */
         .jumbotron {
             position: relative;
@@ -206,7 +367,7 @@
             overflow: hidden;
             box-shadow: var(--shadow-elevated);
         }
-        
+
         .jumbotron::before {
             content: '';
             position: absolute;
@@ -219,12 +380,12 @@
             background-position: center;
             opacity: 0.1;
         }
-        
+
         .jumbotron .content {
             position: relative;
             z-index: 2;
         }
-        
+
         /* Category styling */
         .category-card {
             position: relative;
@@ -235,7 +396,7 @@
             align-items: center;
             justify-content: center;
         }
-        
+
         .category-card::before {
             content: '';
             position: absolute;
@@ -247,20 +408,20 @@
             opacity: 0.8;
             z-index: 1;
         }
-        
+
         .category-card .content {
             position: relative;
             z-index: 2;
             color: white;
             text-align: center;
         }
-        
+
         /* Feature card */
         .feature-card {
             text-align: center;
             padding: 30px 20px;
         }
-        
+
         .feature-card i {
             font-size: 3rem;
             margin-bottom: 20px;
@@ -268,14 +429,14 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        
+
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .jumbotron {
                 padding: 40px 20px;
             }
         }
-        
+
         .hero-section {
             background: linear-gradient(135deg, #4e73df 0%, #3b5bdb 100%);
             color: white;
@@ -284,7 +445,7 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .hero-section::before {
             content: "";
             position: absolute;
@@ -297,24 +458,24 @@
             background-position: center;
             opacity: 0.2;
         }
-        
+
         .hero-text {
             position: relative;
             z-index: 2;
         }
-        
+
         .hero-title {
             font-size: 3rem;
             font-weight: 700;
             margin-bottom: 1rem;
         }
-        
+
         .hero-subtitle {
             font-size: 1.5rem;
             font-weight: 300;
             margin-bottom: 2rem;
         }
-        
+
         .feature-card {
             background-color: white;
             border-radius: 10px;
@@ -325,12 +486,12 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .feature-card:hover {
             transform: translateY(-10px);
             box-shadow: 0 15px 30px rgba(0,0,0,0.1);
         }
-        
+
         .feature-card::before {
             content: "";
             position: absolute;
@@ -342,11 +503,11 @@
             border-radius: 50%;
             transition: all 0.5s ease;
         }
-        
+
         .feature-card:hover::before {
             transform: scale(3);
         }
-        
+
         .feature-icon {
             font-size: 2.5rem;
             margin-bottom: 1rem;
@@ -354,7 +515,7 @@
             position: relative;
             z-index: 2;
         }
-        
+
         .course-card {
             border-radius: 10px;
             overflow: hidden;
@@ -362,44 +523,44 @@
             transition: all 0.3s ease;
             height: 100%;
         }
-        
+
         .course-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 15px 30px rgba(0,0,0,0.1);
         }
-        
+
         .course-card .card-img-top {
             height: 180px;
             object-fit: cover;
         }
-        
+
         .course-price {
             font-weight: 700;
             color: var(--primary-color);
         }
-        
+
         .stats-counter {
             text-align: center;
             padding: 30px 0;
             background-color: var(--light-color);
             margin: 40px 0;
         }
-        
+
         .counter-item {
             padding: 20px;
         }
-        
+
         .counter-value {
             font-size: 2.5rem;
             font-weight: 700;
             color: var(--primary-color);
         }
-        
+
         .counter-title {
             font-size: 1.1rem;
             color: var(--dark-color);
         }
-        
+
         .testimonial {
             background-color: white;
             border-radius: 10px;
@@ -408,7 +569,7 @@
             margin: 20px 0;
             position: relative;
         }
-        
+
         .testimonial::before {
             content: """;
             position: absolute;
@@ -419,13 +580,13 @@
             font-family: sans-serif;
             line-height: 1;
         }
-        
+
         .testimonial-content {
             padding-left: 20px;
             position: relative;
             z-index: 2;
         }
-        
+
         .testimonial-avatar {
             width: 60px;
             height: 60px;
@@ -433,122 +594,100 @@
             object-fit: cover;
             margin-right: 15px;
         }
-        
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
+
         @keyframes slideIn {
             from { transform: translateX(-50px); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
-        
+
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.05); }
             100% { transform: scale(1); }
         }
-        
+
         .animated-fadeIn {
             animation: fadeIn 1s ease forwards;
         }
-        
+
         .animated-slideIn {
             animation: slideIn 1s ease forwards;
         }
-        
+
         .animated-pulse {
             animation: pulse 2s infinite;
+        }
+
+        .navbar-banner {
+            padding: 30px 0;
+            color: #333;
+        }
+        
+        .banner-content h2 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .banner-content p {
+            font-size: 1.1rem;
+            margin-bottom: 0;
+        }
+        
+        .banner-stats {
+            text-align: center;
+        }
+        
+        .stat-item {
+            padding: 10px;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #4361ee;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        @media (max-width: 991px) {
+            .banner-content {
+                text-align: center;
+                margin-bottom: 20px;
+            }
         }
     </style>
     @yield('styles')
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg {{ request()->is('/') ? 'navbar-transparent' : 'navbar-light bg-white shadow-sm fixed-top' }}">
-        <div class="container">
-            <a class="navbar-brand" href="/">
-                <span class="fw-bold">E-Learning</span>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->is('/') ? 'active fw-bold' : '' }}" href="/">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->is('courses*') ? 'active fw-bold' : '' }}" href="/courses">Courses</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->is('about*') ? 'active fw-bold' : '' }}" href="/about">About</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->is('contact*') ? 'active fw-bold' : '' }}" href="/contact">Contact</a>
-                    </li>
-                </ul>
-                <div class="d-flex gap-2">
-                    @guest
-                        <a href="{{ url('/login') }}" class="btn btn-outline-primary">Login</a>
-                        <a href="{{ url('/register') }}" class="btn btn-primary">Sign Up</a>
-                    @else
-                        <div class="dropdown">
-                            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-user-circle me-1"></i> {{ Auth::user()->name }}
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                @if(Auth::user()->hasRole('admin'))
-                                    <li><a class="dropdown-item" href="{{ url('/admin') }}"><i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                @endif
-                                @if(Auth::user()->hasRole('instructor'))
-                                    <li><a class="dropdown-item" href="{{ route('instructor.dashboard') }}"><i class="fas fa-chalkboard-teacher me-2"></i>Instructor Dashboard</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                @endif
-                                <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>My Profile</a></li>
-                                <li><a class="dropdown-item" href="#"><i class="fas fa-graduation-cap me-2"></i>My Courses</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <form method="POST" action="{{ url('/logout') }}">
-                                        @csrf
-                                        <button type="submit" class="dropdown-item"><i class="fas fa-sign-out-alt me-2"></i>Logout</button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </div>
-                    @endguest
-                </div>
-            </div>
-        </div>
-    </nav>
+    <!-- Navigation Bar -->
+    @include('layouts.partials.navbar')
 
-    <!-- Main Content -->
-    <main class="container py-4">
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-        
-        @if(session('error'))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                {{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-        
+    <!-- Page Content -->
+    <main>
         @yield('content')
     </main>
 
     <!-- Footer -->
+    <!-- Dark Mode Toggle Button -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050;">
+        <button onclick="toggleDarkMode()" class="btn btn-sm rounded-circle" style="width: 40px; height: 40px; background-color: var(--dark-color); color: var(--light-color);">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
+
     <footer class="bg-dark text-white pt-5 pb-4">
         <div class="container">
             <div class="row">
                 <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
-                    <h5 class="text-uppercase mb-4">E-Learning</h5>
+                    <h5 class="text-uppercase mb-4">منصة تعليمية</h5>
                     <p>Empowering learners worldwide with high-quality online education and skill development opportunities.</p>
                     <div class="social-icons mt-4">
                         <a href="#" class="text-white me-3"><i class="fab fa-facebook-f"></i></a>
@@ -557,7 +696,7 @@
                         <a href="#" class="text-white"><i class="fab fa-linkedin-in"></i></a>
                     </div>
                 </div>
-                
+
                 <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
                     <h5 class="text-uppercase mb-4">Quick Links</h5>
                     <ul class="list-unstyled">
@@ -567,7 +706,7 @@
                         <li class="mb-2"><a href="/contact" class="text-white text-decoration-none">Contact Us</a></li>
                     </ul>
                 </div>
-                
+
                 <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
                     <h5 class="text-uppercase mb-4">Categories</h5>
                     <ul class="list-unstyled">
@@ -578,7 +717,7 @@
                         <li class="mb-2"><a href="#" class="text-white text-decoration-none">Graphic Design</a></li>
                     </ul>
                 </div>
-                
+
                 <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
                     <h5 class="text-uppercase mb-4">Contact</h5>
                     <p><i class="fas fa-map-marker-alt me-2"></i> 123 Education St, Learning City</p>
@@ -588,7 +727,7 @@
             </div>
         </div>
         <div class="text-center p-3 mt-3" style="background-color: rgba(0, 0, 0, 0.2);">
-            © {{ date('Y') }} E-Learning. All rights reserved.
+            © {{ date('Y') }} منصة تعليمية. All rights reserved.
         </div>
     </footer>
 
@@ -598,19 +737,34 @@
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <!-- CountUp.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/countup.js/2.0.8/countUp.min.js"></script>
-    
+
     <script>
+        // Dark mode toggle functionality
+        function toggleDarkMode() {
+            const body = document.body;
+            const isDarkMode = body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
+        }
+
+        // Check for saved dark mode preference
+        document.addEventListener('DOMContentLoaded', function() {
+            const darkModePreference = localStorage.getItem('darkMode');
+            if (darkModePreference === 'enabled') {
+                document.body.classList.add('dark-mode');
+            }
+        });
+
         // Initialize AOS
         AOS.init({
             duration: 800,
             easing: 'ease-in-out',
             once: true
         });
-        
+
         // Initialize CountUp for stat counters
         document.addEventListener('DOMContentLoaded', function() {
             const counterElements = document.querySelectorAll('.counter-value');
-            
+
             if (counterElements.length > 0) {
                 counterElements.forEach(function(el) {
                     const countUpObj = new CountUp(el, el.getAttribute('data-value'), {
@@ -618,62 +772,28 @@
                         separator: ',',
                         decimal: '.'
                     });
-                    
+
                     // Check if visible in viewport
                     const checkIfVisible = function() {
                         const rect = el.getBoundingClientRect();
                         const windowHeight = window.innerHeight || document.documentElement.clientHeight;
-                        
+
                         if (rect.top <= windowHeight && rect.bottom >= 0) {
                             countUpObj.start();
                             window.removeEventListener('scroll', checkIfVisible);
                         }
                     };
-                    
+
                     // Initial check
                     checkIfVisible();
-                    
+
                     // Listen for scroll
                     window.addEventListener('scroll', checkIfVisible);
                 });
             }
         });
-
-        // Add scroll event listener for navbar effects
-        window.addEventListener('scroll', function() {
-            const navbar = document.querySelector('.navbar');
-            if (window.scrollY > 50) {
-                navbar.classList.add('shadow-sm', 'navbar-sticky');
-            } else {
-                navbar.classList.remove('shadow-sm', 'navbar-sticky');
-            }
-        });
-
-        // Custom JavaScript
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check if on the home page
-            const isHomePage = window.location.pathname === '/' || window.location.pathname === '';
-            const navbar = document.querySelector('.navbar');
-            
-            if (isHomePage) {
-                // Apply immediate transparency
-                navbar.classList.add('navbar-transparent');
-                navbar.classList.remove('navbar-light', 'bg-white', 'shadow-sm', 'fixed-top');
-                
-                // Add scroll event listener for navbar effects on home page
-                window.addEventListener('scroll', function() {
-                    if (window.scrollY > 100) {
-                        navbar.classList.remove('navbar-transparent');
-                        navbar.classList.add('navbar-light', 'bg-white', 'shadow-sm', 'fixed-top');
-                    } else {
-                        navbar.classList.add('navbar-transparent');
-                        navbar.classList.remove('navbar-light', 'bg-white', 'shadow-sm', 'fixed-top');
-                    }
-                });
-            }
-        });
     </script>
-    
+
     @yield('scripts')
 </body>
-</html> 
+</html>

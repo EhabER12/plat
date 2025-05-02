@@ -16,14 +16,14 @@
             </a>
         </div>
     </div>
-    
+
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
-    
+
     @if(count($courses) > 0)
         <div class="card">
             <div class="card-body">
@@ -80,18 +80,18 @@
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="courseActionsDropdown-{{ $course->id }}">
                                                 <li>
-                                                    <a class="dropdown-item" href="{{ route('instructor.courses.manage', $course->id) }}">
+                                                    <a class="dropdown-item" href="{{ route('instructor.courses.manage', $course->course_id) }}">
                                                         <i class="fas fa-tasks me-2"></i> Manage Content
                                                     </a>
                                                 </li>
                                                 <li>
-                                                    <a class="dropdown-item" href="{{ route('instructor.courses.edit', $course->id) }}">
+                                                    <a class="dropdown-item" href="{{ route('instructor.courses.edit', $course->course_id) }}">
                                                         <i class="fas fa-edit me-2"></i> Edit Details
                                                     </a>
                                                 </li>
                                                 @if($course->status === 'published')
                                                 <li>
-                                                    <a class="dropdown-item" href="{{ route('course.detail', $course->id) }}" target="_blank">
+                                                    <a class="dropdown-item" href="{{ route('course.detail', $course->course_id) }}" target="_blank">
                                                         <i class="fas fa-eye me-2"></i> View Course
                                                     </a>
                                                 </li>
@@ -104,7 +104,7 @@
                         </tbody>
                     </table>
                 </div>
-                
+
                 <!-- Pagination -->
                 <div class="d-flex justify-content-center mt-4">
                     {{ $courses->links() }}
@@ -126,4 +126,4 @@
         </div>
     @endif
 </div>
-@endsection 
+@endsection

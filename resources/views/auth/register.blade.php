@@ -29,7 +29,7 @@
         position: relative;
         height: 100%;
         min-height: 500px;
-        background-image: url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1471&auto=format&fit=crop&ixlib=rb-4.0.3');
+        background-color: #4361ee;
         background-size: cover;
         background-position: center;
         color: white;
@@ -37,6 +37,17 @@
         display: flex;
         flex-direction: column;
         justify-content: flex-end;
+        overflow: hidden;
+    }
+    
+    .register-image img.bg-image {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: 0;
     }
 
     .register-image::before {
@@ -167,6 +178,7 @@
                 <!-- Left Image Side -->
                 <div class="col-lg-6">
                     <div class="register-image">
+                        <img src="{{ asset('images/login-bg.jpg') }}" class="bg-image" alt="Register Background">
                         <div class="register-image-content">
                             <h1 class="register-title">Join Our Learning Community</h1>
                             <p class="register-subtitle">Start your educational journey today and unlock a world of knowledge and opportunities.</p>

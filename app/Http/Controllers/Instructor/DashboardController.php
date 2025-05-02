@@ -112,7 +112,7 @@ class DashboardController extends Controller
 
         // Total revenue (simplified calculation)
         $totalRevenue = $instructor->courses()
-            ->where('status', 'published')
+            ->where('approval_status', 'approved')
             ->sum('price');
 
         // Recent enrollments (empty collection)
@@ -337,10 +337,7 @@ class DashboardController extends Controller
 
         // Get instructor courses for the filter
         $courses = Course::where('instructor_id', $instructor->user_id)
-            ->where(function($query) {
-                $query->where('approval_status', 'approved')
-                      ->orWhere('status', 'published');
-            })
+            ->where('approval_status', 'approved')
             ->get();
 
         // Initialize data array

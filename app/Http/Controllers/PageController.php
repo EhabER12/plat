@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\InstructorProfileController;
 use App\Models\Category;
 use App\Models\Course;
 use Illuminate\Http\Request;
@@ -16,109 +17,69 @@ class PageController extends Controller
     {
         try {
             // Check if tables exist before querying
-            $coursesTableExists = \Schema::hasTable('courses');
-            $usersTableExists = \Schema::hasTable('users');
-            $categoriesTableExists = \Schema::hasTable('categories');
+            $coursesTableExists = Schema::hasTable('courses');
+            $usersTableExists = Schema::hasTable('users');
+            $categoriesTableExists = Schema::hasTable('categories');
 
-            \Log::info('Tables exist check: courses=' . ($coursesTableExists ? 'yes' : 'no') .
+            Log::info('Tables exist check: courses=' . ($coursesTableExists ? 'yes' : 'no') .
                       ', users=' . ($usersTableExists ? 'yes' : 'no') .
                       ', categories=' . ($categoriesTableExists ? 'yes' : 'no'));
 
             // If any required table doesn't exist, return empty results
             if (!$coursesTableExists) {
-                \Log::error('Courses table does not exist');
+                Log::error('Courses table does not exist');
                 return view('pages.home', [
-                    'featuredCourses' => collect([]),
+                    'courses' => collect([]),
                     'categories' => collect([]),
                     'error' => 'Database tables not set up properly. Please run migrations.'
                 ]);
             }
 
-            // Get column information to ensure we're querying existing columns
-            $courseColumns = \Schema::getColumnListing('courses');
-            \Log::info('Course columns: ' . json_encode($courseColumns));
-
-            // Check if required columns exist
-            $hasApprovalStatusColumn = in_array('approval_status', $courseColumns);
-            $hasFeaturedColumn = in_array('featured', $courseColumns);
-
-            // Build the query based on available columns
-            $query = Course::query();
-
-            // Only filter by approval_status if the column exists
-            if ($hasApprovalStatusColumn) {
-                $query->where('approval_status', 'approved');
-            }
-
-            // Only filter by featured if the column exists
-            if ($hasFeaturedColumn) {
-                $query->where('featured', 1);
-            }
-
-            // Add relationships if tables exist
+            // Get all courses (for displaying on the home page)
+            $courses = Course::query();
+            
             if ($usersTableExists) {
-                $query->with('instructor');
+                $courses->with('instructor');
             }
-
+            
             if ($categoriesTableExists) {
-                $query->with('category');
+                $courses->with('category');
             }
-
-            $query->orderBy('created_at', 'desc');
-            $query->take(8);
-
-            // Execute the query
-            $featuredCourses = $query->get();
-            \Log::info('Featured courses count: ' . $featuredCourses->count());
-
-            // If no featured courses, try to get recent courses
-            if ($featuredCourses->count() == 0 && $hasFeaturedColumn) {
-                $fallbackQuery = Course::query();
-
-                if ($hasApprovalStatusColumn) {
-                    $fallbackQuery->where('approval_status', 'approved');
-                }
-
-                if ($usersTableExists) {
-                    $fallbackQuery->with('instructor');
-                }
-
-                if ($categoriesTableExists) {
-                    $fallbackQuery->with('category');
-                }
-
-                $fallbackQuery->orderBy('created_at', 'desc');
-                $fallbackQuery->take(8);
-
-                $featuredCourses = $fallbackQuery->get();
-                \Log::info('Fallback courses count: ' . $featuredCourses->count());
-            }
-
-            // Get categories
+            
+            // Order courses by created date
+            $courses->orderBy('created_at', 'desc');
+            
+            // Get the courses
+            $courses = $courses->get();
+            Log::info('Total courses count: ' . $courses->count());
+            
+            // Get all categories with course count
             if ($categoriesTableExists) {
                 $categories = Category::query();
-
+                
                 // Check if withCount can be used
                 if ($coursesTableExists && method_exists(Category::class, 'courses')) {
                     $categories->withCount('courses');
-                    $categories->orderBy('courses_count', 'desc');
                 }
-
-                $categories = $categories->take(6)->get();
+                
+                $categories = $categories->get();
             } else {
                 $categories = collect([]);
             }
 
+            // Debug information
+            Log::info('Total categories count: ' . $categories->count());
+            
             return view('pages.home', [
-                'featuredCourses' => $featuredCourses,
+                'courses' => $courses,
                 'categories' => $categories,
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error loading home page: ' . $e->getMessage());
-            \Log::error($e->getTraceAsString());
+            Log::error('Error loading home page: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
 
             return view('pages.home', [
-                'featuredCourses' => collect([]),
+                'courses' => collect([]),
                 'categories' => collect([]),
                 'error' => 'Unable to load courses: ' . $e->getMessage()
             ]);
@@ -395,10 +356,128 @@ class PageController extends Controller
                 $relatedCourses = $relatedQuery->take(4)->get();
             }
 
-            // Calculate average rating and total ratings
+            // Check if ratings/reviews tables exist
+            $courseReviewsTableExists = \Schema::hasTable('course_reviews');
+            $ratingsTableExists = \Schema::hasTable('ratings');
+
+            // Initialize rating variables
             $averageRating = 0;
             $totalRatings = 0;
             $ratingCounts = [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0];
+            $reviews = collect([]);
+
+            // Get ratings data based on available tables
+            if ($courseReviewsTableExists) {
+                // Use course_reviews table
+                $reviews = \App\Models\CourseReview::where('course_id', $courseId)
+                    ->where('is_approved', true)
+                    ->with('user')
+                    ->orderBy('created_at', 'desc')
+                    ->take(5)
+                    ->get();
+
+                $averageRating = \App\Models\CourseReview::where('course_id', $courseId)
+                    ->where('is_approved', true)
+                    ->avg('rating') ?? 0;
+
+                $totalRatings = \App\Models\CourseReview::where('course_id', $courseId)
+                    ->where('is_approved', true)
+                    ->count();
+
+                // Count ratings by value
+                $ratingDistribution = \App\Models\CourseReview::where('course_id', $courseId)
+                    ->where('is_approved', true)
+                    ->select('rating', \DB::raw('count(*) as count'))
+                    ->groupBy('rating')
+                    ->get()
+                    ->pluck('count', 'rating')
+                    ->toArray();
+
+                // Fill in the rating counts array
+                foreach ($ratingDistribution as $rating => $count) {
+                    if (isset($ratingCounts[$rating])) {
+                        $ratingCounts[$rating] = $count;
+                    }
+                }
+            } elseif ($ratingsTableExists) {
+                // Use ratings table
+                $ratingField = \Schema::hasColumn('ratings', 'rating') ? 'rating' : 'rating_value';
+                $reviewField = \Schema::hasColumn('ratings', 'review') ? 'review' :
+                              (\Schema::hasColumn('ratings', 'review_text') ? 'review_text' :
+                              (\Schema::hasColumn('ratings', 'comment') ? 'comment' : null));
+
+                $reviewsQuery = \App\Models\Rating::where('course_id', $courseId);
+
+                // Add conditions based on available columns
+                if (\Schema::hasColumn('ratings', 'is_published')) {
+                    $reviewsQuery->where('is_published', true);
+                }
+
+                if (\Schema::hasColumn('ratings', 'admin_review_status')) {
+                    $reviewsQuery->orWhere('admin_review_status', 'approved');
+                }
+
+                // Get reviews
+                $reviews = $reviewsQuery->with('user')
+                    ->orderBy('created_at', 'desc')
+                    ->take(5)
+                    ->get();
+
+                // Calculate average rating
+                $averageRating = \App\Models\Rating::where('course_id', $courseId);
+
+                if (\Schema::hasColumn('ratings', 'is_published')) {
+                    $averageRating->where('is_published', true);
+                }
+
+                if (\Schema::hasColumn('ratings', 'admin_review_status')) {
+                    $averageRating->orWhere('admin_review_status', 'approved');
+                }
+
+                $averageRating = $averageRating->avg($ratingField) ?? 0;
+
+                // Count total ratings
+                $totalRatingsQuery = \App\Models\Rating::where('course_id', $courseId);
+
+                if (\Schema::hasColumn('ratings', 'is_published')) {
+                    $totalRatingsQuery->where('is_published', true);
+                }
+
+                if (\Schema::hasColumn('ratings', 'admin_review_status')) {
+                    $totalRatingsQuery->orWhere('admin_review_status', 'approved');
+                }
+
+                $totalRatings = $totalRatingsQuery->count();
+
+                // Count ratings by value
+                $ratingDistributionQuery = \App\Models\Rating::where('course_id', $courseId);
+
+                if (\Schema::hasColumn('ratings', 'is_published')) {
+                    $ratingDistributionQuery->where('is_published', true);
+                }
+
+                if (\Schema::hasColumn('ratings', 'admin_review_status')) {
+                    $ratingDistributionQuery->orWhere('admin_review_status', 'approved');
+                }
+
+                $ratingDistribution = $ratingDistributionQuery
+                    ->select($ratingField, \DB::raw('count(*) as count'))
+                    ->groupBy($ratingField)
+                    ->get()
+                    ->pluck('count', $ratingField)
+                    ->toArray();
+
+                // Fill in the rating counts array
+                foreach ($ratingDistribution as $rating => $count) {
+                    $rating = min(5, max(1, round($rating))); // Ensure it's between 1-5
+                    if (isset($ratingCounts[$rating])) {
+                        $ratingCounts[$rating] = $count;
+                    }
+                }
+            }
+
+            // Format the average rating
+            $averageRating = number_format($averageRating, 1);
 
             return view('pages.course-detail', [
                 'course' => $course,
@@ -406,6 +485,7 @@ class PageController extends Controller
                 'averageRating' => $averageRating,
                 'totalRatings' => $totalRatings,
                 'ratingCounts' => $ratingCounts,
+                'reviews' => $reviews,
             ]);
         } catch (\Exception $e) {
             // Log the error

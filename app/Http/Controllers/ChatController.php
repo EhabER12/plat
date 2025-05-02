@@ -28,7 +28,7 @@ class ChatController extends Controller
         ->with(['participants.user', 'course', 'messages' => function ($query) {
             $query->latest()->limit(1);
         }])
-        ->orderBy('last_message_at', 'desc')
+        ->orderByRaw('COALESCE(last_message_at, created_at) DESC')
         ->get();
         
         return view('chats.index', compact('chats'));
@@ -42,7 +42,12 @@ class ChatController extends Controller
         $user = Auth::user();
         
         // Get courses based on user role
-        if ($user->hasRole('instructor')) {
+        $isInstructor = DB::table('user_roles')
+            ->where('user_id', $user->user_id)
+            ->where('role', 'instructor')
+            ->exists();
+            
+        if ($isInstructor) {
             $courses = Course::where('instructor_id', $user->user_id)
                             ->where('approval_status', 'approved')
                             ->get();

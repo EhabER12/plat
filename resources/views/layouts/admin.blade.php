@@ -49,6 +49,9 @@
                 <a href="{{ route('admin.categories') }}" class="list-group-item list-group-item-action p-3 bg-transparent text-white border-0 {{ request()->routeIs('admin.categories') ? 'active' : '' }}">
                     <i class="fas fa-folder me-2"></i> Categories
                 </a>
+                <a href="{{ route('admin.website-appearance') }}" class="list-group-item list-group-item-action p-3 bg-transparent text-white border-0 {{ request()->routeIs('admin.website-appearance*') ? 'active' : '' }}">
+                    <i class="fas fa-paint-brush me-2"></i> Website Appearance
+                </a>
                 <a href="{{ route('admin.reports') }}" class="list-group-item list-group-item-action p-3 bg-transparent text-white border-0 {{ request()->routeIs('admin.reports') ? 'active' : '' }}">
                     <i class="fas fa-chart-line me-2"></i> Reports
                 </a>

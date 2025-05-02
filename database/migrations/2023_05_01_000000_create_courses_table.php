@@ -22,6 +22,7 @@ return new class extends Migration
             $table->enum('level', ['beginner', 'intermediate', 'advanced'])->default('beginner');
             $table->string('language')->default('en');
             $table->boolean('featured')->default(0);
+            $table->boolean('certificate_available')->default(0);
             $table->enum('approval_status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->text('approval_feedback')->nullable();
             $table->string('thumbnail')->nullable();

@@ -4,7 +4,14 @@
 @section('page-title', 'Dashboard')
 
 @section('styles')
+<!-- استيراد خط تجوال العربي -->
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
+    /* تطبيق الخط على الصفحة بالكامل */
+    body, button, input, select, textarea {
+        font-family: 'Tajawal', 'Helvetica Neue', Arial, sans-serif !important;
+    }
+
     .stat-card {
         border-radius: 10px;
         overflow: hidden;
@@ -121,37 +128,84 @@
         background-color: rgba(220, 53, 69, 0.1);
         color: #dc3545;
     }
+
+    /* تحسين تصميم قسم الرسم البياني للإيرادات */
+    .chart-card {
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: none;
+        overflow: hidden;
+    }
+
+    .chart-card .card-header {
+        background-color: #ffffff;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 1.25rem;
+    }
+
+    .chart-card .card-body {
+        padding: 1.5rem;
+        position: relative;
+        height: 350px;
+        background-color: #fbfbfb;
+    }
+
+    .chart-card canvas {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .chart-card h5 {
+        font-weight: 600;
+        color: #333;
+        display: flex;
+        align-items: center;
+    }
+
+    .chart-card h5 i {
+        color: #20b7b7;
+    }
+
+    @media (max-width: 768px) {
+        .chart-card .card-body {
+            height: 280px;
+        }
+    }
 </style>
 @endsection
 
 @section('content')
 <div class="container-fluid">
     <!-- Welcome Message -->
-    <div class="mb-4">
-        <h3>Welcome, {{ Auth::user()->name }}!</h3>
-        <p class="text-muted">Here's a summary of your courses and recent activity.</p>
+    <div class="welcome-area fade-in">
+        <div class="welcome-shape"></div>
+        <div class="welcome-shape-2"></div>
+        <h3>مرحباً، {{ Auth::user()->name }}!</h3>
+        <p>هذه هي لوحة تحكم المدرب الخاصة بك. يمكنك إدارة دوراتك ومتابعة إحصائياتك من هنا.</p>
+        <a href="{{ route('instructor.courses.create') }}" class="btn">
+            <i class="fas fa-plus-circle me-2"></i>إنشاء دورة جديدة
+        </a>
     </div>
 
     <!-- Stats Row -->
     <div class="row mb-4">
         <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
-            <div class="card stat-card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <div class="stat-icon bg-primary-subtle text-primary">
-                                <i class="fas fa-book"></i>
-                            </div>
-                            <h4 class="stat-value">{{ $totalCourses }}</h4>
-                            <p class="stat-label mb-0">Total Courses</p>
+            <div class="stat-card fade-in" style="animation-delay: 0.1s">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="stat-icon bg-primary-subtle text-primary">
+                            <i class="fas fa-book"></i>
                         </div>
-                        <div class="align-self-end">
-                            <div class="small mb-2">
-                                <span class="text-success">{{ $approvedCourses }}</span> Approved
-                            </div>
-                            <div class="small">
-                                <span class="text-warning">{{ $pendingCourses }}</span> Pending
-                            </div>
+                        <h4 class="stat-value">{{ $totalCourses }}</h4>
+                        <p class="stat-label mb-0">الدورات</p>
+                    </div>
+                    <div class="align-self-end">
+                        <div class="small mb-2">
+                            <span class="text-success">{{ $approvedCourses }}</span> معتمدة
+                        </div>
+                        <div class="small">
+                            <span class="text-warning">{{ $pendingCourses }}</span> قيد المراجعة
                         </div>
                     </div>
                 </div>
@@ -159,40 +213,34 @@
         </div>
 
         <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
-            <div class="card stat-card">
-                <div class="card-body">
-                    <div class="stat-icon bg-success-subtle text-success">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <h4 class="stat-value">{{ $totalStudents }}</h4>
-                    <p class="stat-label mb-0">Total Students</p>
+            <div class="stat-card fade-in" style="animation-delay: 0.2s">
+                <div class="stat-icon bg-success-subtle text-success">
+                    <i class="fas fa-users"></i>
                 </div>
+                <h4 class="stat-value">{{ $totalStudents }}</h4>
+                <p class="stat-label mb-0">الطلاب المسجلين</p>
             </div>
         </div>
 
         <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
-            <div class="card stat-card">
-                <div class="card-body">
-                    <div class="stat-icon bg-warning-subtle text-warning">
-                        <i class="fas fa-dollar-sign"></i>
-                    </div>
-                    <h4 class="stat-value">${{ number_format($totalRevenue, 2) }}</h4>
-                    <p class="stat-label mb-0">Total Revenue</p>
+            <div class="stat-card fade-in" style="animation-delay: 0.3s">
+                <div class="stat-icon bg-warning-subtle text-warning">
+                    <i class="fas fa-dollar-sign"></i>
                 </div>
+                <h4 class="stat-value">${{ number_format($totalRevenue, 2) }}</h4>
+                <p class="stat-label mb-0">إجمالي الإيرادات</p>
             </div>
         </div>
 
         <div class="col-lg-3 col-md-6">
-            <div class="card stat-card">
-                <div class="card-body">
-                    <div class="stat-icon bg-info-subtle text-info">
-                        <i class="fas fa-star"></i>
-                    </div>
-                    <h4 class="stat-value">
-                        {{ isset($courses) && $courses->sum('ratings_count') > 0 ? number_format($courses->sum('ratings_count') / $courses->count(), 1) : '0.0' }}
-                    </h4>
-                    <p class="stat-label mb-0">Avg. Rating</p>
+            <div class="stat-card fade-in" style="animation-delay: 0.4s">
+                <div class="stat-icon bg-info-subtle text-info">
+                    <i class="fas fa-star"></i>
                 </div>
+                <h4 class="stat-value">
+                    {{ isset($courses) && $courses->sum('ratings_count') > 0 ? number_format($courses->sum('ratings_count') / $courses->count(), 1) : '0.0' }}
+                </h4>
+                <p class="stat-label mb-0">متوسط التقييم</p>
             </div>
         </div>
     </div>
@@ -200,104 +248,100 @@
     <!-- Main Content -->
     <div class="row">
         <!-- Left Column -->
-        <div class="col-xl-8 mb-4">
+        <div class="col-xl-8">
             <!-- Revenue Chart -->
-            <div class="card mb-4">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Revenue Overview</h5>
-                    <div class="btn-group btn-group-sm" role="group">
-                        <button type="button" class="btn btn-outline-secondary active">6 Months</button>
-                        <button type="button" class="btn btn-outline-secondary">YTD</button>
-                        <button type="button" class="btn btn-outline-secondary">All Time</button>
-                    </div>
+            <div class="card chart-card mb-4 fade-in" style="animation-delay: 0.5s">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i> الإيرادات الشهرية</h5>
                 </div>
                 <div class="card-body">
                     <canvas id="revenueChart" height="300"></canvas>
                 </div>
             </div>
 
-            <!-- My Courses -->
-            <div class="dashboard-section">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="dashboard-section-title">My Courses</h5>
-                    <a href="{{ route('instructor.courses') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            <!-- Latest Courses -->
+            <div class="card table-card mb-4 fade-in" style="animation-delay: 0.6s">
+                <div class="card-header d-flex justify-content-between">
+                    <h5 class="mb-0"><i class="fas fa-book-open me-2"></i> دوراتك الأخيرة</h5>
+                    <a href="{{ route('instructor.courses') }}" class="btn btn-sm btn-outline-primary">عرض الكل</a>
                 </div>
-
-                @if(count($courses) > 0)
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Course</th>
-                                    <th>Students</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($courses as $course)
+                <div class="card-body p-0">
+                    @if(count($courses) > 0)
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
                                     <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="me-3">
-                                                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <th>العنوان</th>
+                                        <th>السعر</th>
+                                        <th>الطلاب</th>
+                                        <th>الحالة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($courses->take(5) as $course)
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-light rounded p-2 me-3">
                                                         <i class="fas fa-book text-primary"></i>
                                                     </div>
+                                                    <div>
+                                                        <h6 class="mb-0">{{ $course->title }}</h6>
+                                                        <small>{{ \Carbon\Carbon::parse($course->created_at)->format('d M Y') }}</small>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <h6 class="mb-0">{{ $course->title }}</h6>
-                                                    <span class="badge bg-secondary">{{ $course->videos_count }} videos</span>
+                                            </td>
+                                            <td>${{ $course->price }}</td>
+                                            <td>{{ $course->students_count }}</td>
+                                            <td>
+                                                @if($course->status === 'published')
+                                                    <span class="approval-badge approved">معتمدة</span>
+                                                @elseif($course->status === 'pending')
+                                                    <span class="approval-badge pending">قيد المراجعة</span>
+                                                @else
+                                                    <span class="approval-badge rejected">مرفوضة</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                        الإجراءات
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li><a class="dropdown-item" href="{{ route('instructor.courses.manage', $course->course_id) }}">إدارة</a></li>
+                                                        <li><a class="dropdown-item" href="{{ route('instructor.courses.edit', $course->course_id) }}">تعديل</a></li>
+                                                        <li><a class="dropdown-item" href="{{ route('course.detail', $course->course_id) }}" target="_blank">معاينة</a></li>
+                                                    </ul>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td>{{ $course->students_count }}</td>
-                                        <td>
-                                            @if($course->status === 'published')
-                                                <span class="approval-badge approved">Published</span>
-                                            @elseif($course->status === 'pending')
-                                                <span class="approval-badge pending">Pending</span>
-                                            @else
-                                                <span class="approval-badge rejected">Rejected</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <div class="dropdown">
-                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                                    Actions
-                                                </button>
-                                                <ul class="dropdown-menu">
-                                                    <li><a class="dropdown-item" href="{{ route('instructor.courses.manage', $course->id) }}">Manage</a></li>
-                                                    <li><a class="dropdown-item" href="{{ route('instructor.courses.edit', $course->id) }}">Edit</a></li>
-                                                    <li><a class="dropdown-item" href="{{ route('course.detail', $course->id) }}" target="_blank">Preview</a></li>
-                                                </ul>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @else
-                    <div class="text-center py-5 bg-light rounded">
-                        <div class="mb-3">
-                            <i class="fas fa-book-open fa-3x text-muted"></i>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
-                        <h5>You haven't created any courses yet</h5>
-                        <p class="text-muted">Start sharing your knowledge by creating your first course.</p>
-                        <a href="{{ route('instructor.courses.create') }}" class="btn btn-primary mt-2">
-                            <i class="fas fa-plus-circle me-2"></i> Create Course
-                        </a>
-                    </div>
-                @endif
+                    @else
+                        <div class="text-center py-5 bg-light rounded">
+                            <div class="mb-3">
+                                <i class="fas fa-book-open fa-3x text-muted"></i>
+                            </div>
+                            <h5>ليس لديك أي دورات حتى الآن</h5>
+                            <p class="text-muted">ابدأ مشاركة معرفتك من خلال إنشاء دورتك الأولى.</p>
+                            <a href="{{ route('instructor.courses.create') }}" class="btn btn-primary mt-2">
+                                <i class="fas fa-plus-circle me-2"></i> إنشاء دورة
+                            </a>
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
 
         <!-- Right Column -->
         <div class="col-xl-4">
-            <!-- Recent Activity -->
-            <div class="card mb-4">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Recent Enrollments</h5>
+            <!-- Recent Enrollments -->
+            <div class="card mb-4 fade-in" style="animation-delay: 0.7s">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-user-graduate me-2"></i> آخر التسجيلات</h5>
                 </div>
                 <div class="card-body p-0">
                     @if(count($recentEnrollments) > 0)
@@ -306,9 +350,9 @@
                                 <div class="list-group-item">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
-                                            <h6 class="mb-1">New enrollment</h6>
+                                            <h6 class="mb-1">تسجيل جديد</h6>
                                             <p class="mb-0 small">
-                                                <span class="fw-semibold">{{ $enrollment->student->name }}</span> enrolled in
+                                                <span class="fw-semibold">{{ $enrollment->student->name }}</span> سجل في
                                                 <span class="fw-semibold">{{ $enrollment->course->title }}</span>
                                             </p>
                                         </div>
@@ -322,16 +366,16 @@
                             <div class="mb-3">
                                 <i class="fas fa-user-graduate fa-3x text-muted"></i>
                             </div>
-                            <p class="mb-0">No enrollments yet.</p>
+                            <p class="mb-0">لا يوجد تسجيلات حتى الآن.</p>
                         </div>
                     @endif
                 </div>
             </div>
 
             <!-- Recent Reviews -->
-            <div class="card">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Recent Reviews</h5>
+            <div class="card fade-in" style="animation-delay: 0.8s">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-star me-2"></i> آخر التقييمات</h5>
                 </div>
                 <div class="card-body">
                     @if(isset($recentRatings) && count($recentRatings) > 0)
@@ -349,10 +393,10 @@
                                     </div>
                                     <small class="text-muted">{{ \Carbon\Carbon::parse($rating->created_at)->diffForHumans() }}</small>
                                 </div>
-                                <p class="mb-1 small">{{ $rating->comment ?? 'No comment provided.' }}</p>
+                                <p class="mb-1 small">{{ $rating->comment ?? 'لا يوجد تعليق.' }}</p>
                                 <div class="d-flex justify-content-between align-items-center mt-2">
-                                    <small class="text-muted">For: <strong>{{ $rating->course_title }}</strong></small>
-                                    <small class="text-muted">By: {{ $rating->is_anonymous ? 'Anonymous' : $rating->user_name }}</small>
+                                    <small class="text-muted">عن: <strong>{{ $rating->course_title }}</strong></small>
+                                    <small class="text-muted">بواسطة: {{ $rating->is_anonymous ? 'مجهول' : $rating->user_name }}</small>
                                 </div>
                             </div>
                         @endforeach
@@ -361,7 +405,7 @@
                             <div class="mb-3">
                                 <i class="fas fa-star fa-3x text-muted"></i>
                             </div>
-                            <p class="mb-0">No reviews yet.</p>
+                            <p class="mb-0">لا يوجد تقييمات حتى الآن.</p>
                         </div>
                     @endif
                 </div>
@@ -372,11 +416,16 @@
 @endsection
 
 @section('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Revenue Chart
         const ctx = document.getElementById('revenueChart').getContext('2d');
 
+        // تحديد الاتجاه للرسم البياني
+        Chart.defaults.font.family = "'Tajawal', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif";
+        Chart.defaults.font.size = 14;
+        
         // Parse the JSON safely with fallbacks
         let chartLabels = [];
         let chartData = [];
@@ -385,7 +434,7 @@
             chartLabels = JSON.parse('{!! $chartLabels ?? "[]" !!}');
         } catch (e) {
             console.error('Error parsing chart labels');
-            chartLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+            chartLabels = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'];
         }
 
         try {
@@ -395,12 +444,12 @@
             chartData = [500, 800, 1200, 1600, 1800, 2000];
         }
 
-        new Chart(ctx, {
+        const monthlyRevenueChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: chartLabels,
                 datasets: [{
-                    label: 'Revenue ($)',
+                    label: 'الإيرادات ($)',
                     data: chartData,
                     backgroundColor: 'rgba(32, 183, 183, 0.2)',
                     borderColor: '#20b7b7',
@@ -410,7 +459,8 @@
                     pointBorderColor: '#20b7b7',
                     pointBorderWidth: 2,
                     pointRadius: 4,
-                    pointHoverRadius: 6
+                    pointHoverRadius: 6,
+                    fill: true
                 }]
             },
             options: {
@@ -418,9 +468,21 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        display: false
+                        display: true,
+                        position: 'top',
+                        align: 'end',
+                        labels: {
+                            boxWidth: 15,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
                     },
                     tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        titleAlign: 'center',
+                        bodyAlign: 'center',
+                        padding: 12,
+                        displayColors: false,
                         callbacks: {
                             label: function(context) {
                                 return `$${context.raw.toFixed(2)}`;
@@ -428,13 +490,19 @@
                         }
                     }
                 },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
                 scales: {
                     y: {
                         beginAtZero: true,
                         grid: {
-                            color: 'rgba(0, 0, 0, 0.05)'
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false
                         },
                         ticks: {
+                            padding: 10,
                             callback: function(value) {
                                 return '$' + value;
                             }
@@ -443,7 +511,15 @@
                     x: {
                         grid: {
                             display: false
+                        },
+                        ticks: {
+                            padding: 10
                         }
+                    }
+                },
+                elements: {
+                    line: {
+                        tension: 0.4
                     }
                 }
             }

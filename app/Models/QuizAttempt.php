@@ -25,13 +25,17 @@ class QuizAttempt extends Model
      */
     protected $fillable = [
         'quiz_id',
-        'student_id',
-        'score',
+        'user_id',
+        'start_time',
+        'end_time',
         'status',
-        'started_at',
-        'completed_at',
+        'score',
+        'score_percentage',
+        'is_passed',
         'time_spent_seconds',
-        'is_passed'
+        'answers_json',
+        'instructor_feedback',
+        'correct_answers_count'
     ];
 
     /**
@@ -40,13 +44,14 @@ class QuizAttempt extends Model
      * @var array<string, string>
      */
     protected $casts = [
+        'start_time' => 'datetime',
+        'end_time' => 'datetime',
         'score' => 'float',
-        'started_at' => 'datetime',
-        'completed_at' => 'datetime',
-        'time_spent_seconds' => 'integer',
+        'score_percentage' => 'float',
         'is_passed' => 'boolean',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime'
+        'time_spent_seconds' => 'integer',
+        'answers_json' => 'array',
+        'correct_answers_count' => 'integer'
     ];
 
     /**
@@ -66,11 +71,11 @@ class QuizAttempt extends Model
     }
 
     /**
-     * Get the student who made the attempt.
+     * Get the user who made the attempt.
      */
-    public function student(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'student_id', 'user_id');
+        return $this->belongsTo(User::class, 'user_id', 'user_id');
     }
 
     /**
@@ -107,12 +112,12 @@ class QuizAttempt extends Model
         }
         
         if ($this->isInProgress() && $this->quiz->time_limit_minutes > 0) {
-            $timeLimit = $this->started_at->addMinutes($this->quiz->time_limit_minutes);
+            $timeLimit = $this->start_time->addMinutes($this->quiz->time_limit_minutes);
             if (now()->gt($timeLimit)) {
                 $this->update([
                     'status' => self::STATUS_TIMED_OUT,
-                    'completed_at' => now(),
-                    'time_spent_seconds' => now()->diffInSeconds($this->started_at)
+                    'end_time' => now(),
+                    'time_spent_seconds' => now()->diffInSeconds($this->start_time)
                 ]);
                 return true;
             }
@@ -134,14 +139,16 @@ class QuizAttempt extends Model
      */
     public function getTimeRemainingAttribute()
     {
-        if (!$this->isInProgress() || !$this->quiz->time_limit_minutes) {
+        if ($this->status !== 'in_progress') {
             return 0;
         }
-        
-        $timeLimit = $this->started_at->addMinutes($this->quiz->time_limit_minutes);
-        $remaining = $timeLimit->diffInSeconds(now(), false);
-        
-        return max(0, $remaining);
+
+        $now = now();
+        if ($now->gt($this->end_time)) {
+            return 0;
+        }
+
+        return $now->diffInSeconds($this->end_time);
     }
 
     /**
@@ -161,7 +168,7 @@ class QuizAttempt extends Model
     /**
      * Complete the attempt and calculate the score.
      */
-    public function complete()
+    public function complete($answers = null)
     {
         if ($this->isCompleted()) {
             return $this;
@@ -172,8 +179,8 @@ class QuizAttempt extends Model
         
         $this->update([
             'status' => self::STATUS_COMPLETED,
-            'completed_at' => now(),
-            'time_spent_seconds' => now()->diffInSeconds($this->started_at),
+            'end_time' => now(),
+            'time_spent_seconds' => now()->diffInSeconds($this->start_time),
             'score' => $score,
             'is_passed' => $score >= $passingScore
         ]);
@@ -221,6 +228,25 @@ class QuizAttempt extends Model
      */
     public function scopeByStudent($query, $studentId)
     {
-        return $query->where('student_id', $studentId);
+        return $query->where('user_id', $studentId);
+    }
+
+    /**
+     * Check if the attempt has expired.
+     */
+    public function hasExpired()
+    {
+        return $this->status === 'in_progress' && now()->gt($this->end_time);
+    }
+
+    /**
+     * Get the formatted time spent.
+     */
+    public function getFormattedTimeSpentAttribute()
+    {
+        $minutes = floor($this->time_spent_seconds / 60);
+        $seconds = $this->time_spent_seconds % 60;
+
+        return "{$minutes} دقيقة {$seconds} ثانية";
     }
 }

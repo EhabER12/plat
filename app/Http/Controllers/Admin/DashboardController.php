@@ -9,8 +9,11 @@ use App\Models\User;
 use App\Models\Course;
 use App\Models\Category;
 use App\Models\Enrollment;
+use App\Models\InstructorPaymentAccount;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use App\Models\InstructorVerification;
+use Illuminate\Support\Str;
 
 class DashboardController extends Controller
 {
@@ -119,7 +122,7 @@ class DashboardController extends Controller
         $course->status = $validated['status'];
 
         if (!empty($validated['feedback'])) {
-            $course->feedback = $validated['feedback'];
+            $course->approval_feedback = $validated['feedback'];
         }
 
         $course->save();
@@ -622,7 +625,7 @@ class DashboardController extends Controller
             'site_description' => 'nullable|string',
             'contact_email' => 'required|email',
             'contact_phone' => 'nullable|string|max:20',
-            'commission_rate' => 'required|numeric|min:0|max:100',
+            'instructor_commission_rate' => 'required|numeric|min:0|max:100',
             'minimum_withdrawal' => 'required|numeric|min:0',
             'facebook_url' => 'nullable|url',
             'twitter_url' => 'nullable|url',
@@ -643,7 +646,7 @@ class DashboardController extends Controller
     public function instructorVerifications()
     {
         $pendingVerifications = InstructorVerification::with('user')
-            ->orderBy('submission_date', 'desc')
+            ->orderBy('submitted_at', 'desc')
             ->paginate(10);
 
         return view('admin.instructor_verifications', compact('pendingVerifications'));
@@ -678,14 +681,60 @@ class DashboardController extends Controller
         $verification = InstructorVerification::findOrFail($id);
         $verification->status = $validated['status'];
         $verification->admin_notes = $validated['admin_notes'];
+        $verification->reviewed_at = now();
         $verification->save();
 
         if ($validated['status'] === 'approved') {
-            // Add instructor role to user
-            DB::table('user_roles')->updateOrInsert(
-                ['user_id' => $verification->user_id, 'role' => 'instructor'],
-                []
-            );
+            try {
+                // Add instructor role to user
+                DB::table('user_roles')->updateOrInsert(
+                    ['user_id' => $verification->user_id, 'role' => 'instructor'],
+                    []
+                );
+
+                // Create payment account for instructor if payment details are provided
+                if (!empty($verification->payment_details)) {
+                    $paymentDetails = $verification->payment_details;
+
+                    // Check if required payment details are provided
+                    if (isset($paymentDetails['email']) && isset($paymentDetails['phone'])) {
+                        // Create payment account
+                        $accountDetails = [
+                            'email' => $paymentDetails['email'],
+                            'phone' => $paymentDetails['phone'],
+                        ];
+
+                        // Add optional fields if provided
+                        if (isset($paymentDetails['bank_name'])) {
+                            $accountDetails['bank_name'] = $paymentDetails['bank_name'];
+                        }
+
+                        if (isset($paymentDetails['account_number'])) {
+                            $accountDetails['account_number'] = $paymentDetails['account_number'];
+                        }
+
+                        // Create the payment account
+                        InstructorPaymentAccount::create([
+                            'instructor_id' => $verification->user_id,
+                            'payment_provider' => 'paymob',
+                            'account_name' => 'Paymob Account',
+                            'account_details' => $accountDetails,
+                            'is_active' => true,
+                            'is_default' => true,
+                        ]);
+
+                        Log::info('Payment account created for instructor', [
+                            'instructor_id' => $verification->user_id,
+                            'verification_id' => $verification->id,
+                        ]);
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('Error creating payment account for instructor: ' . $e->getMessage(), [
+                    'instructor_id' => $verification->user_id,
+                    'verification_id' => $verification->id,
+                ]);
+            }
         }
 
         return redirect()->route('admin.instructor.verifications')
@@ -708,6 +757,7 @@ class DashboardController extends Controller
 
         $category = new Category();
         $category->name = $validated['name'];
+        $category->slug = Str::slug($validated['name']);
         $category->description = $validated['description'] ?? null;
         $category->parent_id = $validated['parent_id'] ?? null;
         $category->save();
@@ -738,6 +788,7 @@ class DashboardController extends Controller
         }
 
         $category->name = $validated['name'];
+        $category->slug = Str::slug($validated['name']);
         $category->description = $validated['description'] ?? null;
         $category->parent_id = $validated['parent_id'] ?? null;
         $category->save();
@@ -980,6 +1031,7 @@ class DashboardController extends Controller
                 $categoryIds[] = DB::table('categories')->insertGetId([
                     'name' => $category,
                     'description' => 'دورات في مجال ' . $category,
+                    'slug' => Str::slug($category),
                     'created_at' => now(),
                     'updated_at' => now()
                 ]);
@@ -1059,8 +1111,8 @@ class DashboardController extends Controller
 
             return redirect()->route('admin.dashboard')->with('success', 'تم إعادة تهيئة قاعدة البيانات وإضافة البيانات الوهمية بنجاح!');
         } catch (\Exception $e) {
-            \Log::error('حدث خطأ أثناء إعادة تهيئة قاعدة البيانات: ' . $e->getMessage());
-            \Log::error($e->getTraceAsString());
+            Log::error('حدث خطأ أثناء إعادة تهيئة قاعدة البيانات: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
             return redirect()->route('admin.dashboard')->with('error', 'حدث خطأ أثناء إعادة تهيئة قاعدة البيانات: ' . $e->getMessage());
         }
     }

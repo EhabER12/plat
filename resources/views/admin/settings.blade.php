@@ -76,6 +76,12 @@
                             </div>
                             
                             <div class="mb-3">
+                                <label for="minimum_withdrawal" class="form-label">Minimum Withdrawal Amount</label>
+                                <input type="number" class="form-control" id="minimum_withdrawal" name="minimum_withdrawal" value="{{ $settings['minimum_withdrawal']['value'] ?? 50 }}" min="0" required>
+                                <div class="form-text">Minimum amount instructors must earn before they can withdraw.</div>
+                            </div>
+                            
+                            <div class="mb-3">
                                 <label for="payment_methods" class="form-label">Enabled Payment Methods</label>
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="payment_method_credit_card" name="payment_methods[]" value="credit_card" {{ in_array('credit_card', explode(',', $settings['payment_methods']['value'] ?? 'credit_card')) ? 'checked' : '' }}>

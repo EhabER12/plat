@@ -30,7 +30,9 @@ class InstructorVerification extends Model
         'cv_file',
         'linkedin_profile',
         'additional_info',
+        'payment_details',
         'rejection_reason',
+        'admin_notes',
         'status',
         'submitted_at',
         'reviewed_at'
@@ -44,6 +46,7 @@ class InstructorVerification extends Model
     protected $casts = [
         'submitted_at' => 'datetime',
         'reviewed_at' => 'datetime',
+        'payment_details' => 'array',
     ];
 
     /**

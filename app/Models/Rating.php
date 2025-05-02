@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Schema;
 
 class Rating extends Model
 {
@@ -25,8 +26,12 @@ class Rating extends Model
     protected $fillable = [
         'course_id',
         'student_id',
+        'user_id',  // Added user_id as an alternative to student_id
         'rating_value',
+        'rating',   // Added rating as an alternative to rating_value
         'review_text',
+        'review',   // Added review as an alternative to review_text
+        'comment',  // Added comment as another alternative
         'is_published',
         'admin_review_status',
         'admin_review_notes'
@@ -39,10 +44,57 @@ class Rating extends Model
      */
     protected $casts = [
         'rating_value' => 'float',
+        'rating' => 'float',
         'is_published' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
+
+    /**
+     * Get the student ID attribute.
+     *
+     * @return mixed
+     */
+    public function getStudentIdAttribute()
+    {
+        if ($this->attributes['student_id'] ?? null) {
+            return $this->attributes['student_id'];
+        }
+
+        return $this->attributes['user_id'] ?? null;
+    }
+
+    /**
+     * Get the rating value attribute.
+     *
+     * @return float
+     */
+    public function getRatingValueAttribute()
+    {
+        if ($this->attributes['rating_value'] ?? null) {
+            return $this->attributes['rating_value'];
+        }
+
+        return $this->attributes['rating'] ?? 0;
+    }
+
+    /**
+     * Get the review text attribute.
+     *
+     * @return string|null
+     */
+    public function getReviewTextAttribute()
+    {
+        if ($this->attributes['review_text'] ?? null) {
+            return $this->attributes['review_text'];
+        }
+
+        if ($this->attributes['review'] ?? null) {
+            return $this->attributes['review'];
+        }
+
+        return $this->attributes['comment'] ?? null;
+    }
 
     /**
      * Get the course that was rated.
@@ -57,6 +109,24 @@ class Rating extends Model
      */
     public function student(): BelongsTo
     {
+        // Check if student_id column exists in the table
+        if (Schema::hasColumn('ratings', 'student_id')) {
+            return $this->belongsTo(User::class, 'student_id', 'user_id');
+        }
+        // Fallback to user_id if student_id doesn't exist
+        return $this->belongsTo(User::class, 'user_id', 'user_id');
+    }
+
+    /**
+     * Get the user who left the rating (alias for student).
+     */
+    public function user(): BelongsTo
+    {
+        // Check if user_id column exists in the table
+        if (Schema::hasColumn('ratings', 'user_id')) {
+            return $this->belongsTo(User::class, 'user_id', 'user_id');
+        }
+        // Fallback to student_id if user_id doesn't exist
         return $this->belongsTo(User::class, 'student_id', 'user_id');
     }
 
@@ -65,7 +135,12 @@ class Rating extends Model
      */
     public function scopePublished($query)
     {
-        return $query->where('is_published', true);
+        // Check if is_published column exists
+        if (Schema::hasColumn('ratings', 'is_published')) {
+            return $query->where('is_published', true);
+        }
+
+        return $query;
     }
 
     /**
@@ -73,7 +148,12 @@ class Rating extends Model
      */
     public function scopePendingReview($query)
     {
-        return $query->where('admin_review_status', 'pending');
+        // Check if admin_review_status column exists
+        if (Schema::hasColumn('ratings', 'admin_review_status')) {
+            return $query->where('admin_review_status', 'pending');
+        }
+
+        return $query;
     }
 
     /**
@@ -81,11 +161,25 @@ class Rating extends Model
      */
     public function approve($notes = null)
     {
-        $this->update([
-            'admin_review_status' => 'approved',
-            'is_published' => true,
-            'admin_review_notes' => $notes ?? $this->admin_review_notes
-        ]);
+        $data = [];
+
+        // Check if columns exist before updating them
+        if (Schema::hasColumn('ratings', 'admin_review_status')) {
+            $data['admin_review_status'] = 'approved';
+        }
+
+        if (Schema::hasColumn('ratings', 'is_published')) {
+            $data['is_published'] = true;
+        }
+
+        if (Schema::hasColumn('ratings', 'admin_review_notes')) {
+            $data['admin_review_notes'] = $notes ?? $this->admin_review_notes;
+        }
+
+        if (!empty($data)) {
+            $this->update($data);
+        }
+
         return $this;
     }
 
@@ -94,11 +188,25 @@ class Rating extends Model
      */
     public function reject($notes = null)
     {
-        $this->update([
-            'admin_review_status' => 'rejected',
-            'is_published' => false,
-            'admin_review_notes' => $notes ?? $this->admin_review_notes
-        ]);
+        $data = [];
+
+        // Check if columns exist before updating them
+        if (Schema::hasColumn('ratings', 'admin_review_status')) {
+            $data['admin_review_status'] = 'rejected';
+        }
+
+        if (Schema::hasColumn('ratings', 'is_published')) {
+            $data['is_published'] = false;
+        }
+
+        if (Schema::hasColumn('ratings', 'admin_review_notes')) {
+            $data['admin_review_notes'] = $notes ?? $this->admin_review_notes;
+        }
+
+        if (!empty($data)) {
+            $this->update($data);
+        }
+
         return $this;
     }
 }

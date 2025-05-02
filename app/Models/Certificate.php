@@ -23,14 +23,12 @@ class Certificate extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'student_id',
+        'user_id',
         'course_id',
+        'completion_date',
         'certificate_number',
-        'issue_date',
-        'expiry_date',
         'certificate_url',
-        'status',
-        'verification_code'
+        'is_valid'
     ];
 
     /**
@@ -39,24 +37,24 @@ class Certificate extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'issue_date' => 'datetime',
-        'expiry_date' => 'datetime',
+        'completion_date' => 'datetime',
+        'is_valid' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
 
     /**
-     * Get the student who earned the certificate.
+     * Get the user that owns the certificate.
      */
-    public function student(): BelongsTo
+    public function user()
     {
-        return $this->belongsTo(User::class, 'student_id', 'user_id');
+        return $this->belongsTo(User::class, 'user_id', 'user_id');
     }
 
     /**
-     * Get the course for which the certificate was issued.
+     * Get the course this certificate is for.
      */
-    public function course(): BelongsTo
+    public function course()
     {
         return $this->belongsTo(Course::class, 'course_id', 'course_id');
     }

@@ -19,12 +19,20 @@
         margin-bottom: 20px;
     }
     
-    .video-wrapper iframe {
+    .video-wrapper iframe,
+    .video-wrapper video {
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
+    }
+    
+    /* Add style to prevent video caching */
+    .video-player[data-nocache="true"] {
+        transform: translateZ(0);
+        backface-visibility: hidden;
+        will-change: transform;
     }
     
     .lesson-list {
@@ -169,7 +177,7 @@
             <div class="mb-4">
                 <div class="video-wrapper">
                     <!-- This would be the actual video. For the demo, using a placeholder -->
-                    <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen data-nocache="true"></iframe>
                 </div>
                 
                 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -219,7 +227,7 @@
                                     <span>{{ $material->getFormattedFileSizeAttribute() }}</span>
                                 </div>
                             </div>
-                            <a href="#" class="btn btn-sm btn-outline-primary">
+                            <a href="{{ route('courses.materials.download', ['courseId' => $course->course_id, 'materialId' => $material->material_id]) }}" class="btn btn-sm btn-outline-primary">
                                 <i class="fas fa-download"></i> Download
                             </a>
                         </div>
@@ -303,7 +311,7 @@
                         <div>
                             <h5 class="mb-0">Instructor</h5>
                         </div>
-                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="{{ $course->instructor->name }}" class="rounded-circle" width="40" height="40">
+                        <img src="{{ $course->instructor->profile_image ? asset('storage/' . $course->instructor->profile_image) : asset('images/default-profile.png') }}" alt="{{ $course->instructor->name }}" class="rounded-circle" width="40" height="40">
                     </div>
                     <p class="mb-1"><strong>{{ $course->instructor->name }}</strong></p>
                     <p class="text-muted small mb-3">{{ $course->category->name ?? 'Uncategorized' }} Expert</p>
@@ -315,4 +323,8 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script src="{{ asset('js/video-cache-buster.js') }}?v={{ time() }}"></script>
 @endsection 

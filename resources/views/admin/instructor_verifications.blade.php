@@ -8,14 +8,14 @@
         <h4 class="mb-0">Instructor Verification Requests</h4>
         <p class="text-muted">Review and approve instructor applications</p>
     </div>
-    
+
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
-    
+
     <div class="card">
         <div class="card-body">
             @if(count($pendingVerifications) > 0)
@@ -40,8 +40,8 @@
                                                 <i class="fas fa-user text-primary"></i>
                                             </div>
                                             <div>
-                                                <h6 class="mb-0">{{ $verification->user->name }}</h6>
-                                                <small>{{ $verification->user->email }}</small>
+                                                <h6 class="mb-0">{{ $verification->user ? $verification->user->name : 'User Deleted' }}</h6>
+                                                <small>{{ $verification->user ? $verification->user->email : 'N/A' }}</small>
                                             </div>
                                         </div>
                                     </td>
@@ -59,7 +59,7 @@
                         </tbody>
                     </table>
                 </div>
-                
+
                 <!-- Pagination -->
                 <div class="d-flex justify-content-center mt-4">
                     {{ $pendingVerifications->links() }}
@@ -76,4 +76,4 @@
         </div>
     </div>
 </div>
-@endsection 
+@endsection

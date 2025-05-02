@@ -24,6 +24,7 @@ class CourseMaterial extends Model
      */
     protected $fillable = [
         'course_id',
+        'section_id',
         'title',
         'description',
         'file_url',
@@ -52,6 +53,14 @@ class CourseMaterial extends Model
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class, 'course_id', 'course_id');
+    }
+
+    /**
+     * Get the section that the material belongs to.
+     */
+    public function section(): BelongsTo
+    {
+        return $this->belongsTo(CourseSection::class, 'section_id', 'section_id');
     }
 
     /**
@@ -87,5 +96,67 @@ class CourseMaterial extends Model
     {
         return $this->hasMany(StudentProgress::class, 'content_id', 'material_id')
                     ->where('content_type', 'material');
+    }
+
+    /**
+     * Get the file icon based on file type.
+     */
+    public function getFileIconAttribute()
+    {
+        $fileType = strtolower($this->file_type ?? 'file');
+        $fileIcon = 'fa-file';
+
+        if (in_array($fileType, ['pdf'])) {
+            $fileIcon = 'fa-file-pdf text-danger';
+        } elseif (in_array($fileType, ['doc', 'docx'])) {
+            $fileIcon = 'fa-file-word text-primary';
+        } elseif (in_array($fileType, ['xls', 'xlsx'])) {
+            $fileIcon = 'fa-file-excel text-success';
+        } elseif (in_array($fileType, ['ppt', 'pptx'])) {
+            $fileIcon = 'fa-file-powerpoint text-warning';
+        } elseif (in_array($fileType, ['zip', 'rar'])) {
+            $fileIcon = 'fa-file-archive text-secondary';
+        } elseif (in_array($fileType, ['jpg', 'jpeg', 'png', 'gif'])) {
+            $fileIcon = 'fa-file-image text-info';
+        }
+
+        return $fileIcon;
+    }
+
+    /**
+     * Check if the file exists in storage.
+     */
+    public function fileExists()
+    {
+        $fileUrl = $this->attributes['file_url'] ?? null;
+        if (!$fileUrl) {
+            return false;
+        }
+        return \Illuminate\Support\Facades\Storage::disk('public')->exists($fileUrl);
+    }
+
+    /**
+     * Get the file download URL.
+     */
+    public function getDownloadUrlAttribute()
+    {
+        if ($this->fileExists()) {
+            return route('courses.materials.download', [
+                'courseId' => $this->course_id,
+                'materialId' => $this->material_id
+            ]);
+        }
+        return null;
+    }
+
+    /**
+     * Get the file public URL.
+     */
+    public function getFileUrlAttribute($value)
+    {
+        if ($value && $this->fileExists()) {
+            return asset('storage/' . $value);
+        }
+        return $value;
     }
 }

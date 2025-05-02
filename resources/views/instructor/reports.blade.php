@@ -1,11 +1,11 @@
-@extends('instructor.layout')
+@extends('layouts.instructor')
 
 @section('title', 'Reports & Analytics')
 
 @section('content')
     <div class="container-fluid">
         <h1 class="mb-4">Reports & Analytics</h1>
-        
+
         <div class="card mb-4">
             <div class="card-header">
                 <i class="fas fa-chart-line me-1"></i>
@@ -48,7 +48,7 @@
                 </form>
             </div>
         </div>
-        
+
         <div class="row">
             <div class="col-xl-8">
                 <div class="card mb-4">
@@ -111,7 +111,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="card mb-4">
                     <div class="card-header">
                         <i class="fas fa-download me-1"></i>
@@ -133,7 +133,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Recent Activity Section -->
         @if($reportType == 'enrollment' && isset($recentEnrollments))
         <div class="card mb-4">
@@ -281,13 +281,13 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const ctx = document.getElementById('reportChart');
-        
+
         // Extract data from PHP
         const labels = {!! json_encode($data['labels']) !!};
-        
+
         const chartType = '{{ $reportType }}';
         const timeframe = '{{ $timeframe }}';
-        
+
         // Determine chart configuration based on report type
         let chartConfig = {
             type: 'bar',
@@ -309,13 +309,13 @@
                 }
             }
         };
-        
+
         // Configure datasets based on report type
         if (chartType === 'ratings') {
             // For ratings, we show both average rating and count
             const avgRatings = {!! json_encode($data['avg_ratings'] ?? []) !!};
             const counts = {!! json_encode($data['counts'] ?? []) !!};
-            
+
             chartConfig.type = 'line';
             chartConfig.data.datasets = [
                 {
@@ -336,7 +336,7 @@
                     yAxisID: 'y1'
                 }
             ];
-            
+
             // Configure dual y-axes for ratings
             chartConfig.options.scales = {
                 y: {
@@ -363,7 +363,7 @@
         } else {
             // For enrollment and revenue
             const chartData = {!! json_encode($data['data'] ?? []) !!};
-            
+
             // Determine chart color based on report type
             let backgroundColor, borderColor;
             switch(chartType) {
@@ -375,7 +375,7 @@
                     backgroundColor = 'rgba(255, 193, 7, 0.2)';
                     borderColor = 'rgba(255, 193, 7, 1)';
             }
-            
+
             chartConfig.data.datasets = [{
                 label: chartType === 'revenue' ? 'Revenue ($)' : 'Enrollments',
                 data: chartData,
@@ -384,11 +384,11 @@
                 borderWidth: 1
             }];
         }
-        
+
         // Create chart
         new Chart(ctx, chartConfig);
     });
-    
+
     function printReport() {
         window.print();
     }

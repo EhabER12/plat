@@ -9,10 +9,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The table associated with the model.
@@ -157,6 +158,12 @@ class User extends Authenticatable
      */
     public function reviews()
     {
+        // Check if course_reviews table exists
+        if (\Illuminate\Support\Facades\Schema::hasTable('course_reviews')) {
+            return $this->hasMany(CourseReview::class, 'user_id', 'user_id');
+        }
+
+        // Fallback to Review model
         return $this->hasMany(Review::class, 'user_id', 'user_id');
     }
 
@@ -193,11 +200,65 @@ class User extends Authenticatable
     }
 
     /**
+     * Get instructor's payment accounts.
+     */
+    public function paymentAccounts(): HasMany
+    {
+        return $this->hasMany(InstructorPaymentAccount::class, 'instructor_id');
+    }
+
+    /**
+     * Get instructor's earnings.
+     */
+    public function earnings(): HasMany
+    {
+        return $this->hasMany(InstructorEarning::class, 'instructor_id');
+    }
+
+    /**
+     * Get instructor's default payment account.
+     */
+    public function defaultPaymentAccount()
+    {
+        return $this->paymentAccounts()->where('is_default', true)->first();
+    }
+
+    /**
+     * Get instructor's total available earnings.
+     */
+    public function getAvailableEarningsAttribute()
+    {
+        return $this->earnings()->where('status', 'available')->sum('amount');
+    }
+
+    /**
+     * Get instructor's total pending earnings.
+     */
+    public function getPendingEarningsAttribute()
+    {
+        return $this->earnings()->where('status', 'pending')->sum('amount');
+    }
+
+    /**
+     * Get instructor's total withdrawn earnings.
+     */
+    public function getWithdrawnEarningsAttribute()
+    {
+        return $this->earnings()->where('status', 'withdrawn')->sum('amount');
+    }
+
+    /**
      * Get user's ratings given to courses.
      */
     public function ratings(): HasMany
     {
-        return $this->hasMany(Rating::class, 'student_id');
+        // Check if ratings table has student_id column
+        if (\Illuminate\Support\Facades\Schema::hasColumn('ratings', 'student_id')) {
+            return $this->hasMany(Rating::class, 'student_id');
+        }
+
+        // Fallback to user_id if student_id doesn't exist
+        return $this->hasMany(Rating::class, 'user_id');
     }
 
     /**

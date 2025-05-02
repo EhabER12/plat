@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\CourseReview;
 use App\Models\Enrollment;
 use App\Models\Rating;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -60,7 +62,7 @@ class CourseController extends Controller
      */
     public function myCourses()
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         // Get enrolled courses for student
         $enrolledCourses = Course::join('enrollments', 'courses.course_id', '=', 'enrollments.course_id')
@@ -84,21 +86,44 @@ class CourseController extends Controller
      */
     public function review(Request $request, $courseId)
     {
-        $student = auth()->user();
-        $course = $student->enrolledCourses()->findOrFail($courseId);
+        $student = Auth::user();
+        
+        // Get enrolled courses for the student
+        $course = Course::whereHas('enrollments', function($query) use ($student) {
+            $query->where('student_id', $student->user_id);
+        })->findOrFail($courseId);
 
         $validated = $request->validate([
             'rating' => 'required|integer|min:1|max:5',
             'comment' => 'required|string|min:10|max:500',
         ]);
 
-        $rating = $course->ratings()->updateOrCreate(
-            ['user_id' => $student->user_id],
-            [
-                'rating' => $validated['rating'],
-                'review' => $validated['comment'],
-            ]
-        );
+        // Check which table to use for reviews
+        if (Schema::hasTable('course_reviews')) {
+            // Use course_reviews table
+            CourseReview::updateOrCreate(
+                [
+                    'course_id' => $courseId,
+                    'user_id' => $student->user_id
+                ],
+                [
+                    'rating' => $validated['rating'],
+                    'review' => $validated['comment'],
+                    'is_approved' => true
+                ]
+            );
+        } else {
+            // Use ratings table
+            $course->ratings()->updateOrCreate(
+                [
+                    'user_id' => $student->user_id
+                ],
+                [
+                    'rating' => $validated['rating'],
+                    'review' => $validated['comment'],
+                ]
+            );
+        }
 
         return redirect()->back()->with('success', 'Review submitted successfully');
     }
@@ -111,12 +136,18 @@ class CourseController extends Controller
      */
     public function courseContent($courseId)
     {
-        $student = auth()->user();
-        $course = $student->enrolledCourses()
-            ->with(['videos', 'materials', 'instructor'])
-            ->findOrFail($courseId);
+        $student = Auth::user();
+        
+        // Get the course with its relationships
+        $course = Course::whereHas('enrollments', function($query) use ($student) {
+            $query->where('student_id', $student->user_id);
+        })
+        ->with(['videos', 'materials', 'instructor', 'sections.videos'])
+        ->findOrFail($courseId);
 
-        $progress = $student->progress()
+        // Get progress information if available
+        $progress = DB::table('student_progress')
+            ->where('user_id', $student->user_id)
             ->where('course_id', $courseId)
             ->first();
 

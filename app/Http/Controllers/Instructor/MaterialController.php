@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\File;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MaterialController extends Controller
 {
@@ -25,8 +27,8 @@ class MaterialController extends Controller
         $user = Auth::user();
         
         // Verify the instructor owns this course
-        $course = Course::where('id', $courseId)
-            ->where('instructor_id', $user->id)
+        $course = Course::where('course_id', $courseId)
+            ->where('instructor_id', $user->user_id)
             ->firstOrFail();
         
         // Check if course_materials table exists
@@ -41,6 +43,7 @@ class MaterialController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'section_id' => 'nullable|integer|exists:course_sections,section_id',
             'material_file' => 'required|file|max:51200', // 50MB max
         ]);
         
@@ -49,19 +52,31 @@ class MaterialController extends Controller
             $file = $request->file('material_file');
             $fileName = Str::slug($validated['title']) . '-' . time() . '.' . $file->getClientOriginalExtension();
             
-            // Move file to storage
-            $filePath = 'courses/' . $courseId . '/materials/' . $fileName;
-            $file->storeAs('public/' . dirname($filePath), basename($filePath));
+            // Create storage directories if they don't exist
+            $relativePath = 'courses/' . $courseId . '/materials';
+            $fullStoragePath = storage_path('app/public/' . $relativePath);
+            
+            if (!File::exists($fullStoragePath)) {
+                File::makeDirectory($fullStoragePath, 0755, true);
+            }
+            
+            // Store the file in public disk
+            $path = $file->storeAs($relativePath, $fileName, 'public');
             
             // Create material record
             $material = new CourseMaterial();
             $material->course_id = $courseId;
             $material->title = $validated['title'];
             $material->description = $validated['description'] ?? null;
-            $material->file_path = 'storage/' . $filePath;
+            
+            // Associate with section if provided
+            if (!empty($validated['section_id'])) {
+                $material->section_id = $validated['section_id'];
+            }
+            
+            $material->setAttribute('file_url', $path);  // Explicitly set the attribute
             $material->file_type = $file->getClientOriginalExtension();
             $material->file_size = $file->getSize();
-            $material->download_count = 0;
             $material->save();
             
             if ($request->expectsJson()) {
@@ -93,18 +108,21 @@ class MaterialController extends Controller
         $user = Auth::user();
         
         // Verify the instructor owns this course
-        $course = Course::where('id', $courseId)
-            ->where('instructor_id', $user->id)
+        $course = Course::where('course_id', $courseId)
+            ->where('instructor_id', $user->user_id)
             ->firstOrFail();
         
         // Find the material
-        $material = CourseMaterial::where('id', $materialId)
+        $material = CourseMaterial::where('material_id', $materialId)
             ->where('course_id', $courseId)
             ->firstOrFail();
         
-        // Delete the file
-        if (file_exists(public_path($material->file_path))) {
-            unlink(public_path($material->file_path));
+        // Get the file URL from attributes
+        $fileUrl = $material->getAttribute('file_url');
+        
+        // Delete the file if it exists
+        if ($fileUrl && Storage::disk('public')->exists($fileUrl)) {
+            Storage::disk('public')->delete($fileUrl);
         }
         
         // Delete the record
@@ -122,20 +140,33 @@ class MaterialController extends Controller
      *
      * @param  int  $courseId
      * @param  int  $materialId
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\RedirectResponse
      */
     public function download($courseId, $materialId)
     {
         // Find the material
-        $material = CourseMaterial::where('id', $materialId)
+        $material = CourseMaterial::where('material_id', $materialId)
             ->where('course_id', $courseId)
             ->firstOrFail();
         
-        // Increment download count
-        $material->download_count += 1;
-        $material->save();
+        // Create the file name
+        $fileName = $material->title . '.' . $material->file_type;
         
-        // Return the file for download
-        return response()->download(public_path($material->file_path), $material->title . '.' . $material->file_type);
+        // Get the file url from attributes
+        $fileUrl = $material->getAttribute('file_url');
+        
+        if (!$fileUrl) {
+            return redirect()->back()->with('error', 'الملف غير موجود. يرجى الاتصال بالمسؤول.');
+        }
+        
+        // Check if file exists in storage and return it for download
+        $filePath = Storage::disk('public')->path($fileUrl);
+        
+        if (file_exists($filePath)) {
+            return response()->download($filePath, $fileName);
+        }
+        
+        // If file not found, return an error
+        return redirect()->back()->with('error', 'الملف غير موجود. يرجى الاتصال بالمسؤول.');
     }
 } 

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class Course extends Model
 {
@@ -46,7 +47,8 @@ class Course extends Model
         'instructor_id',
         'category_id',
         'approval_status',
-        'thumbnail'
+        'thumbnail',
+        'certificate_available'
     ];
 
     /**
@@ -57,8 +59,20 @@ class Course extends Model
     protected $casts = [
         'price' => 'decimal:2',
         'featured' => 'boolean',
+        'certificate_available' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
+    ];
+
+    /**
+     * The attributes that should be appended to arrays.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = [
+        'is_published',
+        'average_rating',
+        'enrollment_count'
     ];
 
     /**
@@ -73,6 +87,17 @@ class Course extends Model
             return 'published';
         }
         return $this->approval_status;
+    }
+
+    /**
+     * Get the is_published attribute (alias for approval_status for compatibility)
+     *
+     * @return bool
+     */
+    public function getIsPublishedAttribute()
+    {
+        // Return true if approval_status is 'approved'
+        return $this->approval_status === 'approved';
     }
 
     /**
@@ -116,6 +141,15 @@ class Course extends Model
     }
 
     /**
+     * Get the sections for the course.
+     */
+    public function sections(): HasMany
+    {
+        return $this->hasMany(CourseSection::class, 'course_id', 'course_id')
+            ->orderBy('position', 'asc');
+    }
+
+    /**
      * Get the materials for the course.
      */
     public function materials(): HasMany
@@ -144,6 +178,20 @@ class Course extends Model
      */
     public function ratings(): HasMany
     {
+        return $this->hasMany(Rating::class, 'course_id', 'course_id');
+    }
+
+    /**
+     * Get the reviews for the course.
+     */
+    public function reviews(): HasMany
+    {
+        // Check if course_reviews table exists
+        if (\Illuminate\Support\Facades\Schema::hasTable('course_reviews')) {
+            return $this->hasMany(CourseReview::class, 'course_id', 'course_id');
+        }
+
+        // Fallback to ratings table
         return $this->hasMany(Rating::class, 'course_id', 'course_id');
     }
 
@@ -180,10 +228,23 @@ class Course extends Model
     }
 
     /**
+     * Get the certificates issued for this course.
+     */
+    public function certificates(): HasMany
+    {
+        return $this->hasMany(Certificate::class, 'course_id', 'course_id');
+    }
+
+    /**
      * Calculate average rating for the course.
      */
     public function getAverageRatingAttribute()
     {
+        // Check which rating column exists and use it
+        if (\Illuminate\Support\Facades\Schema::hasColumn('ratings', 'rating_value')) {
+            return $this->ratings()->avg('rating_value') ?? 0;
+        }
+
         return $this->ratings()->avg('rating') ?? 0;
     }
 
@@ -305,7 +366,7 @@ class Course extends Model
                     ]);
                 }
             } catch (\Exception $e) {
-                \Log::error('Error creating default courses: ' . $e->getMessage());
+                Log::error('Error creating default courses: ' . $e->getMessage());
             }
         }
     }

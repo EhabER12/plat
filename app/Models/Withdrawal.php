@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Withdrawal extends Model
 {
@@ -62,6 +63,14 @@ class Withdrawal extends Model
     public function processor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'processed_by', 'user_id');
+    }
+
+    /**
+     * Get the earnings included in this withdrawal.
+     */
+    public function earnings(): HasMany
+    {
+        return $this->hasMany(InstructorEarning::class, 'withdrawal_id', 'withdrawal_id');
     }
 
     /**

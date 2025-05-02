@@ -9,7 +9,7 @@
         <div class="col-md-9">
             <div class="card">
                 <div class="card-body">
-                    <form action="{{ route('instructor.courses.update', $course->id) }}" method="POST" enctype="multipart/form-data">
+                    <form action="{{ route('instructor.courses.update', $course->course_id) }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
                         <div class="row mb-4">
@@ -23,7 +23,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="row mb-4">
                             <div class="col-md-12">
                                 <div class="mb-3">
@@ -35,7 +35,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="row mb-4">
                             <div class="col-md-6">
                                 <div class="mb-3">
@@ -43,7 +43,7 @@
                                     <select class="form-select @error('category_id') is-invalid @enderror" id="category_id" name="category_id" required>
                                         <option value="">Select a category</option>
                                         @foreach($categories as $category)
-                                            <option value="{{ $category->id }}" {{ (old('category_id', $course->category_id) == $category->id) ? 'selected' : '' }}>
+                                            <option value="{{ $category->category_id }}" {{ (old('category_id', $course->category_id) == $category->category_id) ? 'selected' : '' }}>
                                                 {{ $category->name }}
                                             </option>
                                         @endforeach
@@ -63,7 +63,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="row mb-4">
                             <div class="col-md-12">
                                 <div class="mb-3">
@@ -81,7 +81,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="alert alert-info mb-4">
                             <div class="d-flex">
                                 <div class="me-3">
@@ -101,7 +101,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="d-flex justify-content-between">
                             <a href="{{ route('instructor.courses') }}" class="btn btn-outline-secondary">Cancel</a>
                             <button type="submit" class="btn btn-primary">
@@ -112,7 +112,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-3">
             <div class="card mb-4">
                 <div class="card-header bg-light">
@@ -148,7 +148,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="card mb-4">
                 <div class="card-header bg-light">
                     <h5 class="mb-0">Course Stats</h5>
@@ -174,17 +174,17 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="card">
                 <div class="card-header bg-light">
                     <h5 class="mb-0">Quick Links</h5>
                 </div>
                 <div class="card-body p-0">
                     <div class="list-group list-group-flush">
-                        <a href="{{ route('instructor.courses.manage', $course->id) }}" class="list-group-item list-group-item-action d-flex align-items-center">
+                        <a href="{{ route('instructor.courses.manage', $course->course_id) }}" class="list-group-item list-group-item-action d-flex align-items-center">
                             <i class="fas fa-video me-3 text-primary"></i> Manage Course Content
                         </a>
-                        <a href="{{ route('course.detail', $course->id) }}" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center">
+                        <a href="{{ route('course.detail', $course->course_id) }}" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center">
                             <i class="fas fa-eye me-3 text-primary"></i> Preview Course
                         </a>
                         <a href="#" class="list-group-item list-group-item-action d-flex align-items-center">
@@ -196,4 +196,4 @@
         </div>
     </div>
 </div>
-@endsection 
+@endsection

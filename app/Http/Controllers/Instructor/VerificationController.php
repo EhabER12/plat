@@ -41,6 +41,11 @@ class VerificationController extends Controller
             'cv_file' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
             'linkedin_profile' => 'nullable|url|max:255',
             'additional_info' => 'nullable|string',
+            'payment_email' => 'required|email|max:255',
+            'payment_phone' => 'required|string|max:20',
+            'payment_bank_name' => 'nullable|string|max:255',
+            'payment_account_number' => 'nullable|string|max:255',
+            'payment_terms' => 'required|accepted',
         ]);
 
         // Process verification data
@@ -54,6 +59,23 @@ class VerificationController extends Controller
             'status' => 'pending',
             'submitted_at' => now(),
         ];
+
+        // Process payment account data
+        $paymentDetails = [
+            'email' => $request->payment_email,
+            'phone' => $request->payment_phone,
+        ];
+
+        // Add optional payment fields if provided
+        if ($request->filled('payment_bank_name')) {
+            $paymentDetails['bank_name'] = $request->payment_bank_name;
+        }
+
+        if ($request->filled('payment_account_number')) {
+            $paymentDetails['account_number'] = $request->payment_account_number;
+        }
+
+        $verificationData['payment_details'] = $paymentDetails;
 
         // Handle certificate file upload
         if ($request->hasFile('certificate_file')) {

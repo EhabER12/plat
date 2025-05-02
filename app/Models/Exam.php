@@ -30,6 +30,7 @@ class Exam extends Model
         'duration_minutes',
         'passing_percentage',
         'is_active',
+        'is_published',
         'created_by',
         'start_date',
         'end_date',
@@ -46,6 +47,7 @@ class Exam extends Model
         'duration_minutes' => 'integer',
         'passing_percentage' => 'float',
         'is_active' => 'boolean',
+        'is_published' => 'boolean',
         'start_date' => 'datetime',
         'end_date' => 'datetime',
         'questions_data' => 'array',
@@ -85,6 +87,7 @@ class Exam extends Model
     {
         $now = now();
         return $this->is_active &&
+            $this->is_published &&
             ($this->start_date === null || $now->gte($this->start_date)) &&
             ($this->end_date === null || $now->lte($this->end_date));
     }

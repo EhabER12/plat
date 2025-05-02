@@ -18,6 +18,8 @@ class Kernel extends ConsoleKernel
         Commands\CreateMissingTables::class,
         Commands\ImportSqlFile::class,
         Commands\ResetDatabase::class,
+        Commands\ProcessInstructorEarnings::class,
+        \App\Console\Commands\CleanVideoStorage::class,
     ];
 
     /**
@@ -29,6 +31,9 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // $schedule->command('inspire')->hourly();
+
+        // Process instructor earnings daily at midnight
+        $schedule->command('earnings:process')->dailyAt('00:00');
     }
 
     /**
@@ -41,4 +46,4 @@ class Kernel extends ConsoleKernel
         $this->load(__DIR__.'/Commands');
         require base_path('routes/console.php');
     }
-} 
+}
