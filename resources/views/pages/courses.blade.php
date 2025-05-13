@@ -57,29 +57,181 @@
         margin-bottom: 30px;
     }
 
-    .filter-card {
+    /* Filter Sidebar Styles */
+    .filter-sidebar {
         border-radius: 15px;
         border: none;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-        margin-top: -25px;
-        position: relative;
-        z-index: 10;
         background-color: white;
+        position: sticky;
+        top: 100px;
     }
 
-    .filter-card .card-body {
-        padding: 25px;
+    .filter-sidebar .card-header {
+        background: #f8f9fa;
+        border-radius: 15px 15px 0 0;
+        padding: 15px 20px;
+        border-bottom: 1px solid #eee;
     }
 
-    .form-label {
+    .filter-sidebar .card-body {
+        padding: 20px;
+    }
+
+    .filter-heading {
         font-weight: 600;
-        color: #444;
-        font-size: 0.9rem;
+        color: #333;
+        margin-bottom: 12px;
+        font-size: 1rem;
+        position: relative;
+        padding-bottom: 8px;
     }
 
+    .filter-heading:after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 40px;
+        height: 3px;
+        background: #4361ee;
+        border-radius: 2px;
+    }
+
+    .filter-group {
+        margin-bottom: 25px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .filter-group:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .filter-options {
+        max-height: 200px;
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+
+    .filter-options::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .filter-options::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    .filter-options::-webkit-scrollbar-thumb {
+        background: #ddd;
+        border-radius: 10px;
+    }
+
+    .filter-options::-webkit-scrollbar-thumb:hover {
+        background: #ccc;
+    }
+
+    .form-check {
+        margin-bottom: 10px;
+        padding-left: 30px;
+    }
+
+    .form-check-input {
+        width: 18px;
+        height: 18px;
+        margin-top: 0.2rem;
+        cursor: pointer;
+        border-color: #ccc;
+    }
+
+    .form-check-input:checked {
+        background-color: #4361ee;
+        border-color: #4361ee;
+    }
+
+    .form-check-label {
+        font-size: 0.95rem;
+        cursor: pointer;
+        color: #555;
+        transition: all 0.2s;
+    }
+
+    .form-check-input:checked + .form-check-label {
+        color: #222;
+        font-weight: 500;
+    }
+
+    .apply-filters-btn {
+        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .apply-filters-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+    }
+
+    .apply-filters-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    /* Active Filter Pills */
+    .active-filters {
+        margin: 0 0 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .filter-pill {
+        background: #e7eaf4;
+        color: #4361ee;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.2s;
+    }
+
+    .filter-pill .remove-filter {
+        cursor: pointer;
+        color: #4361ee;
+        font-weight: bold;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: rgba(67, 97, 238, 0.1);
+        margin-left: 5px;
+    }
+
+    .filter-pill:hover {
+        background: #d1d7f0;
+        transform: translateY(-2px);
+    }
+
+    .filter-pill .remove-filter:hover {
+        background: rgba(67, 97, 238, 0.2);
+    }
+
+    /* Form Controls */
     .form-control, .form-select {
         border-radius: 10px;
-        padding: 12px 15px;
+        padding: 10px 15px;
         border-color: #e0e0e0;
         font-size: 0.95rem;
         box-shadow: none;
@@ -91,20 +243,7 @@
         box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.15);
     }
 
-    .filter-btn {
-        border-radius: 10px;
-        padding: 12px 20px;
-        font-weight: 600;
-        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
-        border: none;
-        transition: all 0.3s ease;
-    }
-
-    .filter-btn:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
-    }
-
+    /* Course Cards */
     .course-card {
         border-radius: 15px;
         border: none;
@@ -251,31 +390,61 @@
         box-shadow: 0 5px 15px rgba(67, 97, 238, 0.2);
     }
 
+    /* Pagination */
     .pagination {
         margin-top: 50px;
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .page-item:first-child .page-link,
+    .page-item:last-child .page-link {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .page-link {
-        border-radius: 10px;
-        margin: 0 5px;
+        min-width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         color: #4361ee;
         border-color: #e0e0e0;
-        padding: 10px 15px;
         font-weight: 600;
-        transition: all 0.3s ease;
+        border-radius: 8px !important;
+        margin: 0;
+        padding: 0.5rem 0.75rem;
+        transition: all 0.2s ease;
     }
 
     .page-link:hover {
         background-color: #4361ee;
         color: white;
         border-color: #4361ee;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(67, 97, 238, 0.2);
     }
 
     .page-item.active .page-link {
         background-color: #4361ee;
         border-color: #4361ee;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(67, 97, 238, 0.2);
     }
 
+    .page-item.disabled .page-link {
+        color: #aaa;
+        background-color: #f8f9fa;
+        border-color: #e0e0e0;
+        pointer-events: none;
+    }
+
+    /* No Courses */
     .no-courses {
         text-align: center;
         padding: 50px 0;
@@ -298,16 +467,58 @@
         max-width: 500px;
         margin: 0 auto 20px;
     }
+
+    /* Loading Spinner */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid #4361ee;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 991.98px) {
+        .filter-sidebar {
+            position: relative;
+            top: 0;
+            margin-bottom: 20px;
+        }
+    }
 </style>
 @endsection
 
 @section('content')
+    <!-- Loading Overlay -->
+    <div class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
     <!-- Courses Header -->
     <div class="courses-header">
         <div class="container">
-            <div class="courses-header-content text-center">
-                <h1 class="courses-title">{{ app()->getLocale() == 'ar' ? 'استكشف دوراتنا التعليمية' : 'Explore Our Courses' }}</h1>
-                <p class="courses-subtitle mx-auto">{{ app()->getLocale() == 'ar' ? 'اكتشف مجموعة واسعة من الدورات عالية الجودة التي تقدمها نخبة من المدربين المتميزين في مختلف المجالات' : 'Discover a wide range of high-quality courses offered by our expert instructors across various fields' }}</p>
+            <div class="courses-header-content">
+                <h1 class="courses-title">{{ __('Explore Courses') }}</h1>
+                <p class="courses-subtitle">{{ __('Discover a wide range of courses taught by expert instructors') }}</p>
             </div>
         </div>
     </div>
@@ -321,170 +532,192 @@
 
     <!-- Filters Section -->
     <div class="container">
-        <div class="card filter-card mb-5">
-            <div class="card-body">
-                <form action="{{ url('/courses') }}" method="GET" class="row g-3">
-                    <div class="col-lg-3 col-md-6">
-                        <label for="category" class="form-label">{{ app()->getLocale() == 'ar' ? 'الفئة' : 'Category' }}</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-transparent border-end-0"><i class="fas fa-folder text-muted"></i></span>
-                            <select class="form-select border-start-0" id="category" name="category">
-                                <option value="">{{ app()->getLocale() == 'ar' ? 'جميع الفئات' : 'All Categories' }}</option>
-                                @foreach($categories as $category)
-                                    <option value="{{ $category->id ?? $category->category_id ?? '' }}" {{ isset($currentCategory) && $currentCategory == ($category->id ?? $category->category_id ?? '') ? 'selected' : '' }}>
-                                        {{ $category->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="filter-sidebar card">
+                    <div class="card-header">
+                        <h5 class="mb-0">{{ __('Filter Courses') }}</h5>
                     </div>
-
-                    <div class="col-lg-4 col-md-6">
-                        <label for="search" class="form-label">{{ app()->getLocale() == 'ar' ? 'البحث' : 'Search' }}</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-transparent border-end-0"><i class="fas fa-search text-muted"></i></span>
-                            <input type="text" class="form-control border-start-0" id="search" name="search" value="{{ $currentSearch ?? '' }}" placeholder="{{ app()->getLocale() == 'ar' ? 'ابحث عن الدورات...' : 'Search courses...' }}">
-                        </div>
-                    </div>
-
-                    <div class="col-lg-3 col-md-6">
-                        <label for="sort" class="form-label">{{ app()->getLocale() == 'ar' ? 'ترتيب حسب' : 'Sort By' }}</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-transparent border-end-0"><i class="fas fa-sort text-muted"></i></span>
-                            <select class="form-select border-start-0" id="sort" name="sort">
-                                <option value="newest" {{ isset($currentSort) && $currentSort == 'newest' ? 'selected' : '' }}>{{ app()->getLocale() == 'ar' ? 'الأحدث' : 'Newest' }}</option>
-                                <option value="oldest" {{ isset($currentSort) && $currentSort == 'oldest' ? 'selected' : '' }}>{{ app()->getLocale() == 'ar' ? 'الأقدم' : 'Oldest' }}</option>
-                                <option value="price-low" {{ isset($currentSort) && $currentSort == 'price-low' ? 'selected' : '' }}>{{ app()->getLocale() == 'ar' ? 'السعر (من الأقل إلى الأعلى)' : 'Price (Low to High)' }}</option>
-                                <option value="price-high" {{ isset($currentSort) && $currentSort == 'price-high' ? 'selected' : '' }}>{{ app()->getLocale() == 'ar' ? 'السعر (من الأعلى إلى الأقل)' : 'Price (High to Low)' }}</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="col-lg-2 col-md-6 d-flex align-items-end">
-                        <button type="submit" class="btn filter-btn w-100">
-                            <i class="fas fa-filter me-2"></i> {{ app()->getLocale() == 'ar' ? 'تصفية' : 'Filter' }}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Courses Grid -->
-    <div class="container">
-        @if(isset($error))
-            <div class="alert alert-warning">
-                {{ $error }}
-            </div>
-        @elseif(count($courses) > 0)
-            <div class="row g-4">
-                @foreach($courses as $course)
-                    <div class="col-lg-4 col-md-6">
-                        <div class="course-card">
-                            <div class="course-image">
-                                @if(isset($course->thumbnail) && !empty($course->thumbnail))
-                                    <img src="{{ asset($course->thumbnail) }}" alt="{{ $course->title }}">
-                                @else
-                                    <img src="https://img.freepik.com/free-photo/students-using-laptop-together_23-2149038413.jpg" alt="{{ $course->title }}">
-                                @endif
-                                <div class="course-category">{{ $course->category_name ?? 'Uncategorized' }}</div>
-                                <div class="course-price">${{ $course->price }}</div>
-                            </div>
-                            <div class="course-content">
-                                <h3 class="course-title">{{ $course->title }}</h3>
-                                <p class="course-instructor">
-                                    <i class="fas fa-user-tie"></i> {{ $course->instructor_name ?? 'Unknown' }}
-                                </p>
-                                <div class="course-stats">
-                                    <div class="course-stat">
-                                        <i class="fas fa-users"></i>
-                                        <span>
-                                            {{ $course->students_count ?? $course->enrollments_count ?? '0' }}
-                                            {{ app()->getLocale() == 'ar' ? 'طالب' : 'students' }}
-                                        </span>
+                    <div class="card-body">
+                        <!-- Use standard form submission as a fallback -->
+                        <form id="filterForm" action="{{ route('courses.index') }}" method="GET">
+                            <!-- Category Filter -->
+                            <div class="filter-group mb-4">
+                                <h6 class="filter-heading">{{ __('Categories') }}</h6>
+                                <div class="filter-options">
+                                    @foreach($categories as $category)
+                                    <div class="form-check">
+                                        <input class="form-check-input filter-checkbox" type="checkbox" name="categories[]" 
+                                            id="category_{{ $category->id }}" value="{{ $category->id }}"
+                                            {{ (is_array(request()->get('categories')) && in_array($category->id, request()->get('categories'))) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="category_{{ $category->id }}">
+                                            {{ $category->name }}
+                                        </label>
                                     </div>
-                                    <div class="course-stat">
-                                        <i class="fas fa-clock"></i>
-                                        <span>
-                                            @php
-                                                $duration = $course->duration ?? 0;
-                                                if (!$duration && isset($course->videos) && $course->videos->count() > 0) {
-                                                    $duration = ceil($course->videos->sum('duration') / 60);
-                                                }
-                                            @endphp
-                                            {{ $duration }}
-                                            {{ app()->getLocale() == 'ar' ? 'ساعة' : 'hours' }}
-                                        </span>
-                                    </div>
-                                    <div class="course-stat">
-                                        <i class="fas fa-signal"></i>
-                                        <span>
-                                            @if(isset($course->level))
-                                                @if($course->level == 'beginner')
-                                                    {{ app()->getLocale() == 'ar' ? 'مبتدئ' : 'Beginner' }}
-                                                @elseif($course->level == 'intermediate')
-                                                    {{ app()->getLocale() == 'ar' ? 'متوسط' : 'Intermediate' }}
-                                                @elseif($course->level == 'advanced')
-                                                    {{ app()->getLocale() == 'ar' ? 'متقدم' : 'Advanced' }}
-                                                @else
-                                                    {{ $course->level }}
-                                                @endif
-                                            @else
-                                                {{ app()->getLocale() == 'ar' ? 'جميع المستويات' : 'All Levels' }}
-                                            @endif
-                                        </span>
-                                    </div>
+                                    @endforeach
                                 </div>
-                                <p class="course-description">{{ \Illuminate\Support\Str::limit($course->description, 150) }}</p>
-
-                                @if(isset($course->ratings) || isset($course->reviews))
-                                    @php
-                                        $ratings = $course->ratings ?? $course->reviews ?? collect([]);
-                                        $avgRating = $ratings->avg('rating') ?? $ratings->avg('rating_value') ?? 0;
-                                        $avgRating = number_format($avgRating, 1);
-                                    @endphp
-                                    <div class="course-rating mt-2">
-                                        @for($i = 1; $i <= 5; $i++)
-                                            @if($i <= floor($avgRating))
-                                                <i class="fas fa-star"></i>
-                                            @elseif($i - 0.5 <= $avgRating)
-                                                <i class="fas fa-star-half-alt"></i>
-                                            @else
-                                                <i class="far fa-star"></i>
-                                            @endif
-                                        @endfor
-                                        <span class="ms-2">{{ $avgRating }} ({{ $ratings->count() }})</span>
-                                    </div>
-                                @endif
                             </div>
-                            <div class="course-footer">
-                                <span class="text-muted">{{ app()->getLocale() == 'ar' ? 'تم التحديث' : 'Updated' }} {{ \Carbon\Carbon::parse($course->updated_at ?? now())->diffForHumans() }}</span>
-                                <a href="{{ url('/courses/' . ($course->course_id ?? $course->id ?? '')) }}" class="btn btn-outline-primary course-btn">
-                                    {{ app()->getLocale() == 'ar' ? 'عرض الدورة' : 'View Course' }} <i class="fas fa-arrow-right ms-1"></i>
+
+                            <!-- Sort Options -->
+                            <div class="filter-group mb-4">
+                                <h6 class="filter-heading">{{ __('Sort By') }}</h6>
+                                <div class="form-group">
+                                    <select name="sort" class="form-select" id="sortFilter">
+                                        <option value="newest" {{ request('sort') == 'newest' ? 'selected' : '' }}>{{ __('Newest') }}</option>
+                                        <option value="popular" {{ request('sort') == 'popular' ? 'selected' : '' }}>{{ __('Most Popular') }}</option>
+                                        <option value="rating" {{ request('sort') == 'rating' ? 'selected' : '' }}>{{ __('Highest Rated') }}</option>
+                                        <option value="price_low" {{ request('sort') == 'price_low' ? 'selected' : '' }}>{{ __('Price: Low to High') }}</option>
+                                        <option value="price_high" {{ request('sort') == 'price_high' ? 'selected' : '' }}>{{ __('Price: High to Low') }}</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Submit Buttons - Using standard form submission -->
+                            <div class="d-grid mb-2">
+                                <button type="submit" class="btn btn-primary apply-filters-btn" id="applyFilters">
+                                    <i class="fas fa-filter me-2"></i>{{ __('Apply Filters') }}
+                                </button>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <a href="{{ route('courses.index') }}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-sync-alt me-2"></i>{{ __('Reset') }}
                                 </a>
                             </div>
-                        </div>
+                        </form>
                     </div>
-                @endforeach
+                </div>
             </div>
-        @else
-            <div class="no-courses">
-                <i class="fas fa-search"></i>
-                <h3>{{ app()->getLocale() == 'ar' ? 'لم يتم العثور على دورات' : 'No Courses Found' }}</h3>
-                <p>{{ app()->getLocale() == 'ar' ? 'لا توجد دورات تطابق معايير البحث الخاصة بك. حاول تعديل عوامل التصفية الخاصة بك.' : 'No courses match your criteria. Try adjusting your filters.' }}</p>
-                <a href="{{ url('/courses') }}" class="btn btn-primary">
-                    <i class="fas fa-sync-alt me-2"></i> {{ app()->getLocale() == 'ar' ? 'إعادة ضبط المرشحات' : 'Reset Filters' }}
-                </a>
-            </div>
-        @endif
-    </div>
+            
+            <div class="col-md-9">
+                <!-- Active Filters -->
+                <div class="active-filters mb-4" id="activeFilters">
+                    @if(request()->has('categories') || request()->has('sort'))
+                        @if(request()->has('categories'))
+                            @foreach(request('categories') as $categoryId)
+                                @php
+                                    $category = $categories->firstWhere('id', $categoryId);
+                                @endphp
+                                @if($category)
+                                <div class="filter-pill">
+                                    {{ $category->name }}
+                                    <a href="{{ request()->fullUrlWithQuery(['categories' => array_diff(request('categories'), [$categoryId])]) }}" class="remove-filter">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                </div>
+                                @endif
+                            @endforeach
+                        @endif
+                        
+                        @if(request('sort') && request('sort') != 'newest')
+                            <div class="filter-pill">
+                                @php
+                                    $sortText = [
+                                        'popular' => __('Most Popular'),
+                                        'rating' => __('Highest Rated'),
+                                        'price_low' => __('Price: Low to High'),
+                                        'price_high' => __('Price: High to Low')
+                                    ][request('sort')] ?? request('sort');
+                                @endphp
+                                {{ $sortText }}
+                                <a href="{{ request()->fullUrlWithQuery(['sort' => null]) }}" class="remove-filter">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            </div>
+                        @endif
+                        
+                        <div class="ms-2">
+                            <a href="{{ route('courses.index') }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>{{ __('Clear All') }}
+                            </a>
+                        </div>
+                    @endif
+                </div>
 
-    <!-- Pagination -->
-    @if(isset($courses) && $courses instanceof \Illuminate\Pagination\LengthAwarePaginator)
-        <div class="container">
-            <div class="d-flex justify-content-center pagination">
-                {{ $courses->appends(request()->query())->links() }}
+                <!-- Courses Container -->
+                <div id="coursesContentContainer">
+                    @if(isset($error))
+                        <div class="alert alert-warning">
+                            {{ $error }}
+                        </div>
+                    @elseif(count($courses) > 0)
+                        <div class="row g-4" id="coursesList">
+                            @foreach($courses as $course)
+                                <div class="col-lg-6 col-md-12">
+                                    <div class="course-card">
+                                        <div class="course-image">
+                                            @if(isset($course->thumbnail) && !empty($course->thumbnail))
+                                                <img src="{{ $course->thumbnail }}" alt="{{ $course->title }}">
+                                            @else
+                                                <img src="https://img.freepik.com/free-photo/students-using-laptop-together_23-2149038413.jpg" alt="{{ $course->title }}">
+                                            @endif
+                                            <div class="course-category">{{ $course->category->name ?? 'Uncategorized' }}</div>
+                                            <div class="course-price">${{ $course->price }}</div>
+                                        </div>
+                                        <div class="course-content">
+                                            <h3 class="course-title">{{ $course->title }}</h3>
+                                            <p class="course-instructor">
+                                                <i class="fas fa-user-tie"></i> {{ $course->instructor->name ?? 'Unknown' }}
+                                            </p>
+                                            <div class="course-stats">
+                                                <div class="course-stat">
+                                                    <i class="fas fa-users"></i>
+                                                    <span>
+                                                        {{ $course->students_count ?? $course->enrollments_count ?? '0' }}
+                                                        {{ app()->getLocale() == 'ar' ? 'طالب' : 'students' }}
+                                                    </span>
+                                                </div>
+                                                <div class="course-stat">
+                                                    <i class="fas fa-clock"></i>
+                                                    <span>
+                                                        @php
+                                                            $duration = $course->duration ?? 0;
+                                                            if (!$duration && isset($course->videos) && $course->videos->count() > 0) {
+                                                                $duration = ceil($course->videos->sum('duration') / 60);
+                                                            }
+                                                        @endphp
+                                                        {{ $duration }}
+                                                        {{ app()->getLocale() == 'ar' ? 'ساعة' : 'hours' }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <p class="course-description">{{ \Illuminate\Support\Str::limit($course->description, 150) }}</p>
+                                        </div>
+                                        <div class="course-footer">
+                                            <span class="text-muted">{{ app()->getLocale() == 'ar' ? 'تم التحديث' : 'Updated' }} {{ \Carbon\Carbon::parse($course->updated_at ?? now())->diffForHumans() }}</span>
+                                            <a href="{{ url('/courses/' . ($course->course_id ?? $course->id ?? '')) }}" class="btn btn-outline-primary course-btn">
+                                                {{ app()->getLocale() == 'ar' ? 'عرض الدورة' : 'View Course' }} <i class="fas fa-arrow-right ms-1"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <!-- Pagination -->
+                        @if($courses instanceof \Illuminate\Pagination\LengthAwarePaginator)
+                            <div class="d-flex justify-content-center pagination" id="pagination">
+                                {{ $courses->appends(request()->except('page'))->links() }}
+                            </div>
+                        @endif
+                    @else
+                        <div class="no-courses">
+                            <i class="fas fa-search"></i>
+                            <h3>{{ app()->getLocale() == 'ar' ? 'لم يتم العثور على دورات' : 'No Courses Found' }}</h3>
+                            <p>{{ app()->getLocale() == 'ar' ? 'لا توجد دورات تطابق معايير البحث الخاصة بك. حاول تعديل عوامل التصفية الخاصة بك.' : 'No courses match your criteria. Try adjusting your filters.' }}</p>
+                            <button type="button" class="btn btn-primary" id="resetAllFilters">
+                                <i class="fas fa-sync-alt me-2"></i>{{ app()->getLocale() == 'ar' ? 'إعادة ضبط المرشحات' : 'Reset Filters' }}
+                            </button>
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
-    @endif
+    </div>
+
+    @push('scripts')
+    <script>
+        // Any custom scripts can go here if needed in the future
+    </script>
+    @endpush
 @endsection
