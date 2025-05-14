@@ -205,7 +205,7 @@
             <div class="alert alert-info">
                 لم يبدأ هذا الامتحان بعد. يرجى العودة في {{ $quiz->start_date->format('Y-m-d H:i') }}.
             </div>
-        @elseif($attemptsLeft === 0)
+        @elseif($attemptsLeft !== null && $attemptsLeft === 0)
             <div class="alert alert-warning">
                 لقد وصلت إلى الحد الأقصى من المحاولات المسموحة لهذا الامتحان.
             </div>

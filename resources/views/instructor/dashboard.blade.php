@@ -172,6 +172,76 @@
             height: 280px;
         }
     }
+
+    /* تحسينات تحليل أداء الطلاب */
+    .student-analytics-item {
+        transition: all 0.3s ease;
+        border-radius: 8px;
+        border: 1px solid #f0f0f0;
+        margin-bottom: 4px;
+    }
+    
+    .student-analytics-item:hover {
+        background-color: #f8f9fa;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    
+    .circular-chart {
+        width: 100%;
+        height: 100%;
+    }
+    
+    .percentage {
+        fill: #555;
+        font-family: sans-serif;
+        font-size: 5px;
+        text-anchor: middle;
+        font-weight: bold;
+    }
+    
+    .circle-bg {
+        fill: none;
+        stroke-width: 2.8;
+    }
+    
+    .circle {
+        fill: none;
+        stroke-width: 2.8;
+        stroke-linecap: round;
+    }
+    
+    .performance-label {
+        color: #6c757d;
+    }
+    
+    .border-success {
+        border-color: rgba(40, 167, 69, 0.3) !important;
+    }
+    
+    .border-info {
+        border-color: rgba(23, 162, 184, 0.3) !important;
+    }
+    
+    .bg-success-subtle {
+        background-color: rgba(40, 167, 69, 0.1);
+    }
+    
+    .bg-info-subtle {
+        background-color: rgba(23, 162, 184, 0.1);
+    }
+    
+    .bg-warning-subtle {
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+    
+    .bg-danger-subtle {
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+    
+    .bg-primary-subtle {
+        background-color: rgba(13, 110, 253, 0.1);
+    }
 </style>
 @endsection
 
@@ -367,6 +437,277 @@
                                 <i class="fas fa-user-graduate fa-3x text-muted"></i>
                             </div>
                             <p class="mb-0">لا يوجد تسجيلات حتى الآن.</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Top Performing Students -->
+            <div class="card mb-4 fade-in" style="animation-delay: 0.75s">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-trophy me-2"></i> الطلاب المتميزون</h5>
+                    <a href="{{ route('instructor.top-students') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-chart-line me-1"></i> تحليل تفصيلي
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    @if(isset($topPerformingStudents) && count($topPerformingStudents) > 0)
+                        <div class="list-group list-group-flush">
+                            @foreach($topPerformingStudents as $student)
+                                <div class="list-group-item py-3 student-analytics-item">
+                                    <!-- Student Overview Header -->
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div class="d-flex align-items-center">
+                                            @if($student->profile_image)
+                                                <img src="{{ $student->profile_image }}" alt="{{ $student->name }}" class="rounded-circle me-3" style="width: 48px; height: 48px; object-fit: cover;">
+                                            @else
+                                                <div class="rounded-circle bg-primary bg-gradient text-white d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                                                    {{ strtoupper(substr($student->name, 0, 1)) }}
+                                                </div>
+                                            @endif
+                                            <div>
+                                                <h6 class="mb-0 fw-bold">{{ $student->name }}</h6>
+                                                <div class="text-muted small">
+                                                    <i class="fas fa-book me-1" title="دورات مسجلة"></i> {{ $student->courses_enrolled }}
+                                                    <span class="mx-1">•</span>
+                                                    <i class="fas fa-clipboard-check me-1" title="امتحانات تم أخذها"></i> {{ $student->exams_taken }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="performance-score">
+                                                <div class="performance-label small mb-1">مستوى الأداء</div>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="progress me-2" style="width: 80px; height: 8px; background-color: rgba(0,0,0,0.05);">
+                                                        <div class="progress-bar {{ $student->performance_score >= 80 ? 'bg-success' : ($student->performance_score >= 65 ? 'bg-info' : ($student->performance_score >= 50 ? 'bg-warning' : 'bg-danger')) }}" 
+                                                             role="progressbar" style="width: {{ $student->performance_score }}%"></div>
+                                                    </div>
+                                                    <div class="fw-bold {{ $student->performance_score >= 80 ? 'text-success' : ($student->performance_score >= 65 ? 'text-info' : ($student->performance_score >= 50 ? 'text-warning' : 'text-danger')) }}">
+                                                        {{ number_format($student->performance_score, 0) }}%
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Performance Metrics -->
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-4">
+                                            <div class="card border-0 bg-light h-100">
+                                                <div class="card-body p-2 text-center">
+                                                    <div class="small text-muted mb-1">النجاح في الامتحانات</div>
+                                                    <div class="d-flex align-items-center justify-content-center">
+                                                        <div class="circular-progress me-2" style="position: relative; width: 50px; height: 50px;">
+                                                            <svg viewBox="0 0 36 36" class="circular-chart">
+                                                                <path class="circle-bg" d="M18 2.0845
+                                                                    a 15.9155 15.9155 0 0 1 0 31.831
+                                                                    a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#eee" stroke-width="3" />
+                                                                <path class="circle" d="M18 2.0845
+                                                                    a 15.9155 15.9155 0 0 1 0 31.831
+                                                                    a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" 
+                                                                    stroke="{{ $student->exams_taken > 0 ? ($student->exams_passed / $student->exams_taken >= 0.7 ? '#28a745' : ($student->exams_passed / $student->exams_taken >= 0.5 ? '#17a2b8' : '#ffc107')) : '#6c757d' }}" 
+                                                                    stroke-width="3" 
+                                                                    stroke-dasharray="{{ $student->exams_taken > 0 ? ($student->exams_passed / $student->exams_taken) * 100 : 0 }}, 100" />
+                                                                <text x="18" y="20.5" class="percentage">{{ $student->exams_taken > 0 ? number_format(($student->exams_passed / $student->exams_taken) * 100, 0) : 0 }}%</text>
+                                                            </svg>
+                                                        </div>
+                                                        <div class="stats-text text-start">
+                                                            <div class="h5 mb-0">{{ $student->exams_passed }}/{{ $student->exams_taken }}</div>
+                                                            <span class="small">{{ $student->exams_taken > 0 ? 'تم اجتيازها' : 'لا امتحانات' }}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="card border-0 bg-light h-100">
+                                                <div class="card-body p-2 text-center">
+                                                    <div class="small text-muted mb-1">متوسط الدرجات</div>
+                                                    <div class="d-flex align-items-center justify-content-center">
+                                                        <div class="score-badge me-2 rounded-circle d-flex align-items-center justify-content-center" 
+                                                             style="width: 50px; height: 50px; background-color: {{ $student->avg_score >= 80 ? '#28a745' : ($student->avg_score >= 70 ? '#17a2b8' : ($student->avg_score >= 60 ? '#ffc107' : '#dc3545')) }}; color: white; font-weight: bold;">
+                                                            {{ number_format($student->avg_score, 0) }}
+                                                        </div>
+                                                        <div class="stats-text text-start">
+                                                            <div class="small">تقدير</div>
+                                                            <div class="fw-bold">
+                                                                @if($student->avg_score >= 90)
+                                                                    ممتاز
+                                                                @elseif($student->avg_score >= 80)
+                                                                    جيد جداً
+                                                                @elseif($student->avg_score >= 70)
+                                                                    جيد
+                                                                @elseif($student->avg_score >= 60)
+                                                                    مقبول
+                                                                @else
+                                                                    ضعيف
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="card border-0 bg-light h-100">
+                                                <div class="card-body p-2 text-center">
+                                                    <div class="small text-muted mb-1">النشاط الأخير</div>
+                                                    <div class="d-flex align-items-center justify-content-center">
+                                                        <i class="fas {{ $student->courses_enrolled > 0 && isset($student->course_performance) && $student->course_performance->where('progress', '>', 10)->count() > 0 ? 'fa-user-check text-success' : 'fa-user-clock text-warning' }} me-2" style="font-size: 1.5rem;"></i>
+                                                        <div class="stats-text text-start">
+                                                            <div class="small">
+                                                                @if($student->courses_enrolled > 0 && isset($student->course_performance) && $student->course_performance->where('progress', '>', 10)->count() > 0)
+                                                                    نشط
+                                                                @else
+                                                                    غير نشط
+                                                                @endif
+                                                            </div>
+                                                            <div class="fw-bold small">
+                                                                @if($student->courses_enrolled > 0 && isset($student->course_performance) && $student->course_performance->count() > 0)
+                                                                    {{ $student->course_performance->where('progress', '>', 50)->count() }} دورات قيد التقدم
+                                                                @else
+                                                                    لم يبدأ بعد
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Student Detailed View Button -->
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="badge bg-light text-dark border me-1">
+                                                <i class="fas fa-clock me-1"></i>آخر نشاط: {{ isset($student->course_performance) && $student->course_performance->count() > 0 ? '3 أيام' : '-' }}
+                                            </span>
+                                            @if($student->exams_passed > 0)
+                                                <span class="badge bg-success-subtle text-success border-success me-1">
+                                                    <i class="fas fa-check-circle me-1"></i>{{ $student->exams_passed }} اختبار تم اجتيازه
+                                                </span>
+                                            @endif
+                                            @if($student->avg_score > 0)
+                                                <span class="badge bg-info-subtle text-info border-info">
+                                                    <i class="fas fa-star me-1"></i>متوسط {{ number_format($student->avg_score, 1) }} 
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#studentDetails{{ $student->user_id }}" aria-expanded="false">
+                                            <i class="fas fa-chart-bar me-1"></i>
+                                            تفاصيل الأداء
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Collapsible Detailed Performance Section -->
+                                    <div class="collapse mt-3" id="studentDetails{{ $student->user_id }}">
+                                        <div class="card card-body shadow-sm border-0">
+                                            <h6 class="fw-bold mb-3 border-bottom pb-2">تحليل أداء الطالب بالتفصيل</h6>
+                                            
+                                            <!-- Course Progress Section -->
+                                            <div class="mb-3">
+                                                <h6 class="fw-bold small text-uppercase text-muted mb-2">
+                                                    <i class="fas fa-book-reader me-1"></i> التقدم في الدورات
+                                                </h6>
+                                                
+                                                @if(isset($student->course_performance) && $student->course_performance->count() > 0)
+                                            <div class="table-responsive">
+                                                        <table class="table table-sm table-hover mb-0 border">
+                                                            <thead class="table-light">
+                                                        <tr>
+                                                                    <th style="width: 40%;">اسم الدورة</th>
+                                                                    <th style="width: 30%;">نسبة التقدم</th>
+                                                                    <th style="width: 15%;">تاريخ التسجيل</th>
+                                                                    <th style="width: 15%;">الحالة</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach($student->course_performance as $course)
+                                                            <tr>
+                                                                        <td>
+                                                                            <div class="d-flex align-items-center">
+                                                                                <div class="course-icon rounded-circle bg-light d-flex align-items-center justify-content-center me-2" style="width: 28px; height: 28px;">
+                                                                                    <i class="fas {{ $course['completed'] ? 'fa-check-circle text-success' : 'fa-play-circle text-primary' }} small"></i>
+                                                                                </div>
+                                                                                <span class="text-truncate" style="max-width: 200px;" title="{{ $course['course_title'] }}">
+                                                                                    {{ $course['course_title'] }}
+                                                                                </span>
+                                                                    </div>
+                                                                </td>
+                                                                        <td>
+                                                                            <div class="d-flex align-items-center">
+                                                                                <div class="progress flex-grow-1 me-2" style="height: 6px;">
+                                                                                    <div class="progress-bar bg-{{ $course['progress'] >= 80 ? 'success' : ($course['progress'] >= 50 ? 'info' : 'warning') }}" 
+                                                                                         role="progressbar" style="width: {{ $course['progress'] }}%"></div>
+                                                                                </div>
+                                                                                <span class="small">{{ $course['progress'] }}%</span>
+                                                                            </div>
+                                                                        </td>
+                                                                        <td class="small">{{ isset($course['enrolled_at']) ? \Carbon\Carbon::parse($course['enrolled_at'])->format('Y/m/d') : '-' }}</td>
+                                                                <td>
+                                                                    @if($course['completed'])
+                                                                        <span class="badge bg-success">مكتمل</span>
+                                                                            @elseif($course['progress'] > 75)
+                                                                                <span class="badge bg-info">متقدم</span>
+                                                                            @elseif($course['progress'] > 25)
+                                                                                <span class="badge bg-primary">قيد التقدم</span>
+                                                                    @else
+                                                                                <span class="badge bg-secondary">بدأ حديثاً</span>
+                                                                    @endif
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                                    </div>
+                                                @else
+                                                    <div class="alert alert-light border text-center py-2">
+                                                        <i class="fas fa-info-circle me-1"></i> لم يبدأ الطالب أي من الدورات بعد
+                                                    </div>
+                                                @endif
+                                            </div>
+                                            
+                                            <!-- Recommendations Section -->
+                                            <div>
+                                                <h6 class="fw-bold small text-uppercase text-muted mb-2">
+                                                    <i class="fas fa-lightbulb me-1"></i> توصيات لتحسين الأداء
+                                                </h6>
+                                                
+                                                <div class="alert alert-light border py-2">
+                                                    @if($student->performance_score >= 80)
+                                                        <i class="fas fa-check-circle text-success me-1"></i> 
+                                                        أداء الطالب ممتاز، يمكن تشجيعه على مساعدة زملائه والمشاركة في محتوى متقدم.
+                                                    @elseif($student->performance_score >= 60)
+                                                        <i class="fas fa-info-circle text-info me-1"></i> 
+                                                        أداء الطالب جيد، يحتاج إلى المزيد من التدريب على {{ $student->avg_score < 75 ? 'الاختبارات' : 'المشاركة في المزيد من الدورات' }}.
+                                                    @else
+                                                        <i class="fas fa-exclamation-circle text-warning me-1"></i> 
+                                                        يحتاج الطالب إلى اهتمام إضافي ومتابعة دورية. يُوصى بالتواصل المباشر لمعرفة الصعوبات التي يواجهها.
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Action Buttons -->
+                                            <div class="d-flex justify-content-end mt-3">
+                                                <button class="btn btn-sm btn-outline-secondary me-2">
+                                                    <i class="fas fa-envelope me-1"></i> مراسلة
+                                                </button>
+                                                <a href="{{ route('instructor.top-students') }}?student={{ $student->user_id }}" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-chart-line me-1"></i> تقرير مفصل
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-center py-4">
+                            <div class="mb-3">
+                                <i class="fas fa-trophy fa-3x text-muted"></i>
+                            </div>
+                            <p class="mb-0">لا يوجد بيانات أداء للطلاب حتى الآن.</p>
+                            <p class="small text-muted">ستظهر البيانات بعد اجتياز الطلاب للامتحانات.</p>
                         </div>
                     @endif
                 </div>

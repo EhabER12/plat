@@ -111,13 +111,27 @@ class QuizAttempt extends Model
             return true;
         }
         
-        if ($this->isInProgress() && $this->quiz->time_limit_minutes > 0) {
-            $timeLimit = $this->start_time->addMinutes($this->quiz->time_limit_minutes);
+        // Make sure the quiz relationship is loaded
+        if (!$this->relationLoaded('quiz')) {
+            $this->load('quiz');
+        }
+        
+        // Get time limit from the quiz or use a default value if not set
+        $timeLimitMinutes = optional($this->quiz)->duration_minutes ?? 0;
+        
+        if ($this->isInProgress() && $timeLimitMinutes > 0) {
+            $timeLimit = $this->start_time->addMinutes($timeLimitMinutes);
             if (now()->gt($timeLimit)) {
+                // Calculate time spent (ensure it's not negative)
+                $timeSpent = now()->diffInSeconds($this->start_time);
+                if ($timeSpent < 0) {
+                    $timeSpent = 0;
+                }
+                
                 $this->update([
                     'status' => self::STATUS_TIMED_OUT,
                     'end_time' => now(),
-                    'time_spent_seconds' => now()->diffInSeconds($this->start_time)
+                    'time_spent_seconds' => $timeSpent
                 ]);
                 return true;
             }
@@ -156,7 +170,13 @@ class QuizAttempt extends Model
      */
     public function getScorePercentageAttribute()
     {
-        $totalPoints = $this->quiz->questions->sum('points');
+        // Make sure the quiz relationship is loaded
+        if (!$this->relationLoaded('quiz')) {
+            $this->load('quiz');
+        }
+        
+        // Safely access the quiz's total possible score or default to 0 if not available
+        $totalPoints = optional($this->quiz)->total_possible_score ?? 0;
         
         if ($totalPoints === 0) {
             return 0;
@@ -174,13 +194,34 @@ class QuizAttempt extends Model
             return $this;
         }
         
-        $score = $this->calculateScore();
-        $passingScore = $this->quiz->passing_score;
+        // If answers are provided, update them
+        if ($answers !== null) {
+            $this->answers_json = $answers;
+            $this->save();
+        }
         
+        // Calculate the score
+        $score = $this->calculateScore();
+        
+        // Make sure the quiz relationship is loaded
+        if (!$this->relationLoaded('quiz')) {
+            $this->load('quiz');
+        }
+        
+        // Safely get the passing score
+        $passingScore = optional($this->quiz)->passing_score ?? 0;
+        
+        // Calculate time spent (ensure it's not negative)
+        $timeSpent = now()->diffInSeconds($this->start_time);
+        if ($timeSpent < 0) {
+            $timeSpent = 0;
+        }
+        
+        // Update the attempt
         $this->update([
             'status' => self::STATUS_COMPLETED,
             'end_time' => now(),
-            'time_spent_seconds' => now()->diffInSeconds($this->start_time),
+            'time_spent_seconds' => $timeSpent,
             'score' => $score,
             'is_passed' => $score >= $passingScore
         ]);
@@ -194,15 +235,61 @@ class QuizAttempt extends Model
     public function calculateScore()
     {
         $score = 0;
-        $answers = $this->answers;
+        $correctAnswersCount = 0;
         
-        foreach ($answers as $answer) {
-            $question = $answer->question;
+        // Get the quiz questions
+        $questions = $this->quiz->questions_json ?? [];
+        
+        // Get the answers from this attempt
+        $answers = $this->answers_json ?? [];
+        
+        foreach ($questions as $questionIndex => $question) {
+            $questionId = $question['id'] ?? $questionIndex;
+            $userAnswer = $answers[$questionId] ?? null;
+            $isCorrect = false;
             
-            if ($question && $question->isCorrectAnswer($answer->answer_data)) {
-                $score += $question->points;
+            // Check if answer is correct based on question type
+            if (isset($question['type'])) {
+                switch ($question['type']) {
+                    case 'multiple_choice':
+                        $correctOptions = collect($question['options'] ?? [])
+                            ->where('is_correct', true)
+                            ->pluck('id')
+                            ->toArray();
+            
+                        if (is_array($userAnswer)) {
+                            // Multiple answers selected
+                            $isCorrect = count(array_diff($correctOptions, $userAnswer)) === 0 && 
+                                         count(array_diff($userAnswer, $correctOptions)) === 0;
+                        } else {
+                            // Single answer selected
+                            $isCorrect = in_array($userAnswer, $correctOptions);
+                        }
+                        break;
+                        
+                    case 'true_false':
+                        $isCorrect = !empty($userAnswer) && $userAnswer == ($question['correct_answer'] ?? null);
+                        break;
+                        
+                    case 'short_answer':
+                        $correctAnswer = $question['correct_answer'] ?? '';
+                        $isCorrect = !empty($userAnswer) && 
+                            strtolower(trim($userAnswer)) == strtolower(trim($correctAnswer));
+                        break;
+                }
+            }
+            
+            // Add points if correct
+            if ($isCorrect) {
+                $points = $question['points'] ?? 1;
+                $score += $points;
+                $correctAnswersCount++;
             }
         }
+        
+        // Update the correct answers count
+        $this->correct_answers_count = $correctAnswersCount;
+        $this->save();
         
         return $score;
     }

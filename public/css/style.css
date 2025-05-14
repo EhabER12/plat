@@ -1,3 +1,19 @@
+/* Add or update root variables at the beginning of the file */
+:root {
+    --primary-color: #003366;
+    --secondary-color: #FFD700;
+    --accent-color: #FFD700;
+    --supportive-color: #E6F0FF;
+    --background-color: #FAFAFA;
+    --text-dark: #1F1F1F;
+    --text-light: #666666;
+    --border-color: #003366;
+    --success-color: #2ECC71;
+    --error-color: #E74C3C;
+    --gradient-primary: linear-gradient(135deg, #003366 0%, #004080 100%);
+    --gradient-secondary: linear-gradient(135deg, #FFD700 0%, #FFC000 100%);
+}
+
 /* What is TOTO Section Styles */
 .what-is-toto-section {
     background-color: #ffffff;
@@ -9,12 +25,13 @@
     font-weight: 700;
     margin-bottom: 30px;
     text-align: center;
+    color: var(--primary-color);
 }
 
 .what-is-toto-section .description-text {
     font-size: 18px;
     line-height: 1.8;
-    color: #444;
+    color: var(--text-dark);
     text-align: center;
     max-width: 900px;
     margin: 0 auto 30px;
@@ -29,7 +46,7 @@
     font-size: 28px;
     font-weight: 700;
     margin-bottom: 20px;
-    color: #333;
+    color: var(--primary-color);
 }
 
 .what-is-toto-section .btn {
@@ -39,8 +56,9 @@
 }
 
 .what-is-toto-section .btn-primary {
-    background-color: #4361ee;
-    border-color: #4361ee;
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--secondary-color);
 }
 
 .what-is-toto-section .btn-outline-light {
@@ -50,17 +68,17 @@
 
 .what-is-toto-section .btn-outline-light:hover {
     background-color: #fff;
-    color: #333;
+    color: var(--primary-color);
 }
 
 .what-is-toto-section .btn-outline-primary {
-    border-color: #4361ee;
-    color: #4361ee;
+    border-color: var(--primary-color);
+    color: var(--primary-color);
 }
 
 .what-is-toto-section .btn-outline-primary:hover {
-    background-color: #4361ee;
-    color: #fff;
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
 }
 
 /* RTL Support for Arabic text */
@@ -170,7 +188,7 @@
     font-size: 32px;
     font-weight: 700;
     margin-bottom: 25px;
-    color: #333;
+    color: var(--primary-color);
 }
 
 .card-icon {
@@ -178,13 +196,13 @@
 }
 
 .teacher-icon {
-    background-color: rgba(67, 97, 238, 0.1);
-    color: #4361ee;
+    background-color: rgba(0, 51, 102, 0.1);
+    color: var(--primary-color);
 }
 
 .student-icon {
-    background-color: rgba(0, 195, 201, 0.1);
-    color: #00c3c9;
+    background-color: rgba(255, 215, 0, 0.1);
+    color: var(--secondary-color);
 }
 
 .simple-card {
@@ -560,7 +578,7 @@
 
 /* Courses Categories & Cards - Modern Style */
 .course-categories-container {
-    position: relative;
+    padding: 60px 0;
 }
 
 .course-category-section {
@@ -568,42 +586,43 @@
 }
 
 .category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 25px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
 }
 
 .category-icon {
-    width: 40px;
-    height: 40px;
+    width: 50px;
+    height: 50px;
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #4361ee, #3a0ca3);
-    color: white;
-    font-size: 18px;
-    margin-left: 15px;
+    font-size: 1.5rem;
+    margin-right: 15px;
 }
 
 .category-title {
-    font-size: 22px;
-    font-weight: 600;
-    margin-bottom: 0;
-    color: #333;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0;
 }
 
 .see-all-link {
-    color: #4361ee;
-    font-weight: 500;
-    text-decoration: none;
-    font-size: 16px;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    font-weight: 600;
     transition: all 0.3s ease;
 }
 
 .see-all-link:hover {
-    color: #3a0ca3;
-    transform: translateX(-5px);
+    color: var(--secondary-color);
+    transform: translateX(5px);
 }
 
 .courses-slider {
@@ -612,43 +631,41 @@
 
 /* Modern Course Card */
 .modern-course-card {
-    background-color: white;
-    border-radius: 16px;
+    background: #FFFFFF;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-    transition: all 0.4s ease;
-    margin-bottom: 30px;
+    transition: all 0.3s ease;
     height: 100%;
-    display: flex;
-    flex-direction: column;
+    border: 1px solid var(--border-color);
+    position: relative;
 }
 
 .modern-course-card:hover {
     transform: translateY(-10px);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
 }
 
 .modern-course-card .course-image {
+    height: 180px;
     position: relative;
-    height: 200px;
     overflow: hidden;
 }
 
 .modern-course-card .course-overlay {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.6));
+    inset: 0;
+    background: linear-gradient(to top, rgba(0, 51, 102, 0.8), transparent);
     z-index: 1;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
 }
 
 .modern-course-card .course-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.6s ease;
+    transition: transform 0.5s ease;
 }
 
 .modern-course-card:hover .course-image img {
@@ -659,111 +676,116 @@
     position: absolute;
     top: 15px;
     left: 15px;
-    background-color: #4361ee;
-    color: white;
+    background-color: var(--secondary-color);
+    color: var(--primary-color);
     padding: 5px 12px;
-    border-radius: 50px;
-    font-size: 12px;
-    font-weight: 500;
+    border-radius: 30px;
+    font-size: 0.8rem;
+    font-weight: 600;
     z-index: 2;
 }
 
 .modern-course-card .course-rating {
     position: absolute;
-    top: 15px;
-    right: 15px;
-    background-color: rgba(255, 193, 7, 0.9);
-    color: #333;
-    padding: 5px 10px;
-    border-radius: 50px;
-    font-size: 12px;
+    bottom: 15px;
+    left: 15px;
+    background-color: rgba(255, 255, 255, 0.85);
+    padding: 5px 12px;
+    border-radius: 30px;
+    font-size: 0.8rem;
     font-weight: 600;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
     z-index: 2;
 }
 
 .modern-course-card .course-rating i {
-    color: #FFD700;
-    margin-right: 3px;
+    color: var(--secondary-color);
+    margin-right: 5px;
 }
 
 .modern-course-card .course-content {
     padding: 20px;
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
+    position: relative;
+    z-index: 3;
 }
 
 .modern-course-card .course-title {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 12px;
+    color: var(--primary-color);
+    font-weight: 700;
+    font-size: 1.2rem;
     line-height: 1.4;
-    color: #333;
+    margin-bottom: 10px;
     min-height: 50px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .modern-course-card .instructor-info {
-    color: #666;
-    font-size: 14px;
-    margin-bottom: 15px;
     display: flex;
     align-items: center;
+    margin-bottom: 15px;
+    color: var(--text-light);
+    font-size: 0.9rem;
 }
 
 .modern-course-card .instructor-info i {
-    margin-left: 8px;
-    color: #4361ee;
+    color: var(--primary-color);
+    margin-right: 5px;
 }
 
 .modern-course-card .course-meta {
     display: flex;
     justify-content: space-between;
-    color: #666;
-    font-size: 14px;
-    margin-bottom: 15px;
-    flex-wrap: wrap;
+    padding: 10px 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    margin-top: 10px;
+    color: var(--text-light);
 }
 
 .modern-course-card .meta-item {
     display: flex;
     align-items: center;
-    margin-bottom: 5px;
+    font-size: 0.85rem;
 }
 
 .modern-course-card .meta-item i {
-    margin-left: 5px;
-    color: #4361ee;
+    margin-right: 5px;
 }
 
 .modern-course-card .course-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: auto;
-    padding-top: 15px;
-    border-top: 1px solid rgba(0,0,0,0.05);
+    padding-top: 10px;
+    margin-top: 10px;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .modern-course-card .course-price {
+    font-size: 1.2rem;
     font-weight: 700;
-    font-size: 18px;
-    color: #4361ee;
+    color: var(--primary-color);
 }
 
 .modern-course-card .course-details-btn {
-    padding: 8px 16px;
-    background-color: #4361ee;
-    color: white;
-    border-radius: 50px;
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 500;
+    background-color: var(--secondary-color);
+    color: var(--primary-color);
+    font-weight: 600;
+    padding: 6px 15px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    border: none;
     transition: all 0.3s ease;
 }
 
 .modern-course-card .course-details-btn:hover {
-    background-color: #3a0ca3;
-    transform: translateY(-3px);
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+    transform: translateY(-2px);
 }
 
 /* Responsive Adjustments */
@@ -1361,10 +1383,25 @@ html[dir="rtl"] .course-card-item.featured::before {
     opacity: 0;
     animation: fadeIn 0.8s ease-in forwards;
     animation-delay: 0.2s;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
 }
 
 /* Add responsive adjustments */
+@media (max-width: 991px) {
+    .courses-container {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+    }
+}
+
 @media (max-width: 767px) {
+    .courses-container {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 15px;
+    }
+    
     .course-card-image {
         height: 160px;
     }

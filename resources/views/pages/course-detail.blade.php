@@ -315,6 +315,11 @@
     <!-- Course Header -->
     <div class="course-header">
         <div class="container">
+            @if($course->approval_status != 'approved')
+            <div class="alert alert-warning mb-4">
+                <strong>ملاحظة:</strong> هذه الدورة في انتظار الموافقة من الإدارة وقد لا تكون متاحة للتسجيل حالياً.
+            </div>
+            @endif
             <div class="row align-items-center">
                 <div class="col-lg-7" style="position: relative; z-index: 2;">
                     <div class="course-category">{{ $course->category->name ?? 'Uncategorized' }}</div>
@@ -410,8 +415,8 @@
                                                         <i class="fas fa-play-circle"></i>
                                                         <span>{{ $video->title }}</span>
                                                         <span class="ms-auto">
-                                                            @if(isset($video->duration))
-                                                                {{ gmdate("i:s", $video->duration) }}
+                                                            @if(isset($video->duration_seconds))
+                                                                {{ gmdate("i:s", $video->duration_seconds) }}
                                                             @endif
                                                         </span>
                                                     </div>
@@ -699,7 +704,7 @@
                                 if(isset($course->duration)) {
                                     $hours = $course->duration;
                                 } elseif(isset($course->videos) && $course->videos->count() > 0) {
-                                    $hours = ceil($course->videos->sum('duration') / 60);
+                                    $hours = ceil($course->videos->sum('duration_seconds') / 3600);
                                 }
                             @endphp
                             <span>{{ $hours }} {{ app()->getLocale() == 'ar' ? 'ساعة من المحتوى' : 'Hours of Content' }}</span>
@@ -764,13 +769,17 @@
                                 <a href="{{ route('student.course-content', $course->course_id) }}" class="btn enroll-btn mb-4">
                                     <i class="fas fa-play-circle me-2"></i> {{ app()->getLocale() == 'ar' ? 'متابعة التعلم' : 'Continue Learning' }}
                                 </a>
-                            @else
+                            @elseif($course->approval_status == 'approved')
                                 <form action="{{ route('student.enroll', $course->course_id) }}" method="POST">
                                     @csrf
                                     <button type="submit" class="btn enroll-btn mb-4">
                                         <i class="fas fa-graduation-cap me-2"></i> {{ app()->getLocale() == 'ar' ? 'التسجيل في هذه الدورة' : 'Enroll in this Course' }}
                                     </button>
                                 </form>
+                            @else
+                                <button type="button" class="btn enroll-btn mb-4" disabled>
+                                    <i class="fas fa-clock me-2"></i> {{ app()->getLocale() == 'ar' ? 'قيد المراجعة' : 'Pending Approval' }}
+                                </button>
                             @endif
                         @elseif(auth()->user()->hasRole('instructor'))
                             <div class="alert alert-info">
@@ -778,9 +787,15 @@
                             </div>
                         @endif
                     @else
+                        @if($course->approval_status == 'approved')
                         <a href="{{ route('login') }}?redirect={{ url()->current() }}" class="btn enroll-btn mb-4">
                             <i class="fas fa-lock me-2"></i> {{ app()->getLocale() == 'ar' ? 'تسجيل الدخول للتسجيل' : 'Login to Enroll' }}
                         </a>
+                        @else
+                            <button type="button" class="btn enroll-btn mb-4" disabled>
+                                <i class="fas fa-clock me-2"></i> {{ app()->getLocale() == 'ar' ? 'قيد المراجعة' : 'Pending Approval' }}
+                            </button>
+                        @endif
                     @endauth
                 </div>
             </div>

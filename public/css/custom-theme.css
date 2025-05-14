@@ -1,0 +1,262 @@
+/**
+ * Custom Theme Colors
+ * Primary: #003366 - For logo, header, dark backgrounds, official elements
+ * Accent: #FFD700 - For main buttons, notifications, special icons, calls to action
+ * Blue Supportive: #E6F0FF - For light backgrounds, content boxes, material cards
+ * Light Background: #FAFAFA - For page backgrounds, especially for reading and video watching comfort
+ */
+
+:root {
+    --primary-color: #003366;
+    --accent-color: #FFD700;
+    --supportive-color: #E6F0FF;
+    --background-color: #FAFAFA;
+    --text-on-primary: #ffffff;
+    --text-on-accent: #003366;
+    --text-dark: #333333;
+    --text-light: #666666;
+    --border-color: #dddddd;
+}
+
+/* Background Colors */
+.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+
+.bg-accent {
+    background-color: var(--accent-color) !important;
+}
+
+.bg-supportive {
+    background-color: var(--supportive-color) !important;
+}
+
+.bg-light {
+    background-color: var(--background-color) !important;
+}
+
+/* Text Colors */
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+.text-accent {
+    color: var(--accent-color) !important;
+}
+
+/* Button Styles */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--text-on-primary);
+}
+
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+    background-color: #002244; /* Darker shade of primary */
+    border-color: #002244;
+}
+
+.btn-accent {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+    color: var(--text-on-accent);
+}
+
+.btn-accent:hover, .btn-accent:focus, .btn-accent:active {
+    background-color: #E6C200; /* Darker shade of accent */
+    border-color: #E6C200;
+}
+
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    color: var(--text-on-primary);
+}
+
+.btn-outline-accent {
+    color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.btn-outline-accent:hover {
+    background-color: var(--accent-color);
+    color: var(--text-on-accent);
+}
+
+/* Card Styles */
+.card {
+    background-color: #ffffff;
+    border-color: var(--border-color);
+}
+
+.card-header {
+    background-color: var(--supportive-color);
+}
+
+/* Navbar Styles */
+.navbar-dark {
+    background-color: var(--primary-color) !important;
+}
+
+.navbar-light {
+    background-color: #ffffff;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Sidebar Styles */
+.sidebar {
+    background-color: var(--primary-color);
+    color: var(--text-on-primary);
+}
+
+.sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+    color: var(--accent-color);
+}
+
+/* Alert Styles */
+.alert-primary {
+    background-color: var(--supportive-color);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.alert-accent {
+    background-color: rgba(255, 215, 0, 0.2);
+    border-color: var(--accent-color);
+    color: #806800;
+}
+
+/* Badge Styles */
+.badge-primary {
+    background-color: var(--primary-color);
+    color: var(--text-on-primary);
+}
+
+.badge-accent {
+    background-color: var(--accent-color);
+    color: var(--text-on-accent);
+}
+
+/* Table Styles */
+.table-header {
+    background-color: var(--primary-color);
+    color: var(--text-on-primary);
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: var(--supportive-color);
+}
+
+/* Form Styles */
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.25);
+}
+
+/* Progress Bar */
+.progress-bar {
+    background-color: var(--primary-color);
+}
+
+/* Accordion */
+.accordion-button:not(.collapsed) {
+    background-color: var(--supportive-color);
+    color: var(--primary-color);
+}
+
+/* Page Background */
+body {
+    background-color: var(--background-color);
+}
+
+/* Modal Styles */
+.modal-header {
+    background-color: var(--primary-color);
+    color: var(--text-on-primary);
+}
+
+/* Pagination */
+.page-item.active .page-link {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.page-link {
+    color: var(--primary-color);
+}
+
+.page-link:hover {
+    color: #002244;
+}
+
+/* Tabs */
+.nav-tabs .nav-link.active {
+    color: var(--primary-color);
+    border-color: var(--border-color) var(--border-color) #fff;
+}
+
+.nav-tabs .nav-link:hover {
+    border-color: var(--supportive-color) var(--supportive-color) var(--border-color);
+}
+
+/* Custom Classes for Content Boxes */
+.content-box {
+    background-color: var(--supportive-color);
+    border-radius: 0.375rem;
+    padding: 1.5rem;
+}
+
+/* Main CTA Button */
+.btn-cta {
+    background-color: var(--accent-color);
+    color: var(--text-on-accent);
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.btn-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    background-color: #E6C200;
+}
+
+/* Dashboard Cards */
+.dashboard-card {
+    border-radius: 0.5rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-card .card-header {
+    background-color: var(--primary-color);
+    color: var(--text-on-primary);
+    border-bottom: none;
+}
+
+/* Override Bootstrap's default focus styles */
+.btn:focus, .btn.focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.25);
+}
+
+.btn-accent:focus, .btn-accent.focus {
+    box-shadow: 0 0 0 0.2rem rgba(255, 215, 0, 0.25);
+} 

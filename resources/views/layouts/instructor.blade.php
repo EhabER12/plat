@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Instructor Dashboard') - E-Learning</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -12,9 +13,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <!-- Instructor Dashboard CSS -->
     <link href="{{ asset('css/instructor.css') }}" rel="stylesheet">
+    <!-- Custom Theme CSS -->
+    <link href="{{ asset('css/custom-theme.css') }}" rel="stylesheet">
     @yield('styles')
 </head>
-<body>
+<body data-user-id="{{ Auth::id() ?? '' }}">
     <div class="container-fluid">
         <div class="row">
             <!-- Sidebar -->
@@ -56,6 +59,16 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a href="{{ route('instructor.coupons.index') }}" class="nav-link {{ request()->routeIs('instructor.coupons*') ? 'active' : '' }}">
+                                <i class="fas fa-tags"></i> Coupons
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('instructor.discounts.index') }}" class="nav-link {{ request()->routeIs('instructor.discounts*') ? 'active' : '' }}">
+                                <i class="fas fa-percent"></i> Discounts
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a href="{{ route('instructor.reports') }}" class="nav-link {{ request()->routeIs('instructor.reports') ? 'active' : '' }}">
                                 <i class="fas fa-chart-bar"></i> Reports
                             </a>
@@ -63,6 +76,14 @@
                         <li class="nav-item">
                             <a href="{{ route('instructor.messages.index') }}" class="nav-link {{ request()->routeIs('instructor.messages*') ? 'active' : '' }}">
                                 <i class="fas fa-comments"></i> Messages
+                                @php
+                                    $unreadMessages = App\Models\DirectMessage::where('receiver_id', Auth::id())
+                                        ->where('is_read', false)
+                                        ->count();
+                                @endphp
+                                @if($unreadMessages > 0)
+                                    <span class="badge bg-danger rounded-pill ms-1" style="font-size: 0.7rem;">{{ $unreadMessages }}</span>
+                                @endif
                             </a>
                         </li>
                         <li class="nav-item">
@@ -108,7 +129,7 @@
                                 <div class="dropdown">
                                     <a href="#" class="text-white dropdown-toggle text-decoration-none" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
                                         @if(Auth::user()->profile_image)
-                                            <img src="{{ asset(Auth::user()->profile_image) }}" alt="{{ Auth::user()->name }}" class="profile-img">
+                                            <img src="{{ Auth::user()->profile_image }}" alt="{{ Auth::user()->name }}" class="profile-img">
                                         @else
                                             <div class="default-profile-icon">
                                                 <i class="fas fa-user"></i>
@@ -158,6 +179,32 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Set up CSRF protection for fetch API
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        // Configure fetch defaults for all requests
+        const originalFetch = window.fetch;
+        window.fetch = function(url, options = {}) {
+            // If it's a POST/PUT/DELETE request and no headers were defined for CSRF, add them
+            if (options.method && ['POST', 'PUT', 'DELETE'].includes(options.method.toUpperCase())) {
+                if (!options.headers) {
+                    options.headers = {};
+                }
+                
+                // Ensure object not Headers instance
+                if (!(options.headers instanceof Headers)) {
+                    if (!options.headers['X-CSRF-TOKEN'] && !options.headers['x-csrf-token']) {
+                        options.headers['X-CSRF-TOKEN'] = csrfToken;
+                    }
+                    if (!options.headers['X-Requested-With'] && !options.headers['x-requested-with']) {
+                        options.headers['X-Requested-With'] = 'XMLHttpRequest';
+                    }
+                }
+            }
+            
+            return originalFetch(url, options);
+        };
+        
         document.addEventListener('DOMContentLoaded', function() {
             // Sidebar toggle functionality for mobile
             const sidebarToggle = document.getElementById('sidebarToggle');
@@ -180,6 +227,17 @@
             });
         });
     </script>
+    <!-- Bootstrap core JavaScript-->
+    <script src="{{ asset('vendor/jquery/jquery.min.js') }}"></script>
+    <script src="{{ asset('vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+
+    <!-- Core plugin JavaScript-->
+    <script src="{{ asset('vendor/jquery-easing/jquery.easing.min.js') }}"></script>
+
+    <!-- Custom scripts for all pages-->
+    <script src="{{ asset('js/sb-admin-2.min.js') }}"></script>
+    
+    <!-- Page specific scripts -->
     @yield('scripts')
 </body>
 </html>

@@ -73,6 +73,7 @@ class InstructorProfileController extends Controller
                 $q->where('instructor_id', $id);
             });
         }])
+        ->select('user_id', 'name', 'email', 'profile_image', 'banner_image', 'bio', 'detailed_description', 'created_at', 'phone', 'website', 'linkedin_profile', 'twitter_profile')
         ->firstOrFail();
 
         // Get instructor's courses with their reviews
@@ -80,13 +81,22 @@ class InstructorProfileController extends Controller
             ->where('approval_status', 'approved')
             ->withCount('enrollments')
             ->withCount('reviews')
-            ->with(['reviews' => function($query) {
-                $query->with('user');
-            }])
+            ->with([
+                'reviews' => function($query) {
+                    $query->with('user');
+                },
+                'category'
+            ])
             ->get()
             ->map(function($course) {
                 $course->average_rating = $course->reviews_count > 0 ?
                     round($course->reviews->sum('rating') / $course->reviews_count, 1) : 0;
+                
+                // Ensure thumbnail path is correct
+                if ($course->thumbnail && !str_starts_with($course->thumbnail, 'storage/')) {
+                    $course->thumbnail = 'storage/' . $course->thumbnail;
+                }
+                
                 return $course;
             });
 

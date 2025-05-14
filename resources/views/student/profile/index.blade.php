@@ -7,6 +7,353 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 <!-- Student Dashboard CSS -->
 <link href="{{ asset('css/student.css') }}" rel="stylesheet">
+<style>
+    .profile-container {
+        background-color: #fff;
+        border-radius: 15px;
+        box-shadow: 0 5px 25px rgba(0,0,0,0.05);
+        overflow: hidden;
+        margin-bottom: 30px;
+    }
+    
+    .profile-cover {
+        height: 200px;
+        background: linear-gradient(135deg, #4776E6, #8E54E9);
+        position: relative;
+    }
+    
+    .profile-header {
+        padding: 20px 30px;
+        position: relative;
+    }
+    
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: 5px solid #fff;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        position: absolute;
+        top: -60px;
+        overflow: hidden;
+        background: #fff;
+    }
+    
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .profile-info {
+        margin-left: 140px;
+        min-height: 80px;
+    }
+    
+    .profile-name {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+        color: #333;
+    }
+    
+    .profile-role {
+        font-size: 1rem;
+        color: #6c757d;
+        margin-bottom: 15px;
+    }
+    
+    .profile-bio {
+        color: #6c757d;
+        margin-bottom: 20px;
+    }
+    
+    .profile-actions {
+        position: absolute;
+        top: 30px;
+        right: 30px;
+        display: flex;
+    }
+    
+    .profile-action-btn {
+        margin-left: 10px;
+    }
+    
+    .profile-stats {
+        display: flex;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 20px;
+    }
+    
+    .stat-item {
+        flex: 1;
+        text-align: center;
+        padding: 0 15px;
+        border-right: 1px solid #dee2e6;
+    }
+    
+    .stat-item:last-child {
+        border-right: none;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #3a86ff;
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .profile-tabs {
+        padding: 0 30px;
+        margin-top: 20px;
+    }
+    
+    .nav-tabs {
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .nav-tabs .nav-link {
+        color: #6c757d;
+        border: none;
+        padding: 15px 20px;
+        font-weight: 500;
+    }
+    
+    .nav-tabs .nav-link.active {
+        color: #3a86ff;
+        border-bottom: 3px solid #3a86ff;
+        background: transparent;
+    }
+    
+    .tab-content {
+        padding: 30px;
+    }
+    
+    .course-card {
+        background-color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+        padding: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .course-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+    
+    .course-header {
+        display: flex;
+        margin-bottom: 15px;
+    }
+    
+    .course-image {
+        width: 80px;
+        height: 80px;
+        background: #f1f3f5;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-right: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .course-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .course-info h4 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: #333;
+    }
+    
+    .course-info p {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 0;
+    }
+    
+    .course-progress {
+        margin-bottom: 15px;
+    }
+    
+    .progress {
+        height: 8px;
+        border-radius: 4px;
+        background-color: #e9ecef;
+    }
+    
+    .progress-bar {
+        background-color: #3a86ff;
+    }
+    
+    .course-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .course-meta {
+        display: flex;
+    }
+    
+    .course-meta-item {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-right: 15px;
+    }
+    
+    .view-course-btn {
+        background-color: #3a86ff;
+        color: #fff;
+        border-radius: 20px;
+        padding: 5px 15px;
+        font-size: 0.85rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .view-course-btn:hover {
+        background-color: #2a75f0;
+        color: #fff;
+    }
+    
+    .activity-item {
+        padding: 15px 0;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    
+    /* للتناسق مع الألوان */
+    .btn-primary {
+        background-color: #3a86ff;
+        border-color: #3a86ff;
+    }
+    
+    .btn-primary:hover {
+        background-color: #2a75f0;
+        border-color: #2a75f0;
+    }
+    
+    .btn-outline-primary {
+        color: #3a86ff;
+        border-color: #3a86ff;
+    }
+    
+    .btn-outline-primary:hover {
+        background-color: #3a86ff;
+        border-color: #3a86ff;
+    }
+    
+    /* مؤثرات للانتقال الناعم */
+    .fade-in {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* تحسينات للنسخة العربية */
+    [dir="rtl"] .profile-info {
+        margin-left: 0;
+        margin-right: 140px;
+    }
+    
+    [dir="rtl"] .profile-actions {
+        right: auto;
+        left: 30px;
+    }
+    
+    [dir="rtl"] .profile-action-btn {
+        margin-left: 0;
+        margin-right: 10px;
+    }
+    
+    [dir="rtl"] .stat-item {
+        border-right: none;
+        border-left: 1px solid #dee2e6;
+    }
+    
+    [dir="rtl"] .stat-item:last-child {
+        border-left: none;
+    }
+    
+    [dir="rtl"] .course-image {
+        margin-right: 0;
+        margin-left: 15px;
+    }
+    
+    [dir="rtl"] .course-meta-item {
+        margin-right: 0;
+        margin-left: 15px;
+    }
+    
+    @media (max-width: 767px) {
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            top: -40px;
+        }
+        
+        .profile-info {
+            margin-left: 0;
+            margin-top: 50px;
+        }
+        
+        .profile-actions {
+            position: relative;
+            top: auto;
+            right: auto;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        
+        .profile-stats {
+            flex-wrap: wrap;
+        }
+        
+        .stat-item {
+            flex: 0 0 50%;
+            margin-bottom: 15px;
+            border-right: none;
+        }
+        
+        .stat-item:nth-child(odd) {
+            border-right: 1px solid #dee2e6;
+        }
+        
+        .stat-item:nth-child(3), .stat-item:nth-child(4) {
+            margin-bottom: 0;
+        }
+        
+        [dir="rtl"] .profile-info {
+            margin-right: 0;
+        }
+        
+        [dir="rtl"] .stat-item:nth-child(odd) {
+            border-right: none;
+            border-left: 1px solid #dee2e6;
+        }
+    }
+</style>
 @endsection
 
 @section('content')
@@ -33,6 +380,14 @@
                 </a>
                 <a href="{{ route('student.messages.index') }}" class="sidebar-icon {{ request()->routeIs('student.messages.index') ? 'active' : '' }}">
                     <i class="fas fa-envelope"></i>
+                    @php
+                        $unreadMessages = App\Models\DirectMessage::where('receiver_id', Auth::id())
+                            ->where('is_read', false)
+                            ->count();
+                    @endphp
+                    @if($unreadMessages > 0)
+                        <span class="badge bg-danger rounded-pill position-absolute" style="font-size: 0.7rem; top: 5px; right: 5px;">{{ $unreadMessages }}</span>
+                    @endif
                     <div class="sidebar-tooltip">{{ app()->getLocale() == 'ar' ? 'الرسائل' : 'Messages' }}</div>
                 </a>
                 <a href="{{ route('student.profile.edit') }}" class="sidebar-icon {{ request()->routeIs('student.profile.edit') ? 'active' : '' }}">
@@ -179,7 +534,7 @@
                                             <div class="text-center py-4">
                                                 <i class="fas fa-book fa-3x text-muted mb-3"></i>
                                                 <p>{{ app()->getLocale() == 'ar' ? 'ليس لديك أي دورات قيد التقدم.' : 'You don\'t have any courses in progress.' }}</p>
-                                                <a href="{{ route('courses') }}" class="btn btn-primary mt-3">{{ app()->getLocale() == 'ar' ? 'استعراض الدورات' : 'Browse Courses' }}</a>
+                                                <a href="{{ route('courses.index') }}" class="btn btn-primary mt-3">{{ app()->getLocale() == 'ar' ? 'استعراض الدورات' : 'Browse Courses' }}</a>
                                             </div>
                                         @endif
                                     </div>
@@ -241,7 +596,7 @@
                                 <div class="text-center py-5">
                                     <i class="fas fa-book fa-3x text-muted mb-3"></i>
                                     <p>{{ app()->getLocale() == 'ar' ? 'أنت غير مسجل في أي دورات حتى الآن.' : 'You are not enrolled in any courses yet.' }}</p>
-                                    <a href="{{ route('courses') }}" class="btn btn-primary mt-3">{{ app()->getLocale() == 'ar' ? 'استعراض الدورات' : 'Browse Courses' }}</a>
+                                    <a href="{{ route('courses.index') }}" class="btn btn-primary mt-3">{{ app()->getLocale() == 'ar' ? 'استعراض الدورات' : 'Browse Courses' }}</a>
                                 </div>
                             @endif
                         </div>

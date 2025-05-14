@@ -7,6 +7,459 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 <!-- Student Dashboard CSS -->
 <link href="{{ asset('css/student.css') }}" rel="stylesheet">
+<style>
+    /* تحسينات عامة */
+    .main-content {
+        padding: 30px;
+    }
+    
+    /* منطقة الترحيب */
+    .welcome-area {
+        background: linear-gradient(135deg, #4776E6, #8E54E9);
+        border-radius: 15px;
+        padding: 30px;
+        position: relative;
+        color: white;
+        overflow: hidden;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(71, 118, 230, 0.2);
+    }
+    
+    .welcome-shape {
+        position: absolute;
+        width: 150px;
+        height: 150px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        top: -40px;
+        right: -40px;
+        z-index: 0;
+    }
+    
+    .welcome-shape-2 {
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        bottom: -30px;
+        left: 30%;
+        z-index: 0;
+    }
+    
+    .welcome-area h3 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .welcome-area p {
+        opacity: 0.9;
+        margin-bottom: 20px;
+        max-width: 80%;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .welcome-area .btn {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: none;
+        border-radius: 30px;
+        padding: 10px 20px;
+        transition: all 0.3s ease;
+        margin-right: 10px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .welcome-area .btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-3px);
+    }
+    
+    .welcome-area .btn-success {
+        background: rgba(40, 167, 69, 0.8);
+    }
+    
+    .welcome-area .btn-success:hover {
+        background: rgba(40, 167, 69, 1);
+    }
+    
+    /* الكورس الحالي */
+    .current-course {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 30px;
+    }
+    
+    .current-course h5 {
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .current-course p {
+        color: #6c757d;
+        margin-bottom: 0;
+    }
+    
+    .progress-circle {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        color: var(--accent-color, #4776E6);
+        font-weight: 600;
+    }
+    
+    .progress-circle::after {
+        content: attr(data-progress);
+        font-size: 0.9rem;
+    }
+    
+    .continue-btn {
+        background: var(--accent-color, #4776E6);
+        color: white;
+        border: none;
+        border-radius: 30px;
+        padding: 8px 16px;
+        font-size: 0.85rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .continue-btn:hover {
+        background: #2a75f0;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    /* قسم البحث والأفاتار */
+    .search-bar {
+        background: white;
+        border-radius: 30px;
+        padding: 8px 15px;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .search-bar input {
+        border: none;
+        outline: none;
+        background: transparent;
+        padding: 5px 10px;
+        width: 200px;
+    }
+    
+    .search-bar i {
+        color: #6c757d;
+    }
+    
+    .user-avatar {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        overflow: hidden;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .user-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    /* صناديق الإحصائيات */
+    .stat-box {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        height: 100%;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-box:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--accent-color, #4776E6);
+        margin-bottom: 5px;
+    }
+    
+    .stat-text {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    /* قسم الدورات */
+    .courses-section {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        margin-bottom: 30px;
+    }
+    
+    .courses-section h3 {
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 20px;
+    }
+    
+    .courses-section .nav-tabs {
+        border-bottom: 1px solid #dee2e6;
+        margin-bottom: 20px;
+    }
+    
+    .courses-section .nav-link {
+        color: #6c757d;
+        border: none;
+        padding: 10px 15px;
+        font-weight: 500;
+        margin-bottom: -1px;
+    }
+    
+    .courses-section .nav-link.active {
+        color: var(--accent-color, #4776E6);
+        border-bottom: 3px solid var(--accent-color, #4776E6);
+        background: transparent;
+    }
+    
+    /* بطاقة الدورة */
+    .course-card {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .course-card:hover {
+        background: white;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        transform: translateY(-3px);
+    }
+    
+    .course-image {
+        width: 70px;
+        height: 70px;
+        border-radius: 10px;
+        background: white;
+        overflow: hidden;
+        margin-right: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .course-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .course-info h4 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .course-info p {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-bottom: 0;
+    }
+    
+    .course-progress {
+        margin: 15px 0;
+    }
+    
+    .progress {
+        height: 8px;
+        border-radius: 4px;
+        background: #e9ecef;
+    }
+    
+    .progress-bar {
+        background: var(--accent-color, #4776E6);
+    }
+    
+    .course-meta {
+        display: flex;
+    }
+    
+    .course-meta-item {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-right: 15px;
+    }
+    
+    .view-course-btn {
+        background: var(--accent-color, #4776E6);
+        color: white;
+        border: none;
+        border-radius: 20px;
+        padding: 5px 15px;
+        font-size: 0.85rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .view-course-btn:hover {
+        background: #2a75f0;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    /* بطاقات النشاط والاختبارات */
+    .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        margin-bottom: 30px;
+    }
+    
+    .card-header {
+        background: white;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 15px 20px;
+        border-radius: 15px 15px 0 0 !important;
+    }
+    
+    .card-header h5 {
+        margin-bottom: 0;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .card-body {
+        padding: 20px;
+    }
+    
+    .activity-item {
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        background: #f8f9fa;
+        transition: all 0.3s ease;
+    }
+    
+    .activity-item:hover {
+        background: white;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .activity-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .activity-item h6 {
+        font-weight: 600;
+        color: #333;
+    }
+    
+    /* تأثيرات حركية */
+    .fade-in {
+        animation: fadeIn 0.5s ease-in-out forwards;
+        opacity: 0;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* مواءمة اللغة العربية */
+    [dir="rtl"] .welcome-shape {
+        right: auto;
+        left: -40px;
+    }
+    
+    [dir="rtl"] .welcome-shape-2 {
+        left: auto;
+        right: 30%;
+    }
+    
+    [dir="rtl"] .welcome-area .btn {
+        margin-right: 0;
+        margin-left: 10px;
+    }
+    
+    [dir="rtl"] .course-image {
+        margin-right: 0;
+        margin-left: 15px;
+    }
+    
+    [dir="rtl"] .course-meta-item {
+        margin-right: 0;
+        margin-left: 15px;
+    }
+    
+    /* تعديلات متوافقة للجوال */
+    @media (max-width: 767px) {
+        .main-content {
+            padding: 15px;
+        }
+        
+        .welcome-area p {
+            max-width: 100%;
+        }
+        
+        .welcome-actions {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        
+        .welcome-actions .btn {
+            margin-bottom: 10px;
+        }
+        
+        .current-course {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .current-course .progress-circle {
+            margin: 15px 0;
+        }
+        
+        .stat-box {
+            margin-bottom: 15px;
+        }
+        
+        .search-bar input {
+            width: 150px;
+        }
+    }
+    
+    /* حدد اللون الرئيسي */
+    :root {
+        --accent-color: #4776E6;
+    }
+</style>
 @endsection
 
 @section('content')
@@ -33,6 +486,14 @@
                 </a>
                 <a href="{{ route('student.messages.index') }}" class="sidebar-icon {{ request()->routeIs('student.messages.index') ? 'active' : '' }}">
                     <i class="fas fa-envelope"></i>
+                    @php
+                        $unreadMessages = App\Models\DirectMessage::where('receiver_id', Auth::id())
+                            ->where('is_read', false)
+                            ->count();
+                    @endphp
+                    @if($unreadMessages > 0)
+                        <span class="badge bg-danger rounded-pill position-absolute" style="font-size: 0.7rem; top: 5px; right: 5px;">{{ $unreadMessages }}</span>
+                    @endif
                     <div class="sidebar-tooltip">{{ app()->getLocale() == 'ar' ? 'الرسائل' : 'Messages' }}</div>
                 </a>
                 <a href="{{ route('student.profile.edit') }}" class="sidebar-icon {{ request()->routeIs('student.profile.edit') ? 'active' : '' }}">
@@ -62,7 +523,7 @@
                             <h3>مرحباً، {{ Auth::user()->name }}!</h3>
                             <p>هذه الصفحة الشخصية الخاصة بك. يمكنك الاطلاع على دوراتك ومتابعة تقدمك.</p>
                             <div class="d-flex gap-2">
-                                <a href="{{ route('courses') }}" class="btn">
+                                <a href="{{ route('courses.index') }}" class="btn">
                                     <i class="fas fa-search me-2"></i>استعراض الدورات
                                 </a>
                                 <a href="{{ route('student.exams.index') }}" class="btn btn-success">
@@ -83,7 +544,7 @@
                         </div>
                         @else
                         <div class="alert alert-info fade-in" style="animation-delay: 0.2s">
-                            <p>لم تقم بالتسجيل في أي دورة حتى الآن. <a href="{{ route('courses') }}">استعراض الدورات</a> للبدء في رحلة التعلم.</p>
+                            <p>لم تقم بالتسجيل في أي دورة حتى الآن. <a href="{{ route('courses.index') }}">استعراض الدورات</a> للبدء في رحلة التعلم.</p>
                         </div>
                         @endif
                     </div>
@@ -204,8 +665,8 @@
                                                 <i class="fas fa-book-open fa-3x text-muted"></i>
                                             </div>
                                             <h5>لم تقم بالتسجيل في أي دورة حتى الآن</h5>
-                                            <p class="text-muted">استعرض الدورات المتاحة وابدأ رحلة التعلم!</p>
-                                            <a href="{{ route('courses') }}" class="btn btn-primary mt-2">
+                                            <p class="text-muted">لم تكتشف بعد أي دورات. ابدأ من خلال استعراض مكتبة الدورات لدينا.</p>
+                                            <a href="{{ route('courses.index') }}" class="btn btn-primary mt-2">
                                                 <i class="fas fa-search me-2"></i> استعراض الدورات
                                             </a>
                                         </div>

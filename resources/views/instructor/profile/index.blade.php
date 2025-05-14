@@ -45,6 +45,36 @@
             
             <div class="card mb-4">
                 <div class="card-header bg-white">
+                    <h5 class="mb-0">Profile Banner</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <div class="banner-preview mb-3" style="height: 100px; background-color: #f0f0f0; overflow: hidden; border-radius: 5px;">
+                            @if($user->banner_image)
+                                <img src="{{ asset($user->banner_image) }}" alt="Profile Banner" class="img-fluid w-100" style="object-fit: cover; height: 100px;">
+                            @else
+                                <div class="d-flex align-items-center justify-content-center h-100">
+                                    <i class="fas fa-image" style="font-size: 48px; color: #aaa;"></i>
+                                </div>
+                            @endif
+                        </div>
+                        
+                        <form action="{{ route('instructor.profile.update.banner') }}" method="POST" enctype="multipart/form-data" id="bannerImageForm">
+                            @csrf
+                            <div class="mb-3">
+                                <label for="banner_image" class="btn btn-outline-primary">
+                                    <i class="fas fa-image me-2"></i> Change Banner
+                                </label>
+                                <input type="file" name="banner_image" id="banner_image" class="d-none" onchange="document.getElementById('bannerImageForm').submit()">
+                            </div>
+                            <small class="text-muted">Recommended size: 1200x300 pixels</small>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header bg-white">
                     <h5 class="mb-0">Account Information</h5>
                 </div>
                 <div class="card-body">
@@ -101,9 +131,32 @@
                         </div>
                         
                         <div class="mb-3">
+                            <label for="website" class="form-label">Website</label>
+                            <input type="url" class="form-control" id="website" name="website" value="{{ old('website', $user->website) }}" placeholder="https://www.example.com">
+                            <div class="form-text">Your personal or professional website</div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="linkedin_profile" class="form-label">LinkedIn Profile</label>
+                                <input type="url" class="form-control" id="linkedin_profile" name="linkedin_profile" value="{{ old('linkedin_profile', $user->linkedin_profile) }}" placeholder="https://www.linkedin.com/in/your-profile">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="twitter_profile" class="form-label">Twitter Profile</label>
+                                <input type="url" class="form-control" id="twitter_profile" name="twitter_profile" value="{{ old('twitter_profile', $user->twitter_profile) }}" placeholder="https://twitter.com/your-username">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
                             <label for="bio" class="form-label">Professional Bio</label>
                             <textarea class="form-control" id="bio" name="bio" rows="4">{{ old('bio', $user->bio) }}</textarea>
                             <div class="form-text">Write a short bio highlighting your expertise and teaching experience.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="detailed_description" class="form-label">Detailed Description</label>
+                            <textarea class="form-control" id="detailed_description" name="detailed_description" rows="6">{{ old('detailed_description', $user->detailed_description) }}</textarea>
+                            <div class="form-text">Write a detailed description about your background, expertise, teaching philosophy, accomplishments and what students can expect from your courses. This will be displayed on your public profile page.</div>
                         </div>
                         
                         <button type="submit" class="btn btn-primary">

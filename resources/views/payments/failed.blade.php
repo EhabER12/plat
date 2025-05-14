@@ -1,43 +1,68 @@
 @extends('layouts.app')
 
-@section('title', 'Payment Failed')
+@section('title', 'فشل عملية الدفع')
 
 @section('content')
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card shadow-sm">
-                <div class="card-body text-center p-5">
-                    <div class="mb-4">
-                        <i class="fas fa-times-circle fa-5x text-danger"></i>
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">فشلت عملية الدفع</h4>
+                </div>
+                <div class="card-body text-center">
+                    <div class="my-4">
+                        <i class="fas fa-times-circle text-danger fa-5x"></i>
+                    </div>
+                    <h3 class="mb-3">فشلت عملية الدفع</h3>
+                    
+                    @if(session('error'))
+                        <div class="alert alert-danger">
+                            {{ session('error') }}
+                        </div>
+                    @endif
+                    
+                    @if(isset($payment) && isset($payment->course))
+                        <div class="my-4 p-3 border rounded bg-light">
+                            <div class="row">
+                                <div class="col-md-6 text-start">
+                                    <p><strong>الدورة:</strong></p>
+                                    <p><strong>المبلغ:</strong></p>
+                                    <p><strong>رقم العملية:</strong></p>
+                                </div>
+                                <div class="col-md-6 text-start">
+                                    <p>{{ $payment->course->title }}</p>
+                                    <p>{{ $payment->amount }} EGP</p>
+                                    <p>{{ $payment->payment_id }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                    
+                    <p class="mb-4">تعذر إتمام عملية الدفع الخاصة بك. يرجى المحاولة مرة أخرى أو استخدام وسيلة دفع مختلفة.</p>
+                    
+                    <div class="alert alert-info">
+                        <h5>أسباب محتملة لفشل الدفع:</h5>
+                        <ul class="text-start mt-2">
+                            <li>معلومات بطاقة الائتمان/الخصم غير صحيحة</li>
+                            <li>رصيد غير كافٍ في البطاقة</li>
+                            <li>تم رفض المعاملة من قبل البنك لأسباب أمنية</li>
+                            <li>انقطاع الاتصال أثناء المعاملة</li>
+                        </ul>
                     </div>
                     
-                    <h2 class="mb-3">Payment Failed</h2>
-                    
-                    <p class="lead mb-4">
-                        We're sorry, but your payment for <strong>{{ $payment->course->title }}</strong> could not be processed.
-                    </p>
-                    
-                    <div class="alert alert-danger mb-4">
-                        <h5 class="alert-heading">Payment Details</h5>
-                        <p class="mb-0">
-                            <strong>Amount:</strong> ${{ number_format($payment->amount, 2) }}<br>
-                            <strong>Payment Method:</strong> {{ ucfirst(str_replace('_', ' ', $payment->payment_method)) }}<br>
-                            <strong>Date:</strong> {{ $payment->payment_date->format('M d, Y H:i') }}<br>
-                            <strong>Status:</strong> <span class="badge bg-danger">Failed</span>
-                        </p>
-                    </div>
-                    
-                    <p class="mb-4">
-                        The payment was not successful. This could be due to insufficient funds, incorrect card details, or other issues with your payment method.
-                    </p>
-                    
-                    <div class="d-grid gap-2">
-                        <a href="{{ route('payment.checkout', $payment->course->course_id) }}" class="btn btn-primary">
-                            <i class="fas fa-redo me-2"></i> Try Again
+                    <div class="d-flex justify-content-center gap-3 mt-4">
+                        @if(isset($payment) && isset($payment->course))
+                            <a href="{{ route('payment.checkout', $payment->course_id) }}" class="btn btn-primary">
+                                <i class="fas fa-sync-alt me-1"></i> محاولة مرة أخرى
                         </a>
-                        <a href="{{ route('course.detail', $payment->course->course_id) }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left me-2"></i> Back to Course
+                        @else 
+                            <a href="{{ route('courses.index') }}" class="btn btn-primary">
+                                <i class="fas fa-sync-alt me-1"></i> العودة للدورات
+                            </a>
+                        @endif
+                        <a href="{{ route('home') }}" class="btn btn-secondary">
+                            <i class="fas fa-home me-1"></i> الصفحة الرئيسية
                         </a>
                     </div>
                 </div>

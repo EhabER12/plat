@@ -145,11 +145,30 @@ class CourseController extends Controller
         ->with(['videos', 'materials', 'instructor', 'sections.videos'])
         ->findOrFail($courseId);
 
-        // Get progress information if available
-        $progress = DB::table('student_progress')
+        // Count total videos in the course
+        $totalVideos = $course->videos()->count();
+        
+        // Get progress records for this course
+        $progressRecords = DB::table('student_progress')
             ->where('user_id', $student->user_id)
             ->where('course_id', $courseId)
-            ->first();
+            ->where('content_type', 'video')
+            ->get();
+        
+        // Count completed videos (either by having completed_at not null or progress_percentage >= 90)
+        $completedVideos = $progressRecords->filter(function($record) {
+            return $record->completed_at != null || $record->progress_percentage >= 90;
+        })->count();
+        
+        // Calculate total percentage
+        $totalPercentage = $totalVideos > 0 ? round(($completedVideos / $totalVideos) * 100) : 0;
+        
+        // Create progress object with total_percentage
+        $progress = (object)[
+            'total_percentage' => $totalPercentage,
+            'completed_videos' => $completedVideos,
+            'total_videos' => $totalVideos
+        ];
 
         return view('student.courses.content', compact('course', 'progress'));
     }

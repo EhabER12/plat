@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use App\Models\InstructorVerification;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Payment;
 
 class DashboardController extends Controller
 {
@@ -24,43 +26,57 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        // Basic statistics
+        // Import statistics for dashboard
         $stats = [
             'total_users' => User::count(),
             'total_courses' => Course::count(),
             'total_categories' => Category::count(),
             'pending_approvals' => Course::where('approval_status', 'pending')->count(),
-            'pending_instructor_verifications' => InstructorVerification::where('status', 'pending')->count(),
+            'total_revenue' => Payment::where('status', 'completed')->sum('amount'),
+            'payment_count' => Payment::where('status', 'completed')->count(),
+            'students_count' => User::whereHas('roles', function($query) {
+                $query->where('name', 'student');
+            })->count(),
+            'instructors_count' => User::whereHas('roles', function($query) {
+                $query->where('name', 'instructor');
+            })->count(),
+            'admins_count' => User::whereHas('roles', function($query) {
+                $query->where('name', 'admin');
+            })->count(),
         ];
-
-        // Get latest users with their roles
-        $latestUsers = User::latest()->take(5)->get();
-        foreach ($latestUsers as $user) {
-            $user->userRoles = $user->getUserRoles();
-        }
-
-        // Get user distribution by role
-        $usersByRole = DB::table('user_roles')
-            ->select('role', DB::raw('count(*) as count'))
-            ->groupBy('role')
-            ->pluck('count', 'role')
-            ->toArray();
-
-        // Get courses by category
-        $coursesByCategory = DB::table('courses')
-            ->join('categories', 'courses.category_id', '=', 'categories.category_id')
-            ->select('categories.name', DB::raw('count(*) as count'))
-            ->groupBy('categories.name', 'categories.category_id')
-            ->pluck('count', 'name')
-            ->toArray();
-
-        // Get latest courses
-        $latestCourses = Course::with('instructor', 'category')
+                
+        // Load recent transactions, users, courses
+        $latest_users = User::latest()->take(5)->get();
+        $latest_courses = Course::with('instructor')->latest()->take(5)->get();
+        $recentTransactions = Payment::latest()->take(10)->get();
+        
+        // Get categorized revenue by payment method
+        $revenueByMethod = Payment::where('status', 'completed')
+            ->selectRaw('payment_method, SUM(amount) as total_amount')
+            ->groupBy('payment_method')
+            ->orderByRaw('SUM(amount) DESC')
+            ->get();
+            
+        // Get courses grouped by category for chart
+        $course_categories = Category::withCount('courses')->take(8)->get();
+        
+        // Get latest notifications
+        $importantNotifications = \App\Models\AdminNotification::where('severity', '>=', 3)
+            ->where('is_read', false)
+            ->with('user')
             ->latest()
             ->take(5)
             ->get();
-
-        return view('admin.dashboard', compact('stats', 'latestUsers', 'usersByRole', 'coursesByCategory', 'latestCourses'));
+        
+        return view('admin.dashboard', compact(
+            'stats', 
+            'latest_users', 
+            'latest_courses', 
+            'recentTransactions', 
+            'revenueByMethod',
+            'course_categories',
+            'importantNotifications'
+        ));
     }
 
     /**
@@ -409,33 +425,93 @@ class DashboardController extends Controller
      */
     private function getRevenueReportData($timeframe)
     {
-        $query = DB::table('payments')
-            ->select(
-                DB::raw('DATE(paid_at) as date'),
-                DB::raw('SUM(amount) as revenue')
-            )
+        $dateColumn = 'created_at';
+        
+        // Get total revenue
+        $totalRevenue = DB::table('transactions')
             ->where('status', 'completed')
-            ->groupBy('date');
-
-        $query = $this->applyTimeframeFilter($query, 'paid_at', $timeframe);
-
-        $data = $query->get()->pluck('revenue', 'date')->toArray();
-
-        // Fill in missing dates with zero revenue
-        $range = $this->getDateRangeForTimeframe($timeframe);
-
-        foreach ($range as $date) {
-            $formattedDate = $date->format('Y-m-d');
-            if (!isset($data[$formattedDate])) {
-                $data[$formattedDate] = 0;
-            }
+            ->where('transaction_type', 'payment')
+            ->sum('amount');
+            
+        // Get payment method distribution
+        $paymentMethods = DB::table('transactions')
+            ->where('status', 'completed')
+            ->where('transaction_type', 'payment')
+            ->select('payment_method', DB::raw('COUNT(*) as count'), DB::raw('SUM(amount) as total_amount'))
+            ->groupBy('payment_method')
+            ->get();
+            
+        // Format payment methods data for chart
+        $methodLabels = [];
+        $methodData = [];
+        $methodColors = [
+            'paymob' => '#3498db',
+            'stripe' => '#9b59b6',
+            'vodafone' => '#e74c3c',
+            'cash' => '#2ecc71',
+            'bank_transfer' => '#f39c12',
+            'default' => '#95a5a6'
+        ];
+        
+        $paymentMethodsColors = [];
+        
+        foreach ($paymentMethods as $method) {
+            $methodLabels[] = ucfirst($method->payment_method);
+            $methodData[] = $method->total_amount;
+            $paymentMethodsColors[] = $methodColors[$method->payment_method] ?? $methodColors['default'];
         }
+        
+        // Get revenue by date
+        $query = DB::table('transactions')
+            ->where('status', 'completed')
+            ->where('transaction_type', 'payment');
 
-        ksort($data);
+        $query = $this->applyTimeframeFilter($query, $dateColumn, $timeframe);
+
+        $results = $query->select(
+                DB::raw($this->getDateFormatSql($dateColumn, $timeframe) . ' as date'),
+                DB::raw('SUM(amount) as total_amount')
+            )
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+            
+        // Get recent payments
+        $recentPayments = DB::table('transactions')
+            ->where('status', 'completed')
+            ->where('transaction_type', 'payment')
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+            
+        // Prepare data for the view
+        $labels = [];
+        $data = [];
+
+        // Fill in missing dates with zero values
+        $dateRange = $this->getDateRangeForTimeframe($timeframe);
+        $dateFormat = $this->getDateFormatPHP($timeframe);
+        
+        $formattedResults = [];
+        foreach ($results as $result) {
+            $formattedResults[$result->date] = $result->total_amount;
+        }
+        
+        foreach ($dateRange as $date) {
+            $formattedDate = $date->format($dateFormat);
+            $labels[] = $formattedDate;
+            $data[] = isset($formattedResults[$formattedDate]) ? $formattedResults[$formattedDate] : 0;
+            }
 
         return [
-            'labels' => array_keys($data),
-            'data' => array_values($data),
+            'labels' => $labels,
+            'data' => $data,
+            'total_revenue' => $totalRevenue,
+            'payment_methods' => $paymentMethods,
+            'method_labels' => $methodLabels,
+            'method_data' => $methodData,
+            'method_colors' => $paymentMethodsColors,
+            'recent_payments' => $recentPayments
         ];
     }
 
@@ -624,18 +700,86 @@ class DashboardController extends Controller
             'site_name' => 'required|string|max:255',
             'site_description' => 'nullable|string',
             'contact_email' => 'required|email',
-            'contact_phone' => 'nullable|string|max:20',
+            'maintenance_mode' => 'nullable|boolean',
+            'currency' => 'required|string|max:10',
             'instructor_commission_rate' => 'required|numeric|min:0|max:100',
-            'minimum_withdrawal' => 'required|numeric|min:0',
-            'facebook_url' => 'nullable|url',
-            'twitter_url' => 'nullable|url',
-            'instagram_url' => 'nullable|url',
-            'youtube_url' => 'nullable|url',
+            'payment_methods' => 'nullable|array',
+            'payment_methods.*' => 'string|in:credit_card,paypal,bank_transfer,paymob,vodafone_cash',
+            'default_payment_method' => 'required|string|in:credit_card,paypal,bank_transfer,paymob,vodafone_cash',
+            'mail_driver' => 'nullable|string',
+            'mail_host' => 'nullable|string',
+            'mail_port' => 'nullable|numeric',
+            'mail_username' => 'nullable|string',
+            'mail_password' => 'nullable|string',
+            'mail_encryption' => 'nullable|string',
         ]);
 
-        // Since we can't write to environment variables easily,
-        // we'll just show a success message for demo purposes
-        return redirect()->route('admin.settings')->with('success', 'Settings updated successfully (demo mode - changes not saved to environment)');
+        DB::beginTransaction();
+
+        try {
+            // Get the current user ID if authenticated
+            $userId = $request->user() ? $request->user()->user_id : null;
+            
+            // Convert checkbox array to comma-separated string for payment methods
+            $paymentMethods = $request->has('payment_methods') ? implode(',', $request->payment_methods) : 'credit_card';
+
+            // Update settings in the database
+            foreach ([
+                'site_name', 'site_description', 'contact_email', 'currency',
+                'instructor_commission_rate', 'mail_driver', 'mail_host',
+                'mail_port', 'mail_username', 'mail_password', 'mail_encryption'
+            ] as $key) {
+                if ($request->has($key)) {
+                    DB::table('settings')->updateOrInsert(
+                        ['key' => $key],
+                        [
+                            'value' => $request->$key,
+                            'updated_at' => now(),
+                            'updated_by' => $userId
+                        ]
+                    );
+                }
+            }
+
+            // Handle maintenance mode separately as it's a boolean
+            DB::table('settings')->updateOrInsert(
+                ['key' => 'maintenance_mode'],
+                [
+                    'value' => $request->has('maintenance_mode') ? '1' : '0',
+                    'updated_at' => now(),
+                    'updated_by' => $userId
+                ]
+            );
+
+            // Update payment methods
+            DB::table('settings')->updateOrInsert(
+                ['key' => 'payment_methods'],
+                [
+                    'value' => $paymentMethods,
+                    'description' => 'Comma-separated list of enabled payment methods',
+                    'updated_at' => now(),
+                    'updated_by' => $userId
+                ]
+            );
+
+            // Update default payment method
+            DB::table('settings')->updateOrInsert(
+                ['key' => 'default_payment_method'],
+                [
+                    'value' => $request->default_payment_method,
+                    'description' => 'Default payment method for the checkout page',
+                    'updated_at' => now(),
+                    'updated_by' => $userId
+                ]
+            );
+
+            DB::commit();
+            return redirect()->route('admin.settings')->with('success', 'Settings updated successfully');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to update settings: ' . $e->getMessage());
+            return redirect()->route('admin.settings')->with('error', 'Failed to update settings: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -804,31 +948,13 @@ class DashboardController extends Controller
      */
     public function deleteCategory($categoryId)
     {
-        $category = Category::findOrFail($categoryId);
-
-        // Check for subcategories
-        $hasSubcategories = Category::where('parent_id', $categoryId)->exists();
-
-        if ($hasSubcategories) {
-            return redirect()->route('admin.categories')->with('error', 'Cannot delete category with subcategories. Please delete or reassign subcategories first.');
+        try {
+            $category = Category::findOrFail($categoryId);
+            $category->delete();
+            return redirect()->route('admin.categories')->with('success', 'Category deleted successfully');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.categories')->with('error', 'Unable to delete category: ' . $e->getMessage());
         }
-
-        // Option 1: Prevent deletion if category has courses
-        if ($category->courses()->count() > 0) {
-            return redirect()->route('admin.categories')
-                ->with('error', 'Cannot delete category that has courses. Please reassign courses first.');
-        }
-
-        /* Option 2: Reassign courses to parent category or NULL
-        if ($category->courses()->count() > 0) {
-            $newCategoryId = $category->parent_id; // Can be NULL
-            $category->courses()->update(['category_id' => $newCategoryId]);
-        }
-        */
-
-        $category->delete();
-
-        return redirect()->route('admin.categories')->with('success', 'Category deleted successfully');
     }
 
     /**
@@ -998,6 +1124,172 @@ class DashboardController extends Controller
      * @return \Illuminate\Http\RedirectResponse
      */
     public function resetDatabase()
+    {
+        try {
+            // إنشاء مدرس جديد
+            $instructorId = DB::table('users')->insertGetId([
+                'name' => 'أحمد المدرس ' . time(),
+                'email' => 'instructor' . time() . '@example.com',
+                'password_hash' => Hash::make('password'),
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+
+            // ربط المدرس بدور المدرس
+            DB::table('user_roles')->insert([
+                'user_id' => $instructorId,
+                'role' => 'instructor',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+
+            // إنشاء تصنيفات
+            $categories = [
+                'البرمجة والتطوير',
+                'تطوير المواقع',
+                'تطوير التطبيقات',
+                'الذكاء الاصطناعي',
+                'قواعد البيانات'
+            ];
+
+            $categoryIds = [];
+            foreach ($categories as $category) {
+                $categoryIds[] = DB::table('categories')->insertGetId([
+                    'name' => $category,
+                    'description' => 'دورات في مجال ' . $category,
+                    'slug' => Str::slug($category),
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            }
+
+            // إنشاء الكورسات
+            $courses = [
+                [
+                    'title' => 'أساسيات البرمجة بلغة PHP',
+                    'description' => 'تعلم أساسيات لغة PHP وكيفية استخدامها في تطوير تطبيقات الويب.',
+                    'price' => 299.99,
+                    'duration' => 24,
+                    'level' => 'beginner',
+                    'language' => 'العربية',
+                    'featured' => 1,
+                    'approval_status' => 'approved',
+                ],
+                [
+                    'title' => 'تطوير تطبيقات الويب باستخدام Laravel',
+                    'description' => 'دورة شاملة في تطوير تطبيقات الويب باستخدام إطار العمل Laravel.',
+                    'price' => 499.99,
+                    'duration' => 36,
+                    'level' => 'intermediate',
+                    'language' => 'العربية',
+                    'featured' => 1,
+                    'approval_status' => 'approved',
+                ],
+                [
+                    'title' => 'تطوير واجهات المستخدم باستخدام React',
+                    'description' => 'تعلم كيفية تطوير واجهات مستخدم تفاعلية وديناميكية باستخدام مكتبة React.js.',
+                    'price' => 399.99,
+                    'duration' => 30,
+                    'level' => 'intermediate',
+                    'language' => 'العربية',
+                    'featured' => 1,
+                    'approval_status' => 'approved',
+                ],
+                [
+                    'title' => 'تطوير تطبيقات الهاتف باستخدام Flutter',
+                    'description' => 'تعلم كيفية تطوير تطبيقات الهاتف المحمول لنظامي Android و iOS باستخدام إطار العمل Flutter.',
+                    'price' => 449.99,
+                    'duration' => 32,
+                    'level' => 'intermediate',
+                    'language' => 'العربية',
+                    'featured' => 1,
+                    'approval_status' => 'approved',
+                ],
+                [
+                    'title' => 'مقدمة في علم البيانات والذكاء الاصطناعي',
+                    'description' => 'استكشف عالم علم البيانات والذكاء الاصطناعي وتعلم المفاهيم الأساسية والتقنيات المستخدمة في هذا المجال المتنامي.',
+                    'price' => 599.99,
+                    'duration' => 40,
+                    'level' => 'beginner',
+                    'language' => 'العربية',
+                    'featured' => 1,
+                    'approval_status' => 'approved',
+                ]
+            ];
+
+            // إضافة الكورسات
+            foreach ($courses as $index => $course) {
+                DB::table('courses')->insert([
+                    'title' => $course['title'],
+                    'description' => $course['description'],
+                    'instructor_id' => $instructorId,
+                    'category_id' => $categoryIds[$index % count($categoryIds)], // توزيع الفئات بشكل منتظم
+                    'price' => $course['price'],
+                    'duration' => $course['duration'],
+                    'level' => $course['level'],
+                    'language' => $course['language'],
+                    'featured' => $course['featured'],
+                    'approval_status' => $course['approval_status'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            return redirect()->route('admin.dashboard')->with('success', 'تم إعادة تهيئة قاعدة البيانات وإضافة البيانات الوهمية بنجاح!');
+        } catch (\Exception $e) {
+            Log::error('حدث خطأ أثناء إعادة تهيئة قاعدة البيانات: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+            return redirect()->route('admin.dashboard')->with('error', 'حدث خطأ أثناء إعادة تهيئة قاعدة البيانات: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get date format string for SQL based on timeframe.
+     *
+     * @param  string  $column
+     * @param  string  $timeframe
+     * @return string
+     */
+    private function getDateFormatSql($column, $timeframe)
+    {
+        switch ($timeframe) {
+            case 'week':
+                return "DATE($column)";
+            case 'month':
+                return "DATE_FORMAT($column, '%Y-%m-%d')";
+            case 'year':
+                return "DATE_FORMAT($column, '%Y-%m')";
+            default:
+                return "DATE($column)";
+        }
+    }
+
+    /**
+     * Get date format string for PHP based on timeframe.
+     *
+     * @param  string  $timeframe
+     * @return string
+     */
+    private function getDateFormatPHP($timeframe)
+    {
+        switch ($timeframe) {
+            case 'week':
+                return 'Y-m-d';
+            case 'month':
+                return 'Y-m-d';
+            case 'year':
+                return 'Y-m';
+            default:
+                return 'Y-m-d';
+        }
+    }
+
+    /**
+     * Create demo data for testing.
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function createDemoData()
     {
         try {
             // إنشاء مدرس جديد

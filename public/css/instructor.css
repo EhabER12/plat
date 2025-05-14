@@ -1,7 +1,12 @@
 :root {
-  --primary-color: #20b7b7;
-  --secondary-color: #343a40;
-  --accent-color: #f76b1c;
+  --primary-color: #003366;
+  --secondary-color: #FFD700;
+  --accent-color: #FFD700;
+  --supportive-color: #E6F0FF;
+  --background-color: #FAFAFA;
+  --text-dark: #333333;
+  --text-light: #666666;
+  --border-color: #dddddd;
   --success-color: #28a745;
   --warning-color: #ffc107;
   --danger-color: #dc3545;
@@ -42,12 +47,14 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Sidebar Styling */
 .sidebar {
-  background: var(--secondary-color);
-  min-height: 100vh;
-  padding-top: 0;
-  box-shadow: var(--shadow-lg);
-  z-index: 99;
-  transition: var(--transition);
+  background-color: var(--primary-color);
+  color: white;
+  height: 100vh;
+  position: fixed;
+  z-index: 100;
+  padding: 0;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s;
 }
 
 .sidebar-sticky {
@@ -72,15 +79,16 @@ h1, h2, h3, h4, h5, h6 {
   text-align: center;
 }
 
-.sidebar .nav-link:hover {
-  color: white;
-  background-color: rgba(255, 255, 255, 0.1);
+.sidebar .nav-link:hover:not(.active) {
+  background-color: rgba(255, 215, 0, 0.2);
+  color: var(--accent-color) !important;
 }
 
 .sidebar .nav-link.active {
-  color: white;
-  background: var(--primary-color);
+  background-color: var(--accent-color);
+  color: var(--primary-color) !important;
   font-weight: 600;
+  border-left: 4px solid #ffffff;
 }
 
 .sidebar-header {

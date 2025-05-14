@@ -48,7 +48,12 @@ class User extends Authenticatable
         'phone',
         'address',
         'bio',
+        'detailed_description',
+        'website',
+        'linkedin_profile',
+        'twitter_profile',
         'profile_picture',
+        'banner_image',
         'dob',
     ];
 
@@ -320,5 +325,39 @@ class User extends Authenticatable
     public function examAttempts(): HasMany
     {
         return $this->hasMany(ExamAttempt::class, 'student_id');
+    }
+
+    /**
+     * Get the parent relations where this user is a parent.
+     */
+    public function parentRelations()
+    {
+        return $this->hasMany(ParentStudentRelation::class, 'parent_id', 'user_id');
+    }
+
+    /**
+     * Get the student relations where this user is a student.
+     */
+    public function studentRelations()
+    {
+        return $this->hasMany(ParentStudentRelation::class, 'student_id', 'user_id');
+    }
+
+    /**
+     * Get all verified parents of this student.
+     */
+    public function verifiedParents()
+    {
+        return $this->belongsToMany(User::class, 'parent_student_relations', 'student_id', 'parent_id', 'user_id')
+                    ->wherePivot('verification_status', 'approved');
+    }
+
+    /**
+     * Get all verified students of this parent.
+     */
+    public function verifiedStudents()
+    {
+        return $this->belongsToMany(User::class, 'parent_student_relations', 'parent_id', 'student_id', 'user_id')
+                    ->wherePivot('verification_status', 'approved');
     }
 }

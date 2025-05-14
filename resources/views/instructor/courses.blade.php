@@ -24,6 +24,7 @@
                                 <th>Price</th>
                                 <th>Students</th>
                                 <th>Videos</th>
+                                <th>Rating</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -46,6 +47,26 @@
                                     <td>${{ $course->price }}</td>
                                     <td>{{ $course->students_count }}</td>
                                     <td>{{ $course->videos_count }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            @php
+                                                $avgRating = $course->average_rating ?? 0;
+                                                $ratingCount = $course->reviews_count ?? 0;
+                                            @endphp
+                                            <div class="me-2">
+                                                @for($i = 1; $i <= 5; $i++)
+                                                    @if($i <= floor($avgRating))
+                                                        <i class="fas fa-star text-warning small"></i>
+                                                    @elseif($i - 0.5 <= $avgRating)
+                                                        <i class="fas fa-star-half-alt text-warning small"></i>
+                                                    @else
+                                                        <i class="far fa-star text-warning small"></i>
+                                                    @endif
+                                                @endfor
+                                            </div>
+                                            <span>{{ number_format($avgRating, 1) }} ({{ $ratingCount }})</span>
+                                        </div>
+                                    </td>
                                     <td>
                                         @if($course->status === 'published')
                                             <span class="badge bg-success">Published</span>

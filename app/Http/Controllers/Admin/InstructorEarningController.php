@@ -107,16 +107,21 @@ class InstructorEarningController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
     public function processWithdrawal(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
             'action' => 'required|in:approve,reject',
-            'notes' => 'nullable|string|max:500'
+            'notes' => 'nullable|string|max:500',
+            'transfer_receipt' => 'required_if:action,approve|image|mimes:jpeg,png,jpg,gif|max:4096'
         ]);
 
         if ($validator->fails()) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['error' => $validator->errors()->first()], 422);
+            }
+
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
@@ -125,26 +130,91 @@ class InstructorEarningController extends Controller
         try {
             DB::beginTransaction();
             
-            $withdrawal = Withdrawal::findOrFail($id);
+            // Get the withdrawal with related instructor and earnings
+            $withdrawal = Withdrawal::with(['instructor', 'earnings'])->findOrFail($id);
             
             // Check if the withdrawal is already processed
             if ($withdrawal->status !== 'pending') {
+                Log::warning('Attempted to process already processed withdrawal', [
+                    'admin_id' => Auth::id(),
+                    'withdrawal_id' => $id,
+                    'current_status' => $withdrawal->status
+                ]);
+                
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json(['error' => 'لا يمكن معالجة هذا الطلب، حيث أنه تم معالجته بالفعل (الحالة الحالية: ' . $withdrawal->status . ')'], 400);
+                }
+                
                 return redirect()->back()
-                    ->with('error', 'This withdrawal request has already been processed.');
+                    ->with('error', 'لا يمكن معالجة هذا الطلب، حيث أنه تم معالجته بالفعل (الحالة الحالية: ' . $withdrawal->status . ')');
             }
             
             $adminId = Auth::id();
+            $adminName = Auth::user()->name;
+            
+            Log::info('Processing withdrawal request', [
+                'admin_id' => $adminId,
+                'admin_name' => $adminName,
+                'withdrawal_id' => $id,
+                'action' => $request->action,
+                'instructor_id' => $withdrawal->instructor_id,
+                'instructor_name' => $withdrawal->instructor->name,
+                'amount' => $withdrawal->amount
+            ]);
             
             if ($request->action === 'approve') {
+                $transferReceiptPath = null;
+                if ($request->hasFile('transfer_receipt')) {
+                    $file = $request->file('transfer_receipt');
+                    $filename = 'receipt_' . $withdrawal->withdrawal_id . '_' . time() . '.' . $file->getClientOriginalExtension();
+                    $transferReceiptPath = $file->storeAs('uploads/receipts', $filename, 'public');
+                    
+                    Log::info('Transfer receipt uploaded', [
+                        'withdrawal_id' => $id,
+                        'filename' => $filename,
+                        'path' => $transferReceiptPath
+                    ]);
+                }
+                
                 // Approve the withdrawal
                 $withdrawal->update([
                     'status' => 'completed',
                     'processed_at' => now(),
                     'processed_by' => $adminId,
-                    'notes' => $request->notes
+                    'notes' => $request->notes,
+                    'transfer_receipt' => $transferReceiptPath ? 'storage/' . $transferReceiptPath : null
                 ]);
+
+                // Update all connected earnings statuses
+                foreach ($withdrawal->earnings as $earning) {
+                    $earning->update([
+                        'status' => InstructorEarning::STATUS_WITHDRAWN
+                    ]);
+                    
+                    Log::info('Earning status updated to withdrawn', [
+                        'earning_id' => $earning->id,
+                        'amount' => $earning->amount,
+                        'course_id' => $earning->course_id
+                    ]);
+                }
+
+                // Send notification to instructor
+                $withdrawal->instructor->notify(new \App\Notifications\WithdrawalProcessed(
+                    'تمت الموافقة على طلب السحب الخاص بك',
+                    'تمت الموافقة على طلب سحب الأموال بقيمة $' . number_format($withdrawal->amount, 2),
+                    'success',
+                    route('instructor.earnings.show-withdrawal', $withdrawal->withdrawal_id)
+                ));
                 
-                $message = 'Withdrawal request approved successfully.';
+                Log::info('Withdrawal request approved', [
+                    'withdrawal_id' => $id,
+                    'admin_id' => $adminId,
+                    'admin_name' => $adminName,
+                    'amount' => $withdrawal->amount,
+                    'instructor_id' => $withdrawal->instructor_id
+                ]);
+
+                $message = 'تمت الموافقة على طلب السحب بنجاح وتم إشعار المدرس.';
             } else {
                 // Reject the withdrawal
                 $withdrawal->update([
@@ -163,22 +233,63 @@ class InstructorEarningController extends Controller
                         'status' => InstructorEarning::STATUS_AVAILABLE,
                         'withdrawal_id' => null
                     ]);
+                    
+                    Log::info('Earning status reset to available', [
+                        'earning_id' => $earning->id,
+                        'amount' => $earning->amount,
+                        'course_id' => $earning->course_id
+                    ]);
                 }
+
+                // Send notification to instructor
+                $withdrawal->instructor->notify(new \App\Notifications\WithdrawalProcessed(
+                    'تم رفض طلب السحب الخاص بك',
+                    'تم رفض طلب سحب الأموال بقيمة $' . number_format($withdrawal->amount, 2) . '. السبب: ' . $request->notes,
+                    'error',
+                    route('instructor.earnings.show-withdrawal', $withdrawal->withdrawal_id)
+                ));
                 
-                $message = 'Withdrawal request rejected successfully.';
+                Log::info('Withdrawal request rejected', [
+                    'withdrawal_id' => $id,
+                    'admin_id' => $adminId,
+                    'admin_name' => $adminName,
+                    'amount' => $withdrawal->amount,
+                    'instructor_id' => $withdrawal->instructor_id,
+                    'reason' => $request->notes
+                ]);
+                
+                $message = 'تم رفض طلب السحب وإعادة المبلغ إلى رصيد المدرب المتاح.';
             }
             
             DB::commit();
+            
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message,
+                    'redirect' => route('admin.instructor-earnings.withdrawals')
+                ]);
+            }
             
             return redirect()->route('admin.instructor-earnings.withdrawals')
                 ->with('success', $message);
                 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to process withdrawal request: ' . $e->getMessage());
+            Log::error('Failed to process withdrawal request', [
+                'error' => $e->getMessage(),
+                'withdrawal_id' => $id,
+                'admin_id' => Auth::id(),
+                'action' => $request->action ?? 'unknown',
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['error' => 'حدث خطأ أثناء معالجة طلب السحب: ' . $e->getMessage()], 500);
+            }
             
             return redirect()->back()
-                ->with('error', 'Failed to process withdrawal request. Please try again.');
+                ->with('error', 'حدث خطأ أثناء معالجة طلب السحب: ' . $e->getMessage());
         }
     }
 

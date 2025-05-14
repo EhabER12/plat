@@ -17,14 +17,17 @@
     <!-- Custom Admin CSS -->
     <link href="{{ asset('css/admin.css') }}" rel="stylesheet">
     
+    <!-- Custom Theme -->
+    <link href="{{ asset('css/custom-theme.css') }}" rel="stylesheet">
+    
     <!-- Additional CSS -->
     @yield('styles')
 </head>
 <body>
     <div class="d-flex" id="wrapper">
         <!-- Sidebar -->
-        <div class="border-end bg-dark text-white" id="sidebar-wrapper">
-            <div class="sidebar-heading border-bottom bg-primary text-white py-4 px-3">
+        <div class="border-end bg-primary text-white" id="sidebar-wrapper">
+            <div class="sidebar-heading border-bottom py-4 px-3">
                 <a href="{{ route('admin.dashboard') }}" class="text-decoration-none text-white">
                     <i class="fas fa-graduation-cap me-2"></i>
                     <span class="fs-5 fw-bold">Admin Panel</span>
@@ -34,11 +37,23 @@
                 <a href="{{ route('admin.dashboard') }}" class="list-group-item list-group-item-action p-3 bg-transparent text-white border-0 {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                     <i class="fas fa-tachometer-alt me-2"></i> Dashboard
                 </a>
+                <a href="{{ route('admin.notifications.index') }}" class="list-group-item list-group-item-action p-3 bg-transparent text-white border-0 {{ request()->routeIs('admin.notifications*') ? 'active' : '' }}">
+                    <i class="fas fa-bell me-2"></i> Notifications 
+                    @php
+                    $unreadCount = \App\Models\AdminNotification::where('is_read', false)->count();
+                    @endphp
+                    @if($unreadCount > 0)
+                    <span class="badge bg-danger rounded-pill ms-2">{{ $unreadCount }}</span>
+                    @endif
+                </a>
                 <a href="{{ route('admin.users') }}" class="list-group-item list-group-item-action p-3 bg-transparent text-white border-0 {{ request()->routeIs('admin.users*') ? 'active' : '' }}">
                     <i class="fas fa-users me-2"></i> Users
                 </a>
                 <a href="{{ route('admin.instructor.verifications') }}" class="list-group-item list-group-item-action p-3 bg-transparent text-white border-0 {{ request()->routeIs('admin.instructor.verification*') ? 'active' : '' }}">
                     <i class="fas fa-user-check me-2"></i> Instructor Verifications
+                </a>
+                <a href="{{ route('admin.parent-verifications.index') }}" class="list-group-item list-group-item-action p-3 bg-transparent text-white border-0 {{ request()->routeIs('admin.parent-verifications*') ? 'active' : '' }}">
+                    <i class="fas fa-users-cog me-2"></i> Parent-Student Verifications
                 </a>
                 <a href="{{ route('admin.courses') }}" class="list-group-item list-group-item-action p-3 bg-transparent text-white border-0 {{ request()->routeIs('admin.courses') ? 'active' : '' }}">
                     <i class="fas fa-book me-2"></i> Courses

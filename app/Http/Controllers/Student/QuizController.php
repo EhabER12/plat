@@ -9,6 +9,7 @@ use App\Models\QuizAttempt;
 use App\Models\Enrollment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class QuizController extends Controller
@@ -110,7 +111,21 @@ class QuizController extends Controller
         // Check if student can take the quiz
         $canTakeQuiz = $quiz->canBeAttemptedBy($student->user_id);
 
-        return view('student.quizzes.show', compact('quiz', 'isAvailable', 'availabilityMessage', 'attempts', 'canTakeQuiz'));
+        // Calculate attempts left
+        $attemptsLeft = $quiz->max_attempts === null ? null : max(0, $quiz->max_attempts - $attempts->count());
+        
+        // Check if the student has an in-progress attempt
+        $hasInProgressAttempt = $attempts->where('status', 'in_progress')->count() > 0;
+
+        return view('student.quizzes.show', compact(
+            'quiz', 
+            'isAvailable', 
+            'availabilityMessage', 
+            'attempts', 
+            'canTakeQuiz',
+            'attemptsLeft',
+            'hasInProgressAttempt'
+        ));
     }
 
     /**
@@ -242,6 +257,7 @@ class QuizController extends Controller
     {
         $student = Auth::user();
 
+        try {
         // Find the attempt
         $attempt = QuizAttempt::where('user_id', $student->user_id)
             ->where('status', 'in_progress')
@@ -255,6 +271,13 @@ class QuizController extends Controller
 
         return redirect()->route('student.quizzes.result', $attemptId)
             ->with('success', 'تم تقديم الاختبار بنجاح.');
+        } catch (\Exception $e) {
+            // Log the error
+            Log::error('Error submitting quiz: ' . $e->getMessage());
+            
+            return redirect()->route('student.quizzes.show', $attempt->quiz_id ?? $request->input('quiz_id'))
+                ->with('error', 'حدث خطأ أثناء تسليم الامتحان. الرجاء المحاولة مرة أخرى.');
+        }
     }
 
     /**

@@ -24,6 +24,7 @@ class StudentProgress extends Model
      */
     protected $fillable = [
         'student_id',
+        'user_id',
         'course_id',
         'content_type',
         'content_id',

@@ -6,7 +6,7 @@
     <div class="container">
         <a class="navbar-brand" href="{{ url('/') }}">
             <img src="{{ asset('images/logo.png') }}" alt="TOTO" class="logo-img" width="40" height="40">
-            <span class="brand-text" style="color: white;"></span>
+            <span class="brand-text" style="color: white; font-weight: 700;">TOTO</span>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
             aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -15,78 +15,78 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav {{ app()->getLocale() == 'ar' ? 'me-auto' : 'ms-auto' }}">
                 <li class="nav-item">
-                    <a class="nav-link {{ Request::is('/') ? 'active' : '' }}" style="color: white;"
+                    <a class="nav-link {{ Request::is('/') ? 'active' : '' }}" style="color: white !important; font-weight: 600;"
                         href="{{ url('/') }}">{{ __('Home') }}</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ Request::is('courses*') ? 'active' : '' }}" style="color: white;"
+                    <a class="nav-link {{ Request::is('courses*') ? 'active' : '' }}" style="color: white !important; font-weight: 600;"
                         href="{{ route('courses.index') }}">{{ __('Courses') }}</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ Request::is('instructors*') ? 'active' : '' }}" style="color: white;"
+                    <a class="nav-link {{ Request::is('instructors*') ? 'active' : '' }}" style="color: white !important; font-weight: 600;"
                         href="{{ route('instructors.index') }}">{{ __('Instructors') }}</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ Request::is('about') ? 'active' : '' }}" style="color: white;"
+                    <a class="nav-link {{ Request::is('about') ? 'active' : '' }}" style="color: white !important; font-weight: 600;"
                         href="{{ url('/about') }}">{{ __('About') }}</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ Request::is('contact') ? 'active' : '' }}" style="color: white;"
+                    <a class="nav-link {{ Request::is('contact') ? 'active' : '' }}" style="color: white !important; font-weight: 600;"
                         href="{{ url('/contact') }}">{{ __('Contact') }}</a>
                 </li>
 
                 <li class="nav-item dropdown d-lg-none d-block">
                     <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button"
-                        data-bs-toggle="dropdown" aria-expanded="false" style="color: white;">
+                        data-bs-toggle="dropdown" aria-expanded="false" style="color: white !important; font-weight: 600;">
                         {{ app()->getLocale() == 'en' ? 'English' : 'العربية' }}
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown" style="background-color: #0a2e4d;">
-                        <li><a class="dropdown-item" href="{{ route('language.switch', 'en') }}" style="color: white;">English</a></li>
-                        <li><a class="dropdown-item" href="{{ route('language.switch', 'ar') }}" style="color: white;">العربية</a></li>
+                        <li><a class="dropdown-item" href="{{ route('language.switch', 'en') }}" style="color: white !important;">English</a></li>
+                        <li><a class="dropdown-item" href="{{ route('language.switch', 'ar') }}" style="color: white !important;">العربية</a></li>
                     </ul>
                 </li>
 
                 @guest
                     <li class="nav-item">
-                        <a class="nav-link {{ Request::is('login') ? 'active' : '' }}" style="color: white;"
+                        <a class="nav-link {{ Request::is('login') ? 'active' : '' }}" style="color: white !important; font-weight: 600;"
                             href="{{ route('login') }}">{{ __('Login') }}</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ Request::is('register') ? 'active' : '' }}" style="color: white;"
+                        <a class="nav-link {{ Request::is('register') ? 'active' : '' }}" style="color: white !important; font-weight: 600;"
                             href="{{ route('register') }}">{{ __('Register') }}</a>
                     </li>
                 @else
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
-                            data-bs-toggle="dropdown" aria-expanded="false" style="color: white;">
+                            data-bs-toggle="dropdown" aria-expanded="false" style="color: white !important; font-weight: 600;">
                             <img src="{{ Auth::user()->profile_image ? asset('storage/' . Auth::user()->profile_image) : asset('images/default-avatar.png') }}"
                                 class="rounded-circle me-1" width="24" height="24" alt="{{ Auth::user()->name }}">
                             {{ Auth::user()->name }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown" style="background-color: #0a2e4d;">
                             @if(Auth::user()->hasRole('admin'))
-                                <li><a class="dropdown-item" style="color: white;"
+                                <li><a class="dropdown-item" style="color: white !important;"
                                         href="{{ route('admin.dashboard') }}">{{ __('Admin Dashboard') }}</a></li>
                             @elseif(Auth::user()->hasRole('instructor'))
-                                <li><a class="dropdown-item" style="color: white;"
+                                <li><a class="dropdown-item" style="color: white !important;"
                                         href="{{ route('instructor.dashboard') }}">{{ __('Instructor Dashboard') }}</a></li>
                             @else
-                                <li><a class="dropdown-item" style="color: white;"
+                                <li><a class="dropdown-item" style="color: white !important;"
                                         href="{{ route('student.dashboard') }}">{{ __('My Dashboard') }}</a></li>
                             @endif
                             @if(Auth::user()->hasRole('admin'))
-                                <li><a class="dropdown-item" style="color: white;" href="{{ route('admin.settings') }}">{{ __('Profile') }}</a></li>
+                                <li><a class="dropdown-item" style="color: white !important;" href="{{ route('admin.settings') }}">{{ __('Profile') }}</a></li>
                             @elseif(Auth::user()->hasRole('instructor'))
-                                <li><a class="dropdown-item" style="color: white;"
+                                <li><a class="dropdown-item" style="color: white !important;"
                                         href="{{ route('instructor.profile.index') }}">{{ __('Profile') }}</a></li>
                             @else
-                                <li><a class="dropdown-item" style="color: white;" href="{{ route('student.profile') }}">{{ __('Profile') }}</a></li>
+                                <li><a class="dropdown-item" style="color: white !important;" href="{{ route('student.profile') }}">{{ __('Profile') }}</a></li>
                             @endif
                             <li>
                                 <hr class="dropdown-divider" style="border-color: rgba(255,255,255,0.2);">
                             </li>
                             <li>
-                                <a class="dropdown-item" style="color: white;" href="{{ route('logout') }}"
+                                <a class="dropdown-item" style="color: white !important;" href="{{ route('logout') }}"
                                     onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                                     {{ __('Logout') }}
                                 </a>
@@ -102,7 +102,7 @@
             <!-- Language Switcher - Visible only on larger screens -->
             <div class="language-switcher d-none d-lg-block ms-3">
                 <a href="{{ route('language.switch', app()->getLocale() == 'en' ? 'ar' : 'en') }}"
-                    class="btn btn-sm {{ app()->getLocale() == 'ar' ? 'btn-outline-primary' : 'btn-outline-secondary' }}" style="color: white; border-color: white;">
+                    class="btn btn-sm {{ app()->getLocale() == 'ar' ? 'btn-outline-primary' : 'btn-outline-secondary' }}" style="color: white !important; border-color: white !important;">
                     {{ app()->getLocale() == 'en' ? 'العربية' : 'English' }}
                 </a>
             </div>
@@ -114,7 +114,7 @@
     /* Navbar styles */
     .navbar-transparent {
         transition: all 0.4s ease;
-        background-color: #0a2e4d;
+        background-color: #0a2e4d !important;
     }
 
     .navbar-transparent.navbar-scrolled {
@@ -124,6 +124,7 @@
 
     .navbar {
         padding: 15px 0;
+        z-index: 1030 !important;
     }
     
     .navbar-scrolled {
@@ -135,16 +136,16 @@
     }
 
     .navbar .brand-text {
-        font-weight: 700;
+        font-weight: 700 !important;
         font-size: 1.5rem;
         margin-left: 0.5rem;
         transition: all 0.3s ease;
-        color: white;
+        color: white !important;
     }
 
     .navbar-toggler {
-        border: none;
-        color: white;
+        border: 2px solid rgba(255,255,255,0.5) !important;
+        color: white !important;
         font-size: 1.2rem;
         padding: 0.4rem 0.8rem;
         border-radius: 5px;
@@ -153,29 +154,34 @@
 
     .navbar-toggler:focus {
         box-shadow: none;
+        outline: none;
     }
     
     .nav-link {
-        font-weight: 500;
+        font-weight: 600 !important;
         padding: 0.5rem 1rem !important;
         margin: 0 0.2rem;
         border-radius: 5px;
         transition: all 0.3s ease;
         color: white !important;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        font-size: 1.05rem;
     }
     
     .nav-link:hover {
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: rgba(255, 255, 255, 0.15);
         transform: translateY(-2px);
+        color: #FFD700 !important;
     }
     
     .nav-link.active {
         background-color: rgba(255, 255, 255, 0.15);
-        font-weight: 600;
+        font-weight: 700 !important;
+        color: #FFD700 !important;
     }
     
     .dropdown-menu {
-        border: none;
+        border: none !important;
         box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
         border-radius: 8px;
         padding: 0.8rem 0;
@@ -191,8 +197,9 @@
     }
     
     .dropdown-item:hover {
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: rgba(255, 255, 255, 0.15);
         transform: translateX(5px);
+        color: #FFD700 !important;
     }
     
     .language-switcher .btn {
@@ -206,16 +213,17 @@
     
     .language-switcher .btn:hover {
         transform: translateY(-2px);
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: rgba(255, 255, 255, 0.15);
+        color: #FFD700 !important;
     }
 
     .dropdown-divider {
-        border-color: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255,255,255,0.2);
     }
 
     @media (max-width: 991.98px) {
         .navbar-collapse {
-            background-color: #0a2e4d;
+            background-color: #0a2e4d !important;
             border-radius: 0 0 15px 15px;
             margin-top: 0.5rem;
             padding: 1.2rem;
@@ -227,17 +235,19 @@
         }
 
         .navbar-nav .nav-link {
-            padding: 0.6rem 1rem;
+            padding: 0.7rem 1rem !important;
             border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
         .navbar-nav .nav-link:hover,
         .navbar-nav .nav-link.active {
             background-color: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255,255,255,0.3);
         }
 
         .navbar-nav .dropdown-menu {
-            background-color: rgba(0, 0, 0, 0.1) !important;
+            background-color: rgba(0, 0, 0, 0.2) !important;
             border: none;
             box-shadow: none;
             padding: 0.5rem;
@@ -248,11 +258,12 @@
         .navbar-nav .dropdown-item {
             color: white !important;
             border-radius: 5px;
+            padding: 0.8rem 1.5rem;
         }
 
         .navbar-nav .dropdown-item:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            color: #fff;
+            background-color: rgba(255, 255, 255, 0.15);
+            color: #FFD700 !important;
         }
     }
 
@@ -283,6 +294,15 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const navbar = document.querySelector('.navbar-transparent');
+
+        // Make sure all nav links are visible and properly styled
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.style.color = 'white';
+            link.style.fontWeight = '600';
+            link.style.visibility = 'visible';
+            link.style.opacity = '1';
+        });
 
         if (navbar) {
             window.addEventListener('scroll', function () {

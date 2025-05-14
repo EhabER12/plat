@@ -9,13 +9,14 @@ use App\Http\Controllers\Instructor\DashboardController as InstructorDashboardCo
 use App\Http\Controllers\PaymentController;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\InstructorMiddleware;
+use App\Http\Controllers\CourseController;
 
 // Pages Routes
-Route::get('/', [PageController::class, 'home']);
+Route::get('/', [PageController::class, 'home'])->name('home');
 Route::get('/about', [PageController::class, 'about']);
 Route::get('/contact', [PageController::class, 'contact']);
 Route::post('/contact', [PageController::class, 'submitContact']);
-Route::get('/courses', [PageController::class, 'courses'])->name('courses');
+Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
 Route::get('/courses/{courseId}', [PageController::class, 'courseDetail'])->name('course.detail');
 
 // Instructor Profiles Routes
@@ -31,6 +32,10 @@ Route::middleware('guest')->group(function () {
     // Registration
     Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
     Route::post('/register', [RegisterController::class, 'register']);
+    
+    // Parent Registration
+    Route::get('/register/parent', [App\Http\Controllers\Auth\ParentRegistrationController::class, 'showRegistrationForm'])->name('register.parent');
+    Route::post('/register/parent', [App\Http\Controllers\Auth\ParentRegistrationController::class, 'register']);
     
     // Password Reset Routes
     Route::get('/forgot-password', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'showLinkRequestForm'])
@@ -78,6 +83,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/profile', [App\Http\Controllers\Instructor\ProfileController::class, 'index'])->name('instructor.profile.index');
         Route::put('/profile', [App\Http\Controllers\Instructor\ProfileController::class, 'update'])->name('instructor.profile.update');
         Route::post('/profile/image', [App\Http\Controllers\Instructor\ProfileController::class, 'updateImage'])->name('instructor.profile.update.image');
+        Route::post('/profile/banner', [App\Http\Controllers\Instructor\ProfileController::class, 'updateBannerImage'])->name('instructor.profile.update.banner');
         Route::put('/profile/password', [App\Http\Controllers\Instructor\ProfileController::class, 'updatePassword'])->name('instructor.profile.update.password');
 
         // Course Management
@@ -140,11 +146,15 @@ Route::middleware('auth')->group(function () {
 
         // Reports
         Route::get('/reports', [InstructorDashboardController::class, 'reports'])->name('instructor.reports');
+        
+        // Top Students Analysis
+        Route::get('/top-students', [InstructorDashboardController::class, 'topStudents'])->name('instructor.top-students');
 
         // Messages
         Route::get('/messages', [App\Http\Controllers\Instructor\MessagesController::class, 'index'])->name('instructor.messages.index');
         Route::get('/messages/{userId}', [App\Http\Controllers\Instructor\MessagesController::class, 'show'])->name('instructor.messages.show');
         Route::post('/messages', [App\Http\Controllers\Instructor\MessagesController::class, 'send'])->name('instructor.messages.send');
+        Route::post('/messages/get-new', [App\Http\Controllers\Instructor\MessagesController::class, 'getNewMessages'])->name('instructor.messages.get-new');
 
         // Quiz routes
         Route::get('/quizzes', [App\Http\Controllers\Instructor\QuizController::class, 'index'])->name('instructor.quizzes.index');
@@ -157,30 +167,85 @@ Route::middleware('auth')->group(function () {
         Route::delete('/quizzes/{id}', [App\Http\Controllers\Instructor\QuizController::class, 'destroy'])->name('instructor.quizzes.destroy');
         Route::get('/quiz-attempts/{attemptId}', [App\Http\Controllers\Instructor\QuizController::class, 'viewAttempt'])->name('instructor.quizzes.attempt');
         Route::post('/quiz-attempts/{attemptId}/feedback', [App\Http\Controllers\Instructor\QuizController::class, 'provideFeedback'])->name('instructor.quizzes.provide-feedback');
+
+        // Coupon Management
+        Route::get('/coupons', [App\Http\Controllers\Instructor\CouponController::class, 'index'])->name('instructor.coupons.index');
+        Route::get('/coupons/create', [App\Http\Controllers\Instructor\CouponController::class, 'create'])->name('instructor.coupons.create');
+        Route::post('/coupons', [App\Http\Controllers\Instructor\CouponController::class, 'store'])->name('instructor.coupons.store');
+        Route::get('/coupons/{id}/edit', [App\Http\Controllers\Instructor\CouponController::class, 'edit'])->name('instructor.coupons.edit');
+        Route::patch('/coupons/{id}', [App\Http\Controllers\Instructor\CouponController::class, 'update'])->name('instructor.coupons.update');
+        Route::delete('/coupons/{id}', [App\Http\Controllers\Instructor\CouponController::class, 'destroy'])->name('instructor.coupons.destroy');
+        
+        // Discount Management
+        Route::get('/discounts', [App\Http\Controllers\Instructor\DiscountController::class, 'index'])->name('instructor.discounts.index');
+        Route::get('/discounts/create', [App\Http\Controllers\Instructor\DiscountController::class, 'create'])->name('instructor.discounts.create');
+        Route::post('/discounts', [App\Http\Controllers\Instructor\DiscountController::class, 'store'])->name('instructor.discounts.store');
+        Route::get('/discounts/{id}/edit', [App\Http\Controllers\Instructor\DiscountController::class, 'edit'])->name('instructor.discounts.edit');
+        Route::patch('/discounts/{id}', [App\Http\Controllers\Instructor\DiscountController::class, 'update'])->name('instructor.discounts.update');
+        Route::delete('/discounts/{id}', [App\Http\Controllers\Instructor\DiscountController::class, 'destroy'])->name('instructor.discounts.destroy');
     });
 
     // Payment Routes
     Route::prefix('payment')->name('payment.')->group(function () {
         Route::get('/checkout/{courseId}', [PaymentController::class, 'checkout'])->name('checkout');
         Route::post('/process/paymob/{courseId}', [PaymentController::class, 'processPaymobPayment'])->name('process.paymob');
+        Route::post('/process/stripe/{courseId}', [PaymentController::class, 'processStripePayment'])->name('process.stripe');
+        Route::post('/process/vodafone/{courseId}', [PaymentController::class, 'processVodafonePayment'])->name('process.vodafone');
+        Route::get('/verify/vodafone/{reference}', [PaymentController::class, 'verifyVodafonePayment'])->name('verify.vodafone');
         Route::get('/pending/{paymentId}', [PaymentController::class, 'showPendingPayment'])->name('pending');
         Route::get('/success/{paymentId}', [PaymentController::class, 'showSuccessPayment'])->name('success');
         Route::get('/failed/{paymentId}', [PaymentController::class, 'showFailedPayment'])->name('failed');
 
-        // Paymob webhook and response routes
+        // Coupon routes
+        Route::post('/apply-coupon/{courseId}', [PaymentController::class, 'applyCoupon'])->name('apply-coupon');
+        Route::post('/remove-coupon/{courseId}', [PaymentController::class, 'removeCoupon'])->name('remove-coupon');
+
+        // Paymob webhook callback from dashboard
         Route::post('/paymob/callback', [PaymentController::class, 'paymobCallback'])->name('paymob.callback');
+        
+        // Paymob response pages (redirects to success/failure pages)
         Route::get('/paymob/response/{status}', [PaymentController::class, 'paymobResponse'])->name('paymob.response');
+
+        // Test Routes - For simulation only
+        Route::get('/test/simulate/{courseId}/{method?}', [PaymentController::class, 'simulatePayment'])->name('test.simulate');
+
+        // Unknown transaction processing
+        Route::post('/process-unknown-transaction', [PaymentController::class, 'processUnknownTransaction'])->name('process-unknown-transaction');
     });
+
+    // Additional Paymob payment routes - These handle callbacks from Paymob to the default URL they expect
+    // IMPORTANT: These routes receive the actual payment notifications from Paymob when users complete payment
+    Route::post('/api/acceptance/post_pay', [PaymentController::class, 'paymobCallback']);
+    Route::get('/api/acceptance/post_pay', [PaymentController::class, 'paymobCallback']);
+    
+    // Development-only route to manually complete a payment (only enable in development)
+    Route::get('/payment/debug/complete/{transactionId}', [PaymentController::class, 'debugCompletePayment']);
+    
+    // Route for handling unknown transactions (when payment is received but transaction not found)
+    Route::get('/payment/unknown-transaction', [PaymentController::class, 'showUnknownTransaction'])->name('payment.unknown-transaction');
 
     // Student Routes - Protected by student middleware
     Route::middleware(\App\Http\Middleware\StudentMiddleware::class)->prefix('student')->group(function () {
         // Dashboard/Profile
+        Route::get('/', [App\Http\Controllers\Student\ProfileController::class, 'index'])->name('student.dashboard');
         Route::get('/profile', [App\Http\Controllers\Student\ProfileController::class, 'index'])->name('student.profile');
         Route::get('/profile/edit', [App\Http\Controllers\Student\ProfileController::class, 'edit'])->name('student.profile.edit');
         Route::put('/profile', [App\Http\Controllers\Student\ProfileController::class, 'update'])->name('student.profile.update');
         Route::get('/profile/change-password', [App\Http\Controllers\Student\ProfileController::class, 'showChangePasswordForm'])->name('student.profile.change-password-form');
         Route::post('/profile/change-password', [App\Http\Controllers\Student\ProfileController::class, 'changePassword'])->name('student.profile.change-password');
         Route::get('/profile/index', [App\Http\Controllers\Student\ProfileController::class, 'index'])->name('student.profile.index');
+
+        // مسارات تقدم الطالب في مشاهدة الفيديوهات
+        Route::post('/save-progress', [App\Http\Controllers\Student\StudentProgressController::class, 'saveProgress'])->name('student.save-progress');
+        
+        // معالج لطلبات GET بطريقة خطأ عن طريق إعادة التوجيه إلى الصفحة الحالية
+        Route::get('/save-progress', function() {
+            // يعود مرة أخرى إلى الصفحة السابقة مع رسالة تحذيرية
+            return redirect()->back()->with('warning', 'تم استخدام طريقة GET للوصول إلى مسار حفظ التقدم. يرجى استخدام طريقة POST.');
+        });
+        
+        Route::get('/course/{courseId}/progress', [App\Http\Controllers\Student\StudentProgressController::class, 'getCourseProgress'])->name('student.course.progress');
+        Route::get('/video/{videoId}/progress', [App\Http\Controllers\Student\StudentProgressController::class, 'getVideoProgress'])->name('student.video.progress');
 
         // Certificates
         Route::get('/certificates', [App\Http\Controllers\Student\CertificateController::class, 'index'])->name('student.certificates.index');
@@ -192,9 +257,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/messages', [App\Http\Controllers\Student\MessagesController::class, 'index'])->name('student.messages.index');
         Route::get('/messages/{instructorId}', [App\Http\Controllers\Student\MessagesController::class, 'show'])->name('student.messages.show');
         Route::post('/messages', [App\Http\Controllers\Student\MessagesController::class, 'send'])->name('student.messages.send');
+        Route::post('/messages/get-new', [App\Http\Controllers\Student\MessagesController::class, 'getNewMessages'])->name('student.messages.get-new');
         // My Courses
         Route::get('/my-courses', [App\Http\Controllers\Student\CourseController::class, 'myCourses'])->name('student.my-courses');
         Route::get('/course/{courseId}/content', [App\Http\Controllers\Student\CourseController::class, 'courseContent'])->name('student.course-content');
+        Route::get('/course/{courseId}/video/{videoId?}', [App\Http\Controllers\Student\ContentController::class, 'show'])->name('student.course-video');
 
         // Enrollment
         Route::post('/course/{courseId}/enroll', [App\Http\Controllers\Student\EnrollController::class, 'enroll'])->name('student.enroll');
@@ -227,8 +294,8 @@ Route::middleware('auth')->group(function () {
     Route::middleware(AdminMiddleware::class)->prefix('admin')->group(function () {
         // Dashboard
         Route::get('/', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
-
-        // Create Demo Data
+        
+        // Create Demo Data (for development only)
         Route::get('/create-demo-data', [AdminDashboardController::class, 'createDemoData'])->name('admin.create-demo-data');
 
         // Reset Database and Add Demo Data
@@ -288,12 +355,24 @@ Route::middleware('auth')->group(function () {
         Route::get('/settings', [AdminDashboardController::class, 'settings'])->name('admin.settings');
         Route::post('/settings', [AdminDashboardController::class, 'updateSettings'])->name('admin.settings.update');
 
-        // Website Appearance Settings
+        // Website Appearance Routes
         Route::get('/website-appearance', [App\Http\Controllers\Admin\WebsiteAppearanceController::class, 'index'])->name('admin.website-appearance');
         Route::post('/website-appearance/hero', [App\Http\Controllers\Admin\WebsiteAppearanceController::class, 'updateHero'])->name('admin.website-appearance.hero');
         Route::post('/website-appearance/features', [App\Http\Controllers\Admin\WebsiteAppearanceController::class, 'updateFeatures'])->name('admin.website-appearance.features');
         Route::post('/website-appearance/stats', [App\Http\Controllers\Admin\WebsiteAppearanceController::class, 'updateStats'])->name('admin.website-appearance.stats');
         Route::post('/website-appearance/navbar-banner', [App\Http\Controllers\Admin\WebsiteAppearanceController::class, 'updateNavbarBanner'])->name('admin.website-appearance.navbar-banner');
+        Route::post('/website-appearance/about', [App\Http\Controllers\Admin\WebsiteAppearanceController::class, 'updateAbout'])->name('admin.website-appearance.about');
+        Route::post('/website-appearance/video', [App\Http\Controllers\Admin\WebsiteAppearanceController::class, 'updateVideo'])->name('admin.website-appearance.video');
+        Route::post('/website-appearance/partners', [App\Http\Controllers\Admin\WebsiteAppearanceController::class, 'updatePartners'])->name('admin.website-appearance.partners');
+        Route::post('/website-appearance/footer', [App\Http\Controllers\Admin\WebsiteAppearanceController::class, 'updateFooter'])->name('admin.website-appearance.update-footer');
+        Route::post('/website-appearance/clear-cache', [App\Http\Controllers\Admin\WebsiteAppearanceController::class, 'clearCache'])->name('admin.website-appearance.clear-cache');
+
+        // Parent-Student Relations Verifications
+        Route::get('/parent-verifications', [App\Http\Controllers\ParentStudentController::class, 'index'])->name('admin.parent-verifications.index');
+        Route::get('/parent-verifications/pending', [App\Http\Controllers\ParentStudentController::class, 'pendingVerifications'])->name('admin.parent-verifications.pending');
+        Route::get('/parent-verifications/{id}', [App\Http\Controllers\ParentStudentController::class, 'show'])->name('admin.parent-verifications.show');
+        Route::post('/parent-verifications/{id}/verify', [App\Http\Controllers\ParentStudentController::class, 'verify'])->name('admin.parent-verifications.verify');
+        Route::get('/parent-verifications/{id}/document/{documentType}', [App\Http\Controllers\ParentStudentController::class, 'downloadDocument'])->name('admin.parent-verifications.document');
 
         // Instructor Earnings Management
         Route::get('/instructor-earnings', [App\Http\Controllers\Admin\InstructorEarningController::class, 'index'])->name('admin.instructor-earnings.index');
@@ -303,6 +382,43 @@ Route::middleware('auth')->group(function () {
         Route::get('/instructor-earnings/settings', [App\Http\Controllers\Admin\InstructorEarningController::class, 'settings'])->name('admin.instructor-earnings.settings');
         Route::post('/instructor-earnings/settings', [App\Http\Controllers\Admin\InstructorEarningController::class, 'updateSettings'])->name('admin.instructor-earnings.update-settings');
         Route::get('/instructor-earnings/instructors/{id}', [App\Http\Controllers\Admin\InstructorEarningController::class, 'instructorEarnings'])->name('admin.instructor-earnings.instructor');
+
+        // Coupon Management
+        Route::get('/coupons', [App\Http\Controllers\Admin\CouponController::class, 'index'])->name('admin.coupons.index');
+        Route::get('/coupons/create', [App\Http\Controllers\Admin\CouponController::class, 'create'])->name('admin.coupons.create');
+        Route::post('/coupons', [App\Http\Controllers\Admin\CouponController::class, 'store'])->name('admin.coupons.store');
+        Route::get('/coupons/{id}/edit', [App\Http\Controllers\Admin\CouponController::class, 'edit'])->name('admin.coupons.edit');
+        Route::patch('/coupons/{id}', [App\Http\Controllers\Admin\CouponController::class, 'update'])->name('admin.coupons.update');
+        Route::delete('/coupons/{id}', [App\Http\Controllers\Admin\CouponController::class, 'destroy'])->name('admin.coupons.destroy');
+        
+        // Discount Management
+        Route::get('/discounts', [App\Http\Controllers\Admin\DiscountController::class, 'index'])->name('admin.discounts.index');
+        Route::get('/discounts/create', [App\Http\Controllers\Admin\DiscountController::class, 'create'])->name('admin.discounts.create');
+        Route::post('/discounts', [App\Http\Controllers\Admin\DiscountController::class, 'store'])->name('admin.discounts.store');
+        Route::get('/discounts/{id}/edit', [App\Http\Controllers\Admin\DiscountController::class, 'edit'])->name('admin.discounts.edit');
+        Route::patch('/discounts/{id}', [App\Http\Controllers\Admin\DiscountController::class, 'update'])->name('admin.discounts.update');
+        Route::delete('/discounts/{id}', [App\Http\Controllers\Admin\DiscountController::class, 'destroy'])->name('admin.discounts.destroy');
+        
+        // Banned Words Management
+        Route::get('/banned-words', [App\Http\Controllers\Admin\BannedWordsController::class, 'index'])->name('admin.banned-words.index');
+        Route::get('/banned-words/create', [App\Http\Controllers\Admin\BannedWordsController::class, 'create'])->name('admin.banned-words.create');
+        Route::post('/banned-words', [App\Http\Controllers\Admin\BannedWordsController::class, 'store'])->name('admin.banned-words.store');
+        Route::get('/banned-words/{bannedWord}/edit', [App\Http\Controllers\Admin\BannedWordsController::class, 'edit'])->name('admin.banned-words.edit');
+        Route::put('/banned-words/{bannedWord}', [App\Http\Controllers\Admin\BannedWordsController::class, 'update'])->name('admin.banned-words.update');
+        Route::delete('/banned-words/{bannedWord}', [App\Http\Controllers\Admin\BannedWordsController::class, 'destroy'])->name('admin.banned-words.destroy');
+        Route::post('/banned-words/{bannedWord}/toggle-status', [App\Http\Controllers\Admin\BannedWordsController::class, 'toggleStatus'])->name('admin.banned-words.toggle-status');
+        Route::get('/flagged-messages', [App\Http\Controllers\Admin\BannedWordsController::class, 'flaggedMessages'])->name('admin.banned-words.flagged-messages');
+        Route::post('/banned-words/test-filter', [App\Http\Controllers\Admin\BannedWordsController::class, 'testFilter'])->name('admin.banned-words.test-filter');
+        Route::post('/banned-words/bulk-import', [App\Http\Controllers\Admin\BannedWordsController::class, 'bulkImport'])->name('admin.banned-words.bulk-import');
+
+        // Admin notifications routes
+        Route::get('notifications/test-create', [\App\Http\Controllers\Admin\NotificationsController::class, 'createTestNotification'])->name('admin.notifications.test-create');
+        Route::get('notifications', [\App\Http\Controllers\Admin\NotificationsController::class, 'index'])->name('admin.notifications.index');
+        Route::get('notifications/{id}', [\App\Http\Controllers\Admin\NotificationsController::class, 'show'])->name('admin.notifications.show');
+        Route::post('notifications/{id}/mark-read', [\App\Http\Controllers\Admin\NotificationsController::class, 'markAsRead'])->name('admin.notifications.mark-read');
+        Route::post('notifications/mark-multiple-read', [\App\Http\Controllers\Admin\NotificationsController::class, 'markMultipleAsRead'])->name('admin.notifications.mark-multiple-read');
+        Route::post('notifications/mark-all-read', [\App\Http\Controllers\Admin\NotificationsController::class, 'markAllAsRead'])->name('admin.notifications.mark-all-read');
+        Route::delete('notifications/{id}', [\App\Http\Controllers\Admin\NotificationsController::class, 'destroy'])->name('admin.notifications.destroy');
     });
 
     // Course Materials Download - Accessible to enrolled students and instructors
@@ -311,10 +427,11 @@ Route::middleware('auth')->group(function () {
 
     // Protected Video Routes
     Route::get('/video/token/{courseId}/{videoId}', [App\Http\Controllers\VideoStreamController::class, 'getAccessToken'])
-        ->name('video.token')
-        ->middleware(['auth', 'verified']);
+        ->name('video.token');
     Route::get('/video/stream/{token}', [App\Http\Controllers\VideoStreamController::class, 'stream'])
         ->name('video.stream');
+    Route::get('/video/stream/hls-segment/{token}', [App\Http\Controllers\VideoStreamController::class, 'hlsSegment'])
+        ->name('video.hls-segment');
     Route::post('/video/progress', [App\Http\Controllers\VideoStreamController::class, 'updateProgress'])
         ->name('video.progress')
         ->middleware(['auth', 'verified']);
@@ -328,6 +445,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/blocked-access', [App\Http\Controllers\BlockedAccessController::class, 'show'])
         ->name('blocked.access')
         ->middleware('auth');
+
+    // Additional Paymob payment routes
+    Route::get('/checkout', [PaymentController::class, 'checkout'])->name('checkout');
+    Route::post('/payment/callback', [PaymentController::class, 'callback'])->name('payment.callback');
+    Route::get('/payment/response', [PaymentController::class, 'processResponse'])->name('payment.response');
+    Route::get('/payment/form', function () {
+        return view('payments.form');
+    })->name('payment.form');
 });
 
 // Certificate Verification (Public Route)
@@ -337,3 +462,24 @@ Route::get('/verify-certificate', function() {
 
 Route::post('/verify-certificate', [App\Http\Controllers\Admin\CertificateController::class, 'verify'])
     ->name('certificate.verification.verify');
+
+// Student-Parent Link
+Route::get('/student/parent/link-request/{token}', [App\Http\Controllers\Student\ParentLinkController::class, 'showLinkRequest'])->name('student.parent-link-request');
+Route::post('/student/parent/link-request/{token}/respond', [App\Http\Controllers\Student\ParentLinkController::class, 'respondToLinkRequest'])->name('student.respond-to-parent-link');
+
+// Parent Routes
+Route::middleware(['auth', \App\Http\Middleware\RoleMiddleware::class.':parent'])->prefix('parent')->group(function () {
+    Route::get('/', [App\Http\Controllers\ParentDashboardController::class, 'index'])->name('parent.dashboard');
+    Route::get('/student/{studentId}', [App\Http\Controllers\ParentDashboardController::class, 'studentActivity'])->name('parent.student-activity');
+    Route::get('/activities', [App\Http\Controllers\ParentDashboardController::class, 'activities'])->name('parent.activities');
+    Route::get('/link-request', [App\Http\Controllers\ParentDashboardController::class, 'linkRequestForm'])->name('parent.link-request');
+    Route::post('/link-request', [App\Http\Controllers\ParentDashboardController::class, 'storeLinkRequest'])->name('parent.store-link-request');
+    Route::post('/link-request/{requestId}/resubmit', [App\Http\Controllers\ParentDashboardController::class, 'resubmitLinkRequest'])->name('parent.resubmit-link-request');
+    
+    // Profile management
+    Route::match(['get', 'post'], '/profile', [App\Http\Controllers\ParentDashboardController::class, 'profile'])->name('parent.profile');
+    Route::post('/profile/password', [App\Http\Controllers\ParentDashboardController::class, 'updatePassword'])->name('parent.profile.update-password');
+});
+
+// Language Route - Public Route
+Route::get('/language/{locale}', [App\Http\Controllers\LanguageController::class, 'switch'])->name('language.switch');

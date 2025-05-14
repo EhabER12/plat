@@ -61,6 +61,10 @@ class CourseController extends Controller
             'price' => 'required|numeric|min:0',
             'category_id' => 'required|exists:categories,category_id',
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'certificate_available' => 'nullable|boolean',
+            'certificate_type' => 'required_if:certificate_available,1|in:default,custom',
+            'custom_certificate' => 'required_if:certificate_type,custom|nullable|image|mimes:jpeg,png,jpg|max:5120',
+            'certificate_text' => 'nullable|string|max:500',
         ]);
         
         // Create course
@@ -71,7 +75,23 @@ class CourseController extends Controller
         $course->category_id = $validated['category_id'];
         $course->instructor_id = Auth::id();
         $course->approval_status = 'pending'; // Default status
-
+        
+        // إعدادات الشهادة
+        $course->certificate_available = $request->has('certificate_available');
+        
+        if ($request->has('certificate_available') && $request->certificate_type) {
+            $course->certificate_type = $request->certificate_type;
+            $course->certificate_text = $request->certificate_text;
+            
+            // معالجة ملف الشهادة المخصصة إذا كان متوفراً
+            if ($request->certificate_type === 'custom' && $request->hasFile('custom_certificate')) {
+                $file = $request->file('custom_certificate');
+                $filename = time() . '_certificate_' . $file->getClientOriginalName();
+                $file->move(public_path('uploads/certificates'), $filename);
+                $course->custom_certificate_path = 'uploads/certificates/' . $filename;
+            }
+        }
+        
         // Handle thumbnail upload
         if ($request->hasFile('thumbnail')) {
             $file = $request->file('thumbnail');
@@ -138,12 +158,40 @@ class CourseController extends Controller
             'price' => 'required|numeric|min:0',
             'category_id' => 'required|exists:categories,category_id',
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'certificate_available' => 'nullable|boolean',
+            'certificate_type' => 'required_if:certificate_available,1|in:default,custom',
+            'custom_certificate' => 'required_if:certificate_type,custom|nullable|image|mimes:jpeg,png,jpg|max:5120',
+            'certificate_text' => 'nullable|string|max:500',
         ]);
         
         $course->title = $validated['title'];
         $course->description = $validated['description'];
         $course->price = $validated['price'];
         $course->category_id = $validated['category_id'];
+        
+        // إعدادات الشهادة
+        $course->certificate_available = $request->has('certificate_available');
+        
+        if ($request->has('certificate_available') && $request->certificate_type) {
+            $course->certificate_type = $request->certificate_type;
+            $course->certificate_text = $request->certificate_text;
+            
+            // معالجة ملف الشهادة المخصصة إذا كان متوفراً
+            if ($request->certificate_type === 'custom' && $request->hasFile('custom_certificate')) {
+                // حذف ملف الشهادة القديم إذا كان موجوداً
+                if ($course->custom_certificate_path) {
+                    $oldPath = public_path($course->custom_certificate_path);
+                    if (file_exists($oldPath)) {
+                        unlink($oldPath);
+                    }
+                }
+                
+                $file = $request->file('custom_certificate');
+                $filename = time() . '_certificate_' . $file->getClientOriginalName();
+                $file->move(public_path('uploads/certificates'), $filename);
+                $course->custom_certificate_path = 'uploads/certificates/' . $filename;
+            }
+        }
         
         // If it's not a minor update, set status back to pending
         if ($course->approval_status === 'approved' && !$request->has('is_minor_update')) {

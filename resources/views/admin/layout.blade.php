@@ -13,10 +13,22 @@
     <!-- Admin CSS -->
     <link href="{{ asset('css/admin.css') }}" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #003366;
+            --secondary-color: #FFD700;
+            --background-color: #FAFAFA;
+            --text-color: #1F1F1F;
+            --border-color: #003366;
+            --success-color: #2ECC71;
+            --error-color: #E74C3C;
+        }
+        
         body {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            background-color: var(--background-color);
+            color: var(--text-color);
         }
         
         .admin-container {
@@ -26,7 +38,7 @@
         
         .sidebar {
             width: 250px;
-            background-color: #212529;
+            background-color: var(--primary-color);
             color: white;
             min-height: 100vh;
             position: fixed;
@@ -40,26 +52,81 @@
         }
         
         .sidebar .nav-link:hover {
-            color: white;
+            color: var(--secondary-color);
             background-color: rgba(255, 255, 255, 0.05);
         }
         
         .sidebar .nav-link.active {
-            color: white;
-            border-left-color: #0d6efd;
-            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--secondary-color);
+            border-left-color: var(--secondary-color);
+            background-color: rgba(255, 215, 0, 0.15);
         }
         
         .content {
             flex: 1;
             margin-left: 250px;
             padding: 76px 20px 20px;
+            background-color: var(--background-color);
         }
 
         .navbar {
             position: fixed;
             width: 100%;
             z-index: 100;
+            background-color: var(--primary-color) !important;
+        }
+        
+        .navbar-brand {
+            color: var(--secondary-color) !important;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: var(--secondary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #004080;
+            border-color: #004080;
+            color: var(--secondary-color);
+        }
+        
+        .btn-warning {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            color: var(--primary-color);
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+            border-color: var(--success-color);
+        }
+        
+        .btn-danger {
+            background-color: var(--error-color);
+            border-color: var(--error-color);
+        }
+        
+        .alert-success {
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+        }
+        
+        .alert-danger {
+            background-color: var(--error-color);
+            color: white;
+            border: none;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(0, 51, 102, 0.25);
+        }
+        
+        .dark-mode-toggle {
+            color: var(--secondary-color);
         }
     </style>
 </head>
@@ -127,6 +194,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.parent-verifications.*') ? 'active' : '' }}" href="{{ route('admin.parent-verifications.index') }}">
+                            <i class="fas fa-child"></i> Parent-Student Verifications
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.courses') ? 'active' : '' }}" href="{{ route('admin.courses') }}">
                             <i class="fas fa-book"></i> Courses
                         </a>
@@ -144,6 +216,24 @@
                             <i class="fas fa-folder"></i> Categories
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.website-appearance*') ? 'active' : '' }}" href="{{ route('admin.website-appearance') }}">
+                            <i class="fas fa-paint-brush"></i> Website Appearance
+                        </a>
+                    </li>
+                    
+                    <!-- Marketing Section -->
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.coupons.index') ? 'active' : '' }}" href="{{ route('admin.coupons.index') }}">
+                            <i class="fas fa-tags"></i> Coupons
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.discounts.index') ? 'active' : '' }}" href="{{ route('admin.discounts.index') }}">
+                            <i class="fas fa-percent"></i> Discounts
+                        </a>
+                    </li>
+                    
                     <hr class="sidebar-divider">
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.reports') ? 'active' : '' }}" href="{{ route('admin.reports') }}">
