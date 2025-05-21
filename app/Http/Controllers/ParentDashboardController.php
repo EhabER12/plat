@@ -981,4 +981,22 @@ class ParentDashboardController extends Controller
         
         return redirect()->route('parent.profile')->with('success', 'تم تحديث كلمة المرور بنجاح');
     }
+
+    /**
+     * Display waiting approval page.
+     *
+     * @return \Illuminate\Contracts\Support\Renderable
+     */
+    public function waitingApproval()
+    {
+        $user = Auth::user();
+        $userRoles = DB::table('user_roles')->where('user_id', $user->user_id)->pluck('role')->toArray();
+        
+        // Check if user has parent role
+        if (!in_array('parent', $userRoles)) {
+            return redirect()->route('home')->with('error', 'غير مصرح لك بالوصول إلى هذه الصفحة.');
+        }
+        
+        return view('parent.waiting_approval');
+    }
 } 

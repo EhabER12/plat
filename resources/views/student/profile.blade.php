@@ -8,379 +8,164 @@
 <!-- Student Dashboard CSS -->
 <link href="{{ asset('css/student.css') }}" rel="stylesheet">
 <style>
-    /* تحسينات عامة */
+    /* Additional custom styles for student dashboard */
     .main-content {
         padding: 30px;
     }
-    
-    /* منطقة الترحيب */
-    .welcome-area {
-        background: linear-gradient(135deg, #4776E6, #8E54E9);
-        border-radius: 15px;
-        padding: 30px;
-        position: relative;
-        color: white;
-        overflow: hidden;
-        margin-bottom: 30px;
-        box-shadow: 0 10px 30px rgba(71, 118, 230, 0.2);
-    }
-    
-    .welcome-shape {
-        position: absolute;
-        width: 150px;
-        height: 150px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 50%;
-        top: -40px;
-        right: -40px;
-        z-index: 0;
-    }
-    
-    .welcome-shape-2 {
-        position: absolute;
-        width: 100px;
-        height: 100px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 50%;
-        bottom: -30px;
-        left: 30%;
-        z-index: 0;
-    }
-    
-    .welcome-area h3 {
-        font-size: 1.8rem;
-        font-weight: 700;
+
+    /* Education-themed icons for stats */
+    .stat-icon {
+        font-size: 2rem;
+        color: var(--primary-color);
         margin-bottom: 10px;
+        opacity: 0.8;
+    }
+
+    /* Course card improvements */
+    .course-card {
         position: relative;
-        z-index: 1;
+        overflow: hidden;
     }
-    
-    .welcome-area p {
-        opacity: 0.9;
-        margin-bottom: 20px;
-        max-width: 80%;
-        position: relative;
-        z-index: 1;
-    }
-    
-    .welcome-area .btn {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-        border: none;
-        border-radius: 30px;
-        padding: 10px 20px;
-        transition: all 0.3s ease;
-        margin-right: 10px;
-        position: relative;
-        z-index: 1;
-    }
-    
-    .welcome-area .btn:hover {
-        background: rgba(255, 255, 255, 0.3);
-        transform: translateY(-3px);
-    }
-    
-    .welcome-area .btn-success {
-        background: rgba(40, 167, 69, 0.8);
-    }
-    
-    .welcome-area .btn-success:hover {
-        background: rgba(40, 167, 69, 1);
-    }
-    
-    /* الكورس الحالي */
-    .current-course {
-        background: white;
-        border-radius: 15px;
-        padding: 20px;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 30px;
-    }
-    
-    .current-course h5 {
-        font-weight: 600;
-        margin-bottom: 5px;
-    }
-    
-    .current-course p {
-        color: #6c757d;
-        margin-bottom: 0;
-    }
-    
-    .progress-circle {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-        color: var(--accent-color, #4776E6);
-        font-weight: 600;
-    }
-    
-    .progress-circle::after {
-        content: attr(data-progress);
-        font-size: 0.9rem;
-    }
-    
-    .continue-btn {
-        background: var(--accent-color, #4776E6);
-        color: white;
-        border: none;
-        border-radius: 30px;
-        padding: 8px 16px;
-        font-size: 0.85rem;
-        text-decoration: none;
+
+    .course-card::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 0;
+        height: 0;
+        border-style: solid;
+        border-width: 0 50px 50px 0;
+        border-color: transparent rgba(26, 75, 132, 0.1) transparent transparent;
         transition: all 0.3s ease;
     }
-    
-    .continue-btn:hover {
-        background: #2a75f0;
-        color: white;
-        transform: translateY(-2px);
+
+    .course-card:hover::after {
+        border-color: transparent rgba(26, 75, 132, 0.2) transparent transparent;
     }
-    
-    /* قسم البحث والأفاتار */
+
+    /* Improved search bar */
     .search-bar {
         background: white;
         border-radius: 30px;
-        padding: 8px 15px;
+        padding: 10px 15px;
         display: flex;
         align-items: center;
         box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
     }
-    
+
+    .search-bar:focus-within {
+        box-shadow: 0 5px 15px rgba(26, 75, 132, 0.1);
+        border-color: rgba(26, 75, 132, 0.2);
+    }
+
     .search-bar input {
         border: none;
         outline: none;
         background: transparent;
         padding: 5px 10px;
         width: 200px;
+        font-family: var(--font-body);
     }
-    
+
     .search-bar i {
-        color: #6c757d;
+        color: var(--primary-color);
     }
-    
+
+    /* Improved user avatar */
     .user-avatar {
         width: 45px;
         height: 45px;
         border-radius: 50%;
         overflow: hidden;
         box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+        border: 2px solid white;
     }
-    
-    .user-avatar img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    
-    /* صناديق الإحصائيات */
-    .stat-box {
-        background: white;
-        border-radius: 12px;
-        padding: 20px;
-        text-align: center;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-        height: 100%;
-        transition: all 0.3s ease;
-    }
-    
-    .stat-box:hover {
-        transform: translateY(-5px);
-    }
-    
-    .stat-number {
-        font-size: 2rem;
-        font-weight: 700;
-        color: var(--accent-color, #4776E6);
-        margin-bottom: 5px;
-    }
-    
-    .stat-text {
-        color: #6c757d;
-        font-size: 0.9rem;
-    }
-    
-    /* قسم الدورات */
+
+    /* Improved courses section */
     .courses-section {
         background: white;
-        border-radius: 15px;
+        border-radius: var(--radius-md);
         padding: 25px;
         box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
         margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(0, 0, 0, 0.03);
     }
-    
+
+    .courses-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: var(--gradient-primary);
+    }
+
     .courses-section h3 {
         font-weight: 700;
-        color: #333;
+        color: var(--dark-color);
         margin-bottom: 20px;
+        position: relative;
     }
-    
+
     .courses-section .nav-tabs {
         border-bottom: 1px solid #dee2e6;
         margin-bottom: 20px;
     }
-    
+
     .courses-section .nav-link {
         color: #6c757d;
         border: none;
-        padding: 10px 15px;
+        padding: 12px 18px;
         font-weight: 500;
         margin-bottom: -1px;
+        transition: all 0.3s ease;
     }
-    
+
     .courses-section .nav-link.active {
-        color: var(--accent-color, #4776E6);
-        border-bottom: 3px solid var(--accent-color, #4776E6);
+        color: var(--primary-color);
+        border-bottom: 3px solid var(--primary-color);
         background: transparent;
     }
-    
-    /* بطاقة الدورة */
-    .course-card {
-        background: #f8f9fa;
-        border-radius: 12px;
-        padding: 15px;
-        margin-bottom: 15px;
-        transition: all 0.3s ease;
+
+    .courses-section .nav-link:hover:not(.active) {
+        color: #495057;
+        background-color: rgba(0, 0, 0, 0.02);
     }
-    
-    .course-card:hover {
-        background: white;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-        transform: translateY(-3px);
+
+    /* Improved activity items */
+    .activity-item {
+        position: relative;
     }
-    
-    .course-image {
-        width: 70px;
-        height: 70px;
-        border-radius: 10px;
-        background: white;
-        overflow: hidden;
-        margin-right: 15px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-    }
-    
-    .course-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    
-    .course-info h4 {
-        font-size: 1.1rem;
-        font-weight: 600;
-        margin-bottom: 5px;
-    }
-    
-    .course-info p {
-        font-size: 0.85rem;
-        color: #6c757d;
-        margin-bottom: 0;
-    }
-    
-    .course-progress {
-        margin: 15px 0;
-    }
-    
-    .progress {
-        height: 8px;
-        border-radius: 4px;
-        background: #e9ecef;
-    }
-    
-    .progress-bar {
-        background: var(--accent-color, #4776E6);
-    }
-    
-    .course-meta {
-        display: flex;
-    }
-    
-    .course-meta-item {
+
+    .activity-time {
         font-size: 0.8rem;
         color: #6c757d;
-        margin-right: 15px;
     }
-    
-    .view-course-btn {
-        background: var(--accent-color, #4776E6);
-        color: white;
-        border: none;
-        border-radius: 20px;
-        padding: 5px 15px;
-        font-size: 0.85rem;
-        text-decoration: none;
-        transition: all 0.3s ease;
-    }
-    
-    .view-course-btn:hover {
-        background: #2a75f0;
-        color: white;
-        transform: translateY(-2px);
-    }
-    
-    /* بطاقات النشاط والاختبارات */
-    .card {
-        border: none;
-        border-radius: 15px;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
-        margin-bottom: 30px;
-    }
-    
-    .card-header {
-        background: white;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-        padding: 15px 20px;
-        border-radius: 15px 15px 0 0 !important;
-    }
-    
-    .card-header h5 {
-        margin-bottom: 0;
-        font-weight: 600;
-        color: #333;
-    }
-    
-    .card-body {
-        padding: 20px;
-    }
-    
-    .activity-item {
-        padding: 15px;
-        border-radius: 10px;
-        margin-bottom: 15px;
-        background: #f8f9fa;
-        transition: all 0.3s ease;
-    }
-    
-    .activity-item:hover {
-        background: white;
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-    }
-    
-    .activity-item:last-child {
-        margin-bottom: 0;
-    }
-    
-    .activity-item h6 {
-        font-weight: 600;
-        color: #333;
-    }
-    
-    /* تأثيرات حركية */
+
+    /* Improved animations */
     .fade-in {
         animation: fadeIn 0.5s ease-in-out forwards;
         opacity: 0;
     }
-    
+
+    .fade-in:nth-child(2) {
+        animation-delay: 0.1s;
+    }
+
+    .fade-in:nth-child(3) {
+        animation-delay: 0.2s;
+    }
+
+    .fade-in:nth-child(4) {
+        animation-delay: 0.3s;
+    }
+
     @keyframes fadeIn {
         from {
             opacity: 0;
@@ -391,73 +176,65 @@
             transform: translateY(0);
         }
     }
-    
-    /* مواءمة اللغة العربية */
-    [dir="rtl"] .welcome-shape {
+
+    /* Improved exam cards */
+    .exam-card {
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+    .exam-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .exam-card .card-body {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100%;
+    }
+
+    /* RTL improvements */
+    [dir="rtl"] .course-card::after {
         right: auto;
-        left: -40px;
+        left: 0;
+        border-width: 50px 50px 0 0;
+        border-color: rgba(26, 75, 132, 0.1) transparent transparent transparent;
     }
-    
-    [dir="rtl"] .welcome-shape-2 {
-        left: auto;
-        right: 30%;
+
+    [dir="rtl"] .course-card:hover::after {
+        border-color: rgba(26, 75, 132, 0.2) transparent transparent transparent;
     }
-    
-    [dir="rtl"] .welcome-area .btn {
-        margin-right: 0;
-        margin-left: 10px;
+
+    [dir="rtl"] .courses-section::before {
+        right: 0;
     }
-    
-    [dir="rtl"] .course-image {
-        margin-right: 0;
-        margin-left: 15px;
-    }
-    
-    [dir="rtl"] .course-meta-item {
-        margin-right: 0;
-        margin-left: 15px;
-    }
-    
-    /* تعديلات متوافقة للجوال */
+
+    /* Mobile improvements */
     @media (max-width: 767px) {
         .main-content {
             padding: 15px;
         }
-        
-        .welcome-area p {
-            max-width: 100%;
-        }
-        
-        .welcome-actions {
-            display: flex;
-            flex-wrap: wrap;
-        }
-        
-        .welcome-actions .btn {
+
+        .welcome-area .btn {
             margin-bottom: 10px;
         }
-        
-        .current-course {
-            flex-direction: column;
-            text-align: center;
-        }
-        
-        .current-course .progress-circle {
-            margin: 15px 0;
-        }
-        
-        .stat-box {
+
+        .search-bar {
             margin-bottom: 15px;
         }
-        
-        .search-bar input {
-            width: 150px;
+
+        .user-avatar {
+            margin-left: auto;
         }
-    }
-    
-    /* حدد اللون الرئيسي */
-    :root {
-        --accent-color: #4776E6;
+
+        .courses-section {
+            padding: 20px;
+        }
+
+        .courses-section .nav-link {
+            padding: 10px 15px;
+        }
     }
 </style>
 @endsection
@@ -467,48 +244,7 @@
     <div class="row">
         <!-- Sidebar -->
         <div class="col-auto p-0">
-            <div class="sidebar">
-                <a href="{{ route('student.profile') }}" class="sidebar-icon mb-5" style="background-color: rgba(255, 255, 255, 0.2); width: 50px; height: 50px;">
-                    <h2 class="mb-0 fw-bold" style="font-family: 'Tajawal', sans-serif;">مت</h2>
-                    <div class="sidebar-tooltip">منصة تعليمية</div>
-                </a>
-                <a href="{{ route('student.profile') }}" class="sidebar-icon {{ request()->routeIs('student.profile') ? 'active' : '' }}">
-                    <i class="fas fa-home"></i>
-                    <div class="sidebar-tooltip">{{ app()->getLocale() == 'ar' ? 'الرئيسية' : 'Dashboard' }}</div>
-                </a>
-                <a href="{{ route('student.my-courses') }}" class="sidebar-icon {{ request()->routeIs('student.my-courses') ? 'active' : '' }}">
-                    <i class="fas fa-graduation-cap"></i>
-                    <div class="sidebar-tooltip">{{ app()->getLocale() == 'ar' ? 'دوراتي' : 'My Courses' }}</div>
-                </a>
-                <a href="{{ route('student.profile.index') }}" class="sidebar-icon {{ request()->routeIs('student.profile.index') ? 'active' : '' }}">
-                    <i class="fas fa-user"></i>
-                    <div class="sidebar-tooltip">{{ app()->getLocale() == 'ar' ? 'الملف الشخصي' : 'Profile' }}</div>
-                </a>
-                <a href="{{ route('student.messages.index') }}" class="sidebar-icon {{ request()->routeIs('student.messages.index') ? 'active' : '' }}">
-                    <i class="fas fa-envelope"></i>
-                    @php
-                        $unreadMessages = App\Models\DirectMessage::where('receiver_id', Auth::id())
-                            ->where('is_read', false)
-                            ->count();
-                    @endphp
-                    @if($unreadMessages > 0)
-                        <span class="badge bg-danger rounded-pill position-absolute" style="font-size: 0.7rem; top: 5px; right: 5px;">{{ $unreadMessages }}</span>
-                    @endif
-                    <div class="sidebar-tooltip">{{ app()->getLocale() == 'ar' ? 'الرسائل' : 'Messages' }}</div>
-                </a>
-                <a href="{{ route('student.profile.edit') }}" class="sidebar-icon {{ request()->routeIs('student.profile.edit') ? 'active' : '' }}">
-                    <i class="fas fa-cog"></i>
-                    <div class="sidebar-tooltip">{{ app()->getLocale() == 'ar' ? 'الإعدادات' : 'Settings' }}</div>
-                </a>
-                <a href="{{ route('student.exams.index') }}" class="sidebar-icon mt-auto mb-4 {{ request()->routeIs('student.exams.index') ? 'active' : '' }}">
-                    <i class="fas fa-file-alt"></i>
-                    <div class="sidebar-tooltip">{{ app()->getLocale() == 'ar' ? 'الاختبارات' : 'Exams' }}</div>
-                </a>
-                <a href="{{ route('student.quizzes.index') }}" class="sidebar-icon mb-2 {{ request()->routeIs('student.quizzes.index') ? 'active' : '' }}">
-                    <i class="fas fa-question-circle"></i>
-                    <div class="sidebar-tooltip">{{ app()->getLocale() == 'ar' ? 'الامتحانات القصيرة' : 'Quizzes' }}</div>
-                </a>
-            </div>
+            @include('layouts.partials.student-sidebar')
         </div>
 
         <!-- Main Content -->
@@ -520,14 +256,17 @@
                         <div class="welcome-area fade-in">
                             <div class="welcome-shape"></div>
                             <div class="welcome-shape-2"></div>
-                            <h3>مرحباً، {{ Auth::user()->name }}!</h3>
-                            <p>هذه الصفحة الشخصية الخاصة بك. يمكنك الاطلاع على دوراتك ومتابعة تقدمك.</p>
-                            <div class="d-flex gap-2">
+                            <h3>مرحباً، {{ Auth::user()->name }}! <i class="fas fa-hand-sparkles ms-2"></i></h3>
+                            <p>هذه الصفحة الشخصية الخاصة بك. يمكنك الاطلاع على دوراتك ومتابعة تقدمك التعليمي وإدارة الاختبارات الخاصة بك.</p>
+                            <div class="d-flex gap-2 flex-wrap">
                                 <a href="{{ route('courses.index') }}" class="btn">
                                     <i class="fas fa-search me-2"></i>استعراض الدورات
                                 </a>
                                 <a href="{{ route('student.exams.index') }}" class="btn btn-success">
                                     <i class="fas fa-file-alt me-2"></i>الاختبارات
+                                </a>
+                                <a href="{{ route('student.my-courses') }}" class="btn">
+                                    <i class="fas fa-graduation-cap me-2"></i>دوراتي
                                 </a>
                             </div>
                         </div>
@@ -537,14 +276,29 @@
                         <div class="current-course fade-in" style="animation-delay: 0.2s">
                             <div class="course-info">
                                 <h5>{{ $currentCourse->title }}</h5>
-                                <p>المدرب: {{ $currentCourse->instructor->name ?? 'غير محدد' }}</p>
+                                <p><i class="fas fa-chalkboard-teacher me-1 text-primary"></i> المدرب: {{ $currentCourse->instructor->name ?? 'غير محدد' }}</p>
+                                <div class="mt-2">
+                                    <span class="badge bg-light text-dark">
+                                        <i class="fas fa-layer-group me-1"></i> {{ $currentCourse->category->name ?? 'غير مصنف' }}
+                                    </span>
+                                </div>
                             </div>
-                            <div class="progress-circle" data-progress="{{ $currentCourse->progress }}%" style="background: conic-gradient(var(--accent-color) 0% {{ $currentCourse->progress }}%, #f3f3f3 {{ $currentCourse->progress }}% 100%);"></div>
-                            <a href="{{ route('student.course-content', $currentCourse->course_id) }}" class="continue-btn">متابعة التعلم</a>
+                            <div class="progress-circle" data-progress="{{ $currentCourse->progress }}%" style="background: conic-gradient(var(--primary-color) 0% {{ $currentCourse->progress }}%, #f3f3f3 {{ $currentCourse->progress }}% 100%);"></div>
+                            <a href="{{ route('student.course-content', $currentCourse->course_id) }}" class="continue-btn">
+                                <i class="fas fa-play-circle me-1"></i> متابعة التعلم
+                            </a>
                         </div>
                         @else
                         <div class="alert alert-info fade-in" style="animation-delay: 0.2s">
-                            <p>لم تقم بالتسجيل في أي دورة حتى الآن. <a href="{{ route('courses.index') }}">استعراض الدورات</a> للبدء في رحلة التعلم.</p>
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <i class="fas fa-info-circle fa-2x"></i>
+                                </div>
+                                <div>
+                                    <h5 class="alert-heading mb-1">ابدأ رحلة التعلم</h5>
+                                    <p>لم تقم بالتسجيل في أي دورة حتى الآن. <a href="{{ route('courses.index') }}" class="alert-link">استعراض الدورات</a> للبدء في رحلة التعلم.</p>
+                                </div>
+                            </div>
                         </div>
                         @endif
                     </div>
@@ -571,24 +325,36 @@
                         <div class="row fade-in" style="animation-delay: 0.4s">
                             <div class="col-6 mb-3">
                                 <div class="stat-box">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-graduation-cap"></i>
+                                    </div>
                                     <div class="stat-number">{{ $completedCoursesCount ?? 0 }}</div>
                                     <div class="stat-text">الدورات المكتملة</div>
                                 </div>
                             </div>
                             <div class="col-6 mb-3">
                                 <div class="stat-box">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-book-reader"></i>
+                                    </div>
                                     <div class="stat-number">{{ $inProgressCoursesCount ?? 0 }}</div>
                                     <div class="stat-text">دورات قيد التقدم</div>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div class="stat-box">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-clock"></i>
+                                    </div>
                                     <div class="stat-number">{{ $totalWatchHours ?? 0 }}</div>
                                     <div class="stat-text">ساعات المشاهدة</div>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div class="stat-box">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-certificate"></i>
+                                    </div>
                                     <div class="stat-number">{{ $certificatesCount ?? 0 }}</div>
                                     <div class="stat-text">الشهادات</div>
                                 </div>
@@ -783,11 +549,18 @@
                                     @foreach($recentActivity as $activity)
                                         <div class="activity-item">
                                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <div>
-                                                    <h6 class="mb-1">{{ $activity->title ?? 'نشاط تعليمي' }}</h6>
-                                                    <p class="mb-0 small">{{ $activity->course->title ?? 'غير محدد' }}</p>
+                                                <div class="d-flex">
+                                                    <div class="me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background-color: rgba(26, 75, 132, 0.1); border-radius: 8px;">
+                                                        <i class="fas fa-play-circle text-primary"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h6 class="mb-1">{{ $activity->title ?? 'نشاط تعليمي' }}</h6>
+                                                        <p class="mb-0 small">{{ $activity->course->title ?? 'غير محدد' }}</p>
+                                                    </div>
                                                 </div>
-                                                <small class="text-muted">{{ $activity->updated_at->diffForHumans() }}</small>
+                                                <div class="activity-time">
+                                                    <span class="badge bg-light text-dark">{{ $activity->updated_at->diffForHumans() }}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     @endforeach
@@ -797,6 +570,7 @@
                                             <i class="fas fa-history fa-3x text-muted"></i>
                                         </div>
                                         <p class="mb-0">لا يوجد نشاط مؤخراً.</p>
+                                        <p class="text-muted small mt-2">ابدأ بمشاهدة الدروس لتتبع نشاطك التعليمي</p>
                                     </div>
                                 @endif
                             </div>
@@ -811,11 +585,22 @@
                                 @if(isset($upcomingExams) && count($upcomingExams) > 0)
                                     @foreach($upcomingExams as $exam)
                                         <div class="activity-item">
-                                            <h6 class="mb-1">{{ $exam->title }}</h6>
-                                            <p class="mb-1 small">{{ $exam->course->title ?? 'غير محدد' }}</p>
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <small class="text-muted"><i class="fas fa-calendar-alt me-1"></i> {{ $exam->date ? $exam->date->format('d/m/Y') : 'غير محدد' }}</small>
-                                                <a href="{{ route('student.exams.show', $exam->id) }}" class="btn btn-sm btn-outline-primary">عرض</a>
+                                            <div class="d-flex">
+                                                <div class="me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background-color: rgba(23, 162, 184, 0.1); border-radius: 8px;">
+                                                    <i class="fas fa-file-alt text-info"></i>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-1">{{ $exam->title }}</h6>
+                                                    <p class="mb-1 small">{{ $exam->course->title ?? 'غير محدد' }}</p>
+                                                    <div class="d-flex justify-content-between align-items-center mt-2">
+                                                        <span class="badge bg-light text-dark">
+                                                            <i class="fas fa-calendar-alt me-1"></i> {{ $exam->date ? $exam->date->format('d/m/Y') : 'غير محدد' }}
+                                                        </span>
+                                                        <a href="{{ route('student.exams.show', $exam->id) }}" class="btn btn-sm btn-outline-primary">
+                                                            <i class="fas fa-eye me-1"></i> عرض
+                                                        </a>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     @endforeach
@@ -825,6 +610,7 @@
                                             <i class="fas fa-file-alt fa-3x text-muted"></i>
                                         </div>
                                         <p class="mb-0">لا توجد اختبارات قادمة.</p>
+                                        <p class="text-muted small mt-2">سيتم عرض الاختبارات القادمة هنا عند جدولتها</p>
                                     </div>
                                 @endif
                             </div>
@@ -837,7 +623,7 @@
                     <div class="col-md-8">
                         <div class="courses-section fade-in" style="animation-delay: 0.6s">
                             <div class="d-flex justify-content-between align-items-center mb-4">
-                                <h3>الامتحانات المتاحة</h3>
+                                <h3><i class="fas fa-clipboard-check me-2"></i>الامتحانات المتاحة</h3>
                                 <div>
                                     <a href="{{ route('student.exams.index') }}" class="btn btn-sm btn-primary me-2">
                                         <i class="fas fa-file-alt me-1"></i> الامتحانات
@@ -847,41 +633,71 @@
                                     </a>
                                 </div>
                             </div>
-                            
+
                             <div class="row">
-                                <div class="col-md-6">
-                                    <div class="card mb-3">
-                                        <div class="card-header bg-primary text-white">
-                                            <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>الامتحانات</h5>
+                                <div class="col-md-4">
+                                    <div class="card mb-3 exam-card">
+                                        <div class="card-header">
+                                            <h5 class="mb-0"><i class="fas fa-file-alt me-2 text-primary"></i>الامتحانات</h5>
                                         </div>
                                         <div class="card-body text-center">
-                                            <p>الامتحانات الرئيسية للدورات المسجل فيها</p>
-                                            <a href="{{ route('student.exams.index') }}" class="btn btn-primary mt-2">
+                                            <div class="mb-3">
+                                                <i class="fas fa-file-alt fa-3x text-primary opacity-75 mb-3"></i>
+                                                <p>الامتحانات الرئيسية للدورات المسجل فيها</p>
+                                            </div>
+                                            <a href="{{ route('student.exams.index') }}" class="btn btn-primary">
                                                 <i class="fas fa-external-link-alt me-1"></i>
                                                 عرض الامتحانات
                                             </a>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="card mb-3">
-                                        <div class="card-header bg-info text-white">
-                                            <h5 class="mb-0"><i class="fas fa-question-circle me-2"></i>الامتحانات القصيرة</h5>
+                                <div class="col-md-4">
+                                    <div class="card mb-3 exam-card">
+                                        <div class="card-header">
+                                            <h5 class="mb-0"><i class="fas fa-question-circle me-2 text-info"></i>الامتحانات القصيرة</h5>
                                         </div>
                                         <div class="card-body text-center">
-                                            <p>الاختبارات القصيرة والتقييمات الدورية</p>
-                                            <a href="{{ route('student.quizzes.index') }}" class="btn btn-info mt-2">
+                                            <div class="mb-3">
+                                                <i class="fas fa-question-circle fa-3x text-info opacity-75 mb-3"></i>
+                                                <p>الاختبارات القصيرة والتقييمات الدورية</p>
+                                            </div>
+                                            <a href="{{ route('student.quizzes.index') }}" class="btn btn-info">
                                                 <i class="fas fa-external-link-alt me-1"></i>
                                                 عرض الامتحانات القصيرة
                                             </a>
                                         </div>
                                     </div>
                                 </div>
+                                <div class="col-md-4">
+                                    <div class="card mb-3 exam-card">
+                                        <div class="card-header">
+                                            <h5 class="mb-0"><i class="fas fa-trophy me-2 text-warning"></i>التقييمات والإنجازات</h5>
+                                        </div>
+                                        <div class="card-body text-center">
+                                            <div class="mb-3">
+                                                <i class="fas fa-trophy fa-3x text-warning opacity-75 mb-3"></i>
+                                                <p>تقييمات الأداء والإنجازات والشارات</p>
+                                            </div>
+                                            <a href="{{ route('student.motivation.index') }}" class="btn btn-warning">
+                                                <i class="fas fa-external-link-alt me-1"></i>
+                                                عرض التقييمات
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            
+
                             <div class="alert alert-info mt-3">
-                                <i class="fas fa-info-circle me-2"></i>
-                                يمكنك الاطلاع على الامتحانات والاختبارات القصيرة المتاحة في الدورات التي قمت بالتسجيل فيها من خلال الروابط أعلاه.
+                                <div class="d-flex">
+                                    <div class="me-3">
+                                        <i class="fas fa-info-circle fa-2x"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="alert-heading mb-1">معلومات عن الامتحانات والتقييمات</h5>
+                                        <p class="mb-0">يمكنك الاطلاع على الامتحانات والاختبارات القصيرة المتاحة في الدورات التي قمت بالتسجيل فيها، ومتابعة تقييمات أدائك والإنجازات التي حققتها من خلال الروابط أعلاه.</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -141,7 +141,8 @@ class Course extends Model
      */
     public function videos(): HasMany
     {
-        return $this->hasMany(CourseVideo::class, 'course_id', 'course_id');
+        return $this->hasMany(CourseVideo::class, 'course_id', 'course_id')
+            ->orderBy('position', 'asc');
     }
 
     /**

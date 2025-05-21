@@ -15,6 +15,13 @@ class DatabaseSeeder extends Seeder
         // Create users
         $this->call(UsersTableSeeder::class);
 
+        // Create courses collection
+        // $this->call(CoursesCollectionSeeder::class);
+
+        // Create badges and achievements
+        $this->call(BadgesSeeder::class);
+        $this->call(AchievementsSeeder::class);
+
         // Create demo data
         $this->createDemoData();
     }

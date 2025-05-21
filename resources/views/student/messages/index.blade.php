@@ -29,7 +29,7 @@
                 @else
                     @foreach($contacts as $contact)
                         <div class="contact-item{{ $selectedContact && $selectedContact->user_id == $contact->user_id ? ' active' : '' }}" 
-                             data-contact-id="{{ $contact->user_id }}"
+                             data-id="{{ $contact->user_id }}"
                              onclick="window.location.href='{{ route('student.messages.show', $contact->user_id) }}'">
                             <div class="contact-avatar{{ rand(0,1) ? ' online' : '' }}">
                                 {{ strtoupper(substr($contact->name, 0, 1)) }}
@@ -39,14 +39,11 @@
                                 <div class="contact-time">{{ $contact->last_message_time }}</div>
                                 <div class="contact-preview">
                                     @if($contact->unread_count > 0)
-                                        <span class="unread-indicator"></span>
+                                        <span class="unread-badge">{{ $contact->unread_count }}</span>
                                     @endif
                                     {{ $contact->last_message_preview }}
                                 </div>
                             </div>
-                            @if($contact->unread_count > 0)
-                                <div class="unread-count">{{ $contact->unread_count }}</div>
-                            @endif
                         </div>
                     @endforeach
                 @endif
@@ -83,7 +80,6 @@
 
                 <!-- Chat Messages -->
                 <div class="chat-messages" id="messagesContainer">
-                    <div class="messages-container">
                     @if($messages->isEmpty())
                             <div class="empty-state">
                                 <div class="empty-state-icon">✉️</div>
@@ -115,27 +111,37 @@
                                 </div>
                             @endforeach
                         @endif
-                        </div>
                 </div>
 
                 <!-- Message Input -->
                 <div class="chat-input">
-                    <div class="chat-input-field">
-                        <textarea 
-                            id="messageInput" 
-                            placeholder="Type a message..." 
-                            rows="1" 
-                            class="chat-input"
-                            autofocus></textarea>
-                    </div>
-                    <div class="chat-input-buttons">
-                        <button type="button" class="chat-input-button" title="Attach file">
-                            <i class="fas fa-paperclip"></i>
-                        </button>
-                        <button type="submit" id="sendButton" class="chat-input-button send-button">
-                            <i class="fas fa-paper-plane"></i> Send
-                        </button>
-                    </div>
+                    <form id="messageForm">
+                        <div class="chat-input-field">
+                            <textarea 
+                                id="messageInput" 
+                                placeholder="Type a message..." 
+                                rows="1" 
+                                class="chat-input"
+                                autofocus></textarea>
+                            <!-- Hidden form fields -->
+                            <input type="hidden" id="receiver-id" value="{{ $selectedContact->user_id }}">
+                            <input type="hidden" id="current-user-id" value="{{ Auth::user()->user_id }}">
+                            <input type="hidden" id="user-role" value="student">
+                            @if($messages->isNotEmpty())
+                                <input type="hidden" id="last-message-id" value="{{ $messages->last()->message_id }}">
+                            @else
+                                <input type="hidden" id="last-message-id" value="0">
+                            @endif
+                        </div>
+                        <div class="chat-input-buttons">
+                            <button type="button" class="chat-input-button" title="Attach file">
+                                <i class="fas fa-paperclip"></i>
+                            </button>
+                            <button type="submit" id="sendButton" class="chat-input-button send-button">
+                                <i class="fas fa-paper-plane"></i> Send
+                            </button>
+                        </div>
+                    </form>
                 </div>
             @endif
         </div>
@@ -146,24 +152,4 @@
 @section('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
 <script src="{{ asset('js/messaging.js') }}"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Set user ID for the messaging system
-    window.currentUserId = {{ Auth::id() }};
-    
-    // Check if we're on a messaging page with contact selected
-    if (document.getElementById('messagesContainer') && document.getElementById('messageInput')) {
-        // Create the messaging system instance
-        window.messagingSystem = new MessagingSystem({
-            typingDelay: 2000,
-            checkNewMessagesInterval: 5000,
-            animateNewMessages: true,
-            showTypingIndicator: true,
-            enableSoundEffects: false
-        });
-        
-        console.log('Messaging system initialized');
-    }
-});
-</script>
 @endsection

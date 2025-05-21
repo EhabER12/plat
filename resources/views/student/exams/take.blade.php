@@ -9,67 +9,74 @@
         border-radius: 8px;
         margin-bottom: 20px;
     }
-    
+
     .question-header {
         background-color: #f8f9fa;
         padding: 15px;
         border-radius: 8px 8px 0 0;
         border-bottom: 1px solid #ddd;
     }
-    
+
     .question-body {
         padding: 15px;
     }
-    
+
     .option-row {
         margin-bottom: 10px;
     }
-    
+
     .timer-container {
         position: sticky;
         top: 20px;
         z-index: 100;
     }
-    
+
     .timer-card {
         background-color: #fff;
         border: 1px solid #ddd;
         border-radius: 8px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
-    
+
     .timer {
         font-size: 1.5rem;
         font-weight: bold;
+        padding: 10px;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        direction: ltr;
     }
-    
+
     .timer.warning {
         color: #fd7e14;
+        background-color: #fff8f0;
     }
-    
+
     .timer.danger {
         color: #dc3545;
+        background-color: #fff5f5;
         animation: pulse 1s infinite;
     }
-    
+
     @keyframes pulse {
         0% {
             opacity: 1;
         }
         50% {
-            opacity: 0.5;
+            opacity: 0.7;
         }
         100% {
             opacity: 1;
         }
     }
-    
+
     .question-navigation {
         display: grid;
         grid-template-columns: repeat(5, 1fr);
         gap: 10px;
     }
-    
+
     .question-nav-btn {
         width: 100%;
         height: 40px;
@@ -81,13 +88,13 @@
         background-color: #f8f9fa;
         cursor: pointer;
     }
-    
+
     .question-nav-btn.active {
         background-color: #0d6efd;
         color: white;
         border-color: #0d6efd;
     }
-    
+
     .question-nav-btn.answered {
         background-color: #198754;
         color: white;
@@ -106,7 +113,7 @@
 
             <form id="exam-form" action="{{ route('student.exams.submit', $attempt->attempt_id) }}" method="POST">
                 @csrf
-                
+
                 @foreach($attempt->exam->questions as $index => $question)
                     <div class="question-card" id="question-{{ $index + 1 }}">
                         <div class="question-header d-flex justify-content-between align-items-center">
@@ -115,7 +122,7 @@
                         </div>
                         <div class="question-body">
                             <p class="mb-4">{{ $question->question_text }}</p>
-                            
+
                             @if($question->question_type === 'multiple_choice')
                                 <div class="options">
                                     @foreach($question->options as $option)
@@ -147,7 +154,7 @@
                                     <textarea class="form-control answer-input" name="answers[{{ $question->question_id }}]" rows="3" placeholder="Type your answer here..." data-question="{{ $index + 1 }}"></textarea>
                                 </div>
                             @endif
-                            
+
                             <div class="d-flex justify-content-between mt-4">
                                 @if($index > 0)
                                     <button type="button" class="btn btn-outline-secondary prev-question" data-target="{{ $index }}">
@@ -156,7 +163,7 @@
                                 @else
                                     <div></div>
                                 @endif
-                                
+
                                 @if($index < $attempt->exam->questions->count() - 1)
                                     <button type="button" class="btn btn-outline-primary next-question" data-target="{{ $index + 2 }}">
                                         Next <i class="fas fa-arrow-right"></i>
@@ -170,7 +177,7 @@
                         </div>
                     </div>
                 @endforeach
-                
+
                 <!-- Submit Confirmation Modal -->
                 <div class="modal fade" id="submitConfirmModal" tabindex="-1" aria-labelledby="submitConfirmModalLabel" aria-hidden="true">
                     <div class="modal-dialog">
@@ -194,21 +201,21 @@
                 </div>
             </form>
         </div>
-        
+
         <div class="col-md-3">
             <div class="timer-container">
                 <div class="card timer-card mb-4">
                     <div class="card-body text-center">
-                        <h5 class="card-title">Time Remaining</h5>
+                        <h5 class="card-title">الوقت المتبقي</h5>
                         <div class="timer" id="timer">
-                            <span id="hours">00</span>:<span id="minutes">00</span>:<span id="seconds">00</span>
+                            <div id="time-display">--:--:--</div>
                         </div>
                         <div class="progress mt-2">
                             <div class="progress-bar" id="timer-progress" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="card mb-4">
                     <div class="card-header">
                         <h5 class="mb-0">Question Navigation</h5>
@@ -219,7 +226,7 @@
                                 <button type="button" class="question-nav-btn" data-target="{{ $index + 1 }}">{{ $index + 1 }}</button>
                             @endforeach
                         </div>
-                        
+
                         <div class="d-flex justify-content-between mt-3">
                             <div>
                                 <span class="badge bg-secondary me-1"></span> Unanswered
@@ -228,7 +235,7 @@
                                 <span class="badge bg-success me-1"></span> Answered
                             </div>
                         </div>
-                        
+
                         <div class="d-grid gap-2 mt-4">
                             <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#submitConfirmModal">
                                 <i class="fas fa-check-circle"></i> Submit Exam
@@ -236,7 +243,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="card">
                     <div class="card-header">
                         <h5 class="mb-0">Exam Information</h5>
@@ -263,42 +270,42 @@
                 question.style.display = 'none';
             }
         });
-        
+
         // Navigation buttons
         const navButtons = document.querySelectorAll('.question-nav-btn');
         navButtons[0].classList.add('active');
-        
+
         navButtons.forEach(button => {
             button.addEventListener('click', function() {
                 const targetQuestion = this.getAttribute('data-target');
                 showQuestion(targetQuestion);
             });
         });
-        
+
         // Next/Previous buttons
         const nextButtons = document.querySelectorAll('.next-question');
         const prevButtons = document.querySelectorAll('.prev-question');
-        
+
         nextButtons.forEach(button => {
             button.addEventListener('click', function() {
                 const targetQuestion = this.getAttribute('data-target');
                 showQuestion(targetQuestion);
             });
         });
-        
+
         prevButtons.forEach(button => {
             button.addEventListener('click', function() {
                 const targetQuestion = this.getAttribute('data-target');
                 showQuestion(targetQuestion);
             });
         });
-        
+
         // Function to show a specific question
         function showQuestion(questionNumber) {
             questions.forEach((question, index) => {
                 question.style.display = (index + 1) == questionNumber ? 'block' : 'none';
             });
-            
+
             navButtons.forEach(button => {
                 button.classList.remove('active');
                 if (button.getAttribute('data-target') == questionNumber) {
@@ -306,7 +313,7 @@
                 }
             });
         }
-        
+
         // Track answered questions
         const answerInputs = document.querySelectorAll('.answer-input');
         answerInputs.forEach(input => {
@@ -316,39 +323,47 @@
                 navButton.classList.add('answered');
             });
         });
-        
+
         // Timer functionality
         const timerElement = document.getElementById('timer');
-        const hoursElement = document.getElementById('hours');
-        const minutesElement = document.getElementById('minutes');
-        const secondsElement = document.getElementById('seconds');
         const timerProgressElement = document.getElementById('timer-progress');
-        
+
         let remainingTime = {{ $remainingTime }};
         const totalTime = {{ $attempt->exam->duration * 60 }};
         const startTime = Math.min(remainingTime, totalTime);
-        
+
         function updateTimer() {
             if (remainingTime <= 0) {
                 clearInterval(timerInterval);
                 document.getElementById('exam-form').submit();
                 return;
             }
-            
+
             remainingTime--;
-            
+
             const hours = Math.floor(remainingTime / 3600);
             const minutes = Math.floor((remainingTime % 3600) / 60);
             const seconds = remainingTime % 60;
-            
-            hoursElement.textContent = hours.toString().padStart(2, '0');
-            minutesElement.textContent = minutes.toString().padStart(2, '0');
-            secondsElement.textContent = seconds.toString().padStart(2, '0');
-            
+
+            // تحسين طريقة عرض الوقت المتبقي
+            let timeDisplay = '';
+
+            if (hours > 0) {
+                timeDisplay += `${hours} ${hours === 1 ? 'ساعة' : 'ساعات'} `;
+            }
+
+            if (minutes > 0 || hours > 0) {
+                timeDisplay += `${minutes.toString().padStart(2, '0')} ${minutes === 1 ? 'دقيقة' : 'دقائق'} `;
+            }
+
+            timeDisplay += `${seconds.toString().padStart(2, '0')} ${seconds === 1 ? 'ثانية' : 'ثواني'}`;
+
+            document.getElementById('time-display').textContent = timeDisplay;
+
             // Update progress bar
             const percentage = (remainingTime / startTime) * 100;
             timerProgressElement.style.width = `${percentage}%`;
-            
+
             // Change color based on remaining time
             if (remainingTime < 300) { // Less than 5 minutes
                 timerElement.classList.add('danger');
@@ -360,15 +375,15 @@
                 timerProgressElement.classList.add('bg-warning');
             }
         }
-        
+
         const timerInterval = setInterval(updateTimer, 1000);
         updateTimer(); // Initial update
-        
+
         // Submit confirmation
         document.getElementById('submitConfirmModal').addEventListener('show.bs.modal', function() {
             const answeredCount = document.querySelectorAll('.question-nav-btn.answered').length;
             const totalQuestions = {{ $attempt->exam->questions->count() }};
-            
+
             if (answeredCount < totalQuestions) {
                 document.getElementById('unanswered-warning').classList.remove('d-none');
             } else {

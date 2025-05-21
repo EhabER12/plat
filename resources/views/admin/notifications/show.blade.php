@@ -56,11 +56,11 @@
                             </span>
                         @endif
 
-                        @if($notification->severity >= 4)
+                        @if($notification->severity == 'high')
                             <span class="badge badge-danger py-2 px-3">
                                 <i class="fas fa-exclamation-triangle me-1"></i> خطير
                             </span>
-                        @elseif($notification->severity >= 3)
+                        @elseif($notification->severity == 'medium')
                             <span class="badge badge-warning py-2 px-3">
                                 <i class="fas fa-exclamation me-1"></i> متوسط الخطورة
                             </span>
@@ -81,7 +81,6 @@
                                 @if($notification->is_read)
                                     <span class="badge bg-success py-2 px-3">
                                         <i class="fas fa-check-circle me-1"></i> مقروء
-                                        <small class="ms-1">{{ $notification->read_at ? $notification->read_at->format('Y-m-d H:i') : '' }}</small>
                                     </span>
                                 @else
                                     <span class="badge bg-warning py-2 px-3">
@@ -91,9 +90,14 @@
                             </span>
                         </div>
                         
-                        <h5 class="content-title border-bottom pb-2 mb-3">المحتوى</h5>
+                        <h5 class="content-title border-bottom pb-2 mb-3">العنوان</h5>
+                        <div class="p-4 bg-light rounded content-box mb-4">
+                            <h4>{{ $notification->title }}</h4>
+                        </div>
+
+                        <h5 class="content-title border-bottom pb-2 mb-3">الرسالة</h5>
                         <div class="p-4 bg-light rounded content-box">
-                            {{ $notification->content }}
+                            {{ $notification->message }}
                         </div>
                     </div>
                     
@@ -117,66 +121,6 @@
                         </h5>
                         <div class="p-4 bg-danger text-white rounded content-box">
                             {{ $notification->data['original_message'] }}
-                        </div>
-                    </div>
-                    @endif
-                    
-                    @if($relatedItem && $relatedItem instanceof \App\Models\DirectMessage)
-                    <div class="mb-4">
-                        <h5 class="content-title border-bottom pb-2 mb-3">
-                            <i class="fas fa-envelope-open-text me-2 text-primary"></i> معلومات الرسالة
-                        </h5>
-                        <div class="related-message-info">
-                            <div class="row mb-2">
-                                <div class="col-md-6">
-                                    <div class="info-item p-3 bg-light rounded mb-3">
-                                        <span class="info-label d-block mb-1 text-primary">المرسل</span>
-                                        <span class="info-value d-flex align-items-center">
-                                            <i class="fas fa-user me-2"></i>
-                                            {{ $relatedItem->sender->name ?? 'غير معروف' }}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="info-item p-3 bg-light rounded mb-3">
-                                        <span class="info-label d-block mb-1 text-primary">المستقبل</span>
-                                        <span class="info-value d-flex align-items-center">
-                                            <i class="fas fa-user me-2"></i>
-                                            {{ $relatedItem->receiver->name ?? 'غير معروف' }}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col-md-6">
-                                    <div class="info-item p-3 bg-light rounded mb-3">
-                                        <span class="info-label d-block mb-1 text-primary">تاريخ الإرسال</span>
-                                        <span class="info-value d-flex align-items-center">
-                                            <i class="fas fa-calendar-alt me-2"></i>
-                                            {{ $relatedItem->created_at->format('Y-m-d H:i:s') }}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="info-item p-3 bg-light rounded mb-3">
-                                        <span class="info-label d-block mb-1 text-primary">الحالة</span>
-                                        <span class="info-value d-flex align-items-center">
-                                            <i class="fas fa-check-circle me-2"></i>
-                                            مرسلة
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-12">
-                                    <div class="info-item p-3 bg-light rounded">
-                                        <span class="info-label d-block mb-1 text-primary">المحتوى بعد الفلترة</span>
-                                        <span class="info-value d-block p-3 border rounded-3 mt-2">
-                                            {{ $relatedItem->content }}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                     @endif
@@ -220,239 +164,50 @@
 
         <!-- Sidebar -->
         <div class="col-lg-4">
-            <!-- User Info -->
-            @if($notification->user)
+            <!-- Notification Type Info -->
             <div class="card shadow mb-4 border-0">
                 <div class="card-header py-3 bg-white">
                     <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-user me-2"></i> معلومات المستخدم
+                        <i class="fas fa-info-circle me-2"></i> معلومات النوع
                     </h6>
                 </div>
                 <div class="card-body">
-                    <div class="text-center mb-4">
-                        <div class="avatar-container mx-auto mb-3 position-relative">
-                            <img src="{{ $notification->user->profile_image ? asset('storage/' . $notification->user->profile_image) : asset('images/default-avatar.png') }}" 
-                                 alt="{{ $notification->user->name }}" 
-                                 class="rounded-circle user-avatar shadow" 
-                                 width="100" height="100">
-                            
-                            @if(isset($notification->data['user_roles']))
-                                @php
-                                    $roleClass = '';
-                                    $roleIcon = '';
-                                    foreach($notification->data['user_roles'] as $role) {
-                                        if ($role == 'admin') {
-                                            $roleClass = 'bg-danger';
-                                            $roleIcon = 'crown';
-                                            break;
-                                        } elseif ($role == 'instructor') {
-                                            $roleClass = 'bg-primary';
-                                            $roleIcon = 'chalkboard-teacher';
-                                        } elseif ($role == 'student') {
-                                            $roleClass = 'bg-info';
-                                            $roleIcon = 'user-graduate';
-                                        }
-                                    }
-                                @endphp
-                                <div class="role-badge position-absolute {{ $roleClass }} text-white rounded-circle">
-                                    <i class="fas fa-{{ $roleIcon }}"></i>
-                                </div>
+                    <div class="info-item p-3 bg-light rounded mb-3">
+                        <span class="info-label d-block mb-1 text-primary">نوع الإشعار</span>
+                        <span class="info-value d-flex align-items-center">
+                            @if($notification->type == 'flagged_content')
+                                <i class="fas fa-flag me-2 text-warning"></i>
+                                <span>محتوى محظور</span>
+                            @elseif($notification->type == 'system_alert')
+                                <i class="fas fa-exclamation-circle me-2 text-danger"></i>
+                                <span>تنبيه نظام</span>
+                            @else
+                                <i class="fas fa-bell me-2 text-secondary"></i>
+                                <span>{{ $notification->type }}</span>
                             @endif
-                        </div>
-                        
-                        <h5 class="mb-1">{{ $notification->user->name }}</h5>
-                        
-                        <div class="user-roles mb-3">
-                            @if(isset($notification->data['user_roles']))
-                                @foreach($notification->data['user_roles'] as $role)
-                                    @if($role == 'student')
-                                        <span class="badge badge-info py-1 px-2">
-                                            <i class="fas fa-user-graduate me-1"></i> طالب
-                                        </span>
-                                    @elseif($role == 'instructor')
-                                        <span class="badge badge-primary py-1 px-2">
-                                            <i class="fas fa-chalkboard-teacher me-1"></i> مدرس
-                                        </span>
-                                    @elseif($role == 'admin')
-                                        <span class="badge badge-danger py-1 px-2">
-                                            <i class="fas fa-crown me-1"></i> مشرف
-                                        </span>
-                                    @else
-                                        <span class="badge badge-secondary py-1 px-2">
-                                            <i class="fas fa-user me-1"></i> {{ $role }}
-                                        </span>
-                                    @endif
-                                @endforeach
+                        </span>
+                    </div>
+                    <div class="info-item p-3 bg-light rounded mb-3">
+                        <span class="info-label d-block mb-1 text-primary">مستوى الخطورة</span>
+                        <span class="info-value d-flex align-items-center">
+                            @if($notification->severity == 'high')
+                                <i class="fas fa-exclamation-triangle me-2 text-danger"></i>
+                                <span>عالي</span>
+                            @elseif($notification->severity == 'medium')
+                                <i class="fas fa-exclamation me-2 text-warning"></i>
+                                <span>متوسط</span>
+                            @else
+                                <i class="fas fa-info-circle me-2 text-info"></i>
+                                <span>منخفض</span>
                             @endif
-                        </div>
+                        </span>
                     </div>
-                    
-                    <div class="user-info-section bg-light p-3 rounded mb-3">
-                        <div class="user-info-item d-flex align-items-center mb-2">
-                            <div class="icon-wrapper me-2 text-primary">
-                                <i class="fas fa-envelope"></i>
-                            </div>
-                            <div class="info-content">
-                                <span class="info-label d-block text-muted small">البريد الإلكتروني</span>
-                                <span class="info-value">{{ $notification->user->email }}</span>
-                            </div>
-                        </div>
-                        
-                        <div class="user-info-item d-flex align-items-center mb-2">
-                            <div class="icon-wrapper me-2 text-primary">
-                                <i class="fas fa-calendar-alt"></i>
-                            </div>
-                            <div class="info-content">
-                                <span class="info-label d-block text-muted small">تاريخ التسجيل</span>
-                                <span class="info-value">{{ $notification->user->created_at->format('Y-m-d') }}</span>
-                            </div>
-                        </div>
-                        
-                        <div class="user-info-item d-flex align-items-center">
-                            <div class="icon-wrapper me-2 text-warning">
-                                <i class="fas fa-exclamation-triangle"></i>
-                            </div>
-                            <div class="info-content">
-                                <span class="info-label d-block text-muted small">الإنذارات</span>
-                                <span class="info-value">
-                                    @php
-                                        $warningCount = \App\Models\AdminNotification::where('user_id', $notification->user->user_id)
-                                            ->where('type', 'flagged_content')
-                                            ->count();
-                                    @endphp
-                                    <span class="badge bg-{{ $warningCount > 5 ? 'danger' : 'warning' }} text-white py-1 px-2">
-                                        {{ $warningCount }}
-                                    </span>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="user-actions text-center mt-3">
-                        <a href="#" class="btn btn-warning">
-                            <i class="fas fa-exclamation-triangle me-1"></i> تحذير المستخدم
-                        </a>
-                        
-                        <a href="#" class="btn btn-outline-primary mt-2 mx-auto d-block">
-                            <i class="fas fa-user me-1"></i> عرض الملف الشخصي
-                        </a>
-                    </div>
-                </div>
-            </div>
-            @endif
-            
-            <!-- Notification Metadata -->
-            <div class="card shadow mb-4 border-0">
-                <div class="card-header py-3 bg-white">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-tags me-2"></i> بيانات الإشعار
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="metadata-section">
-                        <div class="metadata-item py-2 px-3 mb-2 d-flex justify-content-between align-items-center bg-light rounded">
-                            <div class="metadata-label text-primary">
-                                <i class="fas fa-calendar-alt me-1"></i> تاريخ الإنشاء
-                            </div>
-                            <div class="metadata-value">
-                                {{ $notification->created_at->format('Y-m-d H:i:s') }}
-                            </div>
-                        </div>
-                        
-                        <div class="metadata-item py-2 px-3 mb-2 d-flex justify-content-between align-items-center bg-light rounded">
-                            <div class="metadata-label text-primary">
-                                <i class="fas fa-check-circle me-1"></i> الحالة
-                            </div>
-                            <div class="metadata-value">
-                                @if($notification->is_read)
-                                    <span class="badge bg-success text-white">
-                                        مقروء
-                                        <small class="ms-1">{{ $notification->read_at ? $notification->read_at->format('Y-m-d H:i') : '' }}</small>
-                                    </span>
-                                @else
-                                    <span class="badge bg-warning text-dark">غير مقروء</span>
-                                @endif
-                            </div>
-                        </div>
-                        
-                        <div class="metadata-item py-2 px-3 mb-2 d-flex justify-content-between align-items-center bg-light rounded">
-                            <div class="metadata-label text-primary">
-                                <i class="fas fa-exclamation-circle me-1"></i> مستوى الخطورة
-                            </div>
-                            <div class="metadata-value">
-                                <div class="severity-stars">
-                                    @for($i = 1; $i <= 5; $i++)
-                                        @if($i <= $notification->severity)
-                                            <i class="fas fa-star text-warning"></i>
-                                        @else
-                                            <i class="far fa-star text-muted"></i>
-                                        @endif
-                                    @endfor
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="metadata-item py-2 px-3 mb-2 d-flex justify-content-between align-items-center bg-light rounded">
-                            <div class="metadata-label text-primary">
-                                <i class="fas fa-tag me-1"></i> نوع الإشعار
-                            </div>
-                            <div class="metadata-value">
-                                @if($notification->type == 'flagged_content')
-                                    <span class="badge badge-warning">محتوى محظور</span>
-                                @elseif($notification->type == 'system_alert')
-                                    <span class="badge badge-danger">تنبيه نظام</span>
-                                @else
-                                    <span class="badge badge-secondary">{{ $notification->type }}</span>
-                                @endif
-                            </div>
-                        </div>
-                        
-                        <div class="metadata-item py-2 px-3 mb-2 d-flex justify-content-between align-items-center bg-light rounded">
-                            <div class="metadata-label text-primary">
-                                <i class="fas fa-link me-1"></i> العنصر المرتبط
-                            </div>
-                            <div class="metadata-value">
-                                @if($notification->related_type)
-                                    <span class="badge bg-primary text-white">
-                                        {{ class_basename($notification->related_type) }} #{{ $notification->related_id }}
-                                    </span>
-                                @else
-                                    <span class="text-muted">لا يوجد</span>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="notification-stats mt-4">
-                        <h6 class="font-weight-bold border-bottom pb-2 mb-3">إحصائيات سريعة</h6>
-                        <div class="row text-center">
-                            <div class="col-6 mb-3">
-                                <div class="stat-item p-2 bg-light rounded">
-                                    <div class="stat-icon text-primary mb-2">
-                                        <i class="fas fa-clock fa-2x"></i>
-                                    </div>
-                                    <div class="stat-value">
-                                        {{ $notification->created_at->diffForHumans() }}
-                                    </div>
-                                    <div class="stat-label small text-muted">
-                                        منذ الإنشاء
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-6 mb-3">
-                                <div class="stat-item p-2 bg-light rounded">
-                                    <div class="stat-icon text-danger mb-2">
-                                        <i class="fas fa-exclamation-triangle fa-2x"></i>
-                                    </div>
-                                    <div class="stat-value">
-                                        {{ $notification->severity }}/5
-                                    </div>
-                                    <div class="stat-label small text-muted">
-                                        مستوى الخطورة
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="info-item p-3 bg-light rounded">
+                        <span class="info-label d-block mb-1 text-primary">تاريخ الإنشاء</span>
+                        <span class="info-value d-flex align-items-center">
+                            <i class="fas fa-calendar-alt me-2 text-primary"></i>
+                            <span>{{ $notification->created_at->format('Y-m-d H:i:s') }}</span>
+                        </span>
                     </div>
                 </div>
             </div>

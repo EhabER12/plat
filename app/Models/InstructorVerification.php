@@ -10,6 +10,13 @@ class InstructorVerification extends Model
     use HasFactory;
 
     /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'instructor_verifications';
+
+    /**
      * The primary key for the model.
      *
      * @var string
@@ -26,16 +33,24 @@ class InstructorVerification extends Model
         'education',
         'expertise',
         'years_of_experience',
-        'certificate_file',
-        'cv_file',
         'linkedin_profile',
         'additional_info',
-        'payment_details',
-        'rejection_reason',
-        'admin_notes',
+        'qualifications',
         'status',
         'submitted_at',
-        'reviewed_at'
+        'payment_details',
+        'certificate_file',
+        'id_document',
+        'cv_document',
+        'certificate_document',
+        'admin_notes',
+        'verified_by',
+        'verified_at',
+        'reviewed_at',
+        'identification_type',
+        'identification_number',
+        'identification_image',
+        'cv_file',
     ];
 
     /**
@@ -44,9 +59,10 @@ class InstructorVerification extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'submitted_at' => 'datetime',
-        'reviewed_at' => 'datetime',
         'payment_details' => 'array',
+        'submitted_at' => 'datetime',
+        'verified_at' => 'datetime',
+        'reviewed_at' => 'datetime',
     ];
 
     /**
@@ -54,6 +70,14 @@ class InstructorVerification extends Model
      */
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id', 'user_id');
+    }
+
+    /**
+     * Get the admin that verified the request.
+     */
+    public function verifier()
+    {
+        return $this->belongsTo(User::class, 'verified_by', 'user_id');
     }
 }

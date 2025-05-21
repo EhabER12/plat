@@ -51,12 +51,14 @@ class DiscountController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
+            'code' => 'required|string|max:50|unique:discounts,code',
             'description' => 'nullable|string',
-            'discount_type' => 'required|in:percentage,fixed',
-            'discount_value' => 'required|numeric|min:0',
-            'applies_to_all_courses' => 'boolean',
-            'courses' => 'required_if:applies_to_all_courses,0|array',
+            'type' => 'required|in:percentage,fixed',
+            'value' => 'required|numeric|min:0',
+            'min_order_value' => 'nullable|numeric|min:0',
+            'max_discount_value' => 'nullable|numeric|min:0',
+            'usage_limit' => 'nullable|integer|min:1',
+            'courses' => 'array',
             'courses.*' => 'exists:courses,course_id',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
@@ -69,41 +71,35 @@ class DiscountController extends Controller
                 ->withInput();
         }
 
-        // Ensure the instructor only applies discounts to their own courses
+        // Ensure the instructor only selects their own courses
         $instructorCourseIds = Course::where('instructor_id', Auth::id())
             ->pluck('course_id')
             ->toArray();
         
-        // Check if instructor wants to apply discount to all courses
-        $appliesToAllCourses = $request->has('applies_to_all_courses');
+        // Filter courses to ensure only instructor's courses are included
+        $selectedCourses = $request->has('courses') ? 
+            array_intersect($request->courses, $instructorCourseIds) : [];
         
-        // If applying to specific courses, filter to ensure only instructor's courses
-        $selectedCourses = $appliesToAllCourses ? null : 
-            array_intersect($request->courses, $instructorCourseIds);
-        
-        if (!$appliesToAllCourses && empty($selectedCourses)) {
-            return back()
-                ->withErrors(['courses' => 'You must select at least one of your own courses.'])
-                ->withInput();
-        }
-
         // Create the discount
-        $discount = new Discount();
-        $discount->name = $request->name;
+        $discount = new Discount;
+        $discount->code = $request->code;
         $discount->description = $request->description;
-        $discount->discount_type = $request->discount_type;
-        $discount->discount_value = $request->discount_value;
-        $discount->applies_to_all_courses = $appliesToAllCourses;
-        
-        // If applies to all courses, store all instructor course IDs
-        $discount->courses = $appliesToAllCourses ? $instructorCourseIds : $selectedCourses;
-        
+        $discount->type = $request->type;
+        $discount->value = $request->value;
+        $discount->min_order_value = $request->min_order_value;
+        $discount->max_discount_value = $request->max_discount_value;
+        $discount->usage_limit = $request->usage_limit;
         $discount->start_date = $request->start_date;
         $discount->end_date = $request->end_date;
         $discount->is_active = $request->has('is_active');
         $discount->created_by = Auth::id();
         
         $discount->save();
+        
+        // Sync courses with pivot table
+        if (!empty($selectedCourses)) {
+            $discount->courses()->sync($selectedCourses);
+        }
 
         return redirect()
             ->route('instructor.discounts.index')
@@ -118,7 +114,8 @@ class DiscountController extends Controller
      */
     public function edit($id)
     {
-        $discount = Discount::where('created_by', Auth::id())
+        $discount = Discount::with('courses')
+            ->where('created_by', Auth::id())
             ->findOrFail($id);
             
         // Get only the instructor's courses
@@ -127,7 +124,9 @@ class DiscountController extends Controller
             ->orderBy('title')
             ->get();
             
-        return view('instructor.discounts.edit', compact('discount', 'courses'));
+        $selectedCourses = $discount->courses ? $discount->courses->pluck('course_id')->toArray() : [];
+            
+        return view('instructor.discounts.edit', compact('discount', 'courses', 'selectedCourses'));
     }
 
     /**
@@ -143,12 +142,14 @@ class DiscountController extends Controller
             ->findOrFail($id);
         
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
+            'code' => 'required|string|max:50|unique:discounts,code,' . $discount->discount_id . ',discount_id',
             'description' => 'nullable|string',
-            'discount_type' => 'required|in:percentage,fixed',
-            'discount_value' => 'required|numeric|min:0',
-            'applies_to_all_courses' => 'boolean',
-            'courses' => 'required_if:applies_to_all_courses,0|array',
+            'type' => 'required|in:percentage,fixed',
+            'value' => 'required|numeric|min:0',
+            'min_order_value' => 'nullable|numeric|min:0',
+            'max_discount_value' => 'nullable|numeric|min:0',
+            'usage_limit' => 'nullable|integer|min:1',
+            'courses' => 'array',
             'courses.*' => 'exists:courses,course_id',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
@@ -161,39 +162,35 @@ class DiscountController extends Controller
                 ->withInput();
         }
 
-        // Ensure the instructor only applies discounts to their own courses
+        // Ensure the instructor only selects their own courses
         $instructorCourseIds = Course::where('instructor_id', Auth::id())
             ->pluck('course_id')
             ->toArray();
         
-        // Check if instructor wants to apply discount to all courses
-        $appliesToAllCourses = $request->has('applies_to_all_courses');
+        // Filter courses to ensure only instructor's courses are included
+        $selectedCourses = $request->has('courses') ? 
+            array_intersect($request->courses, $instructorCourseIds) : [];
         
-        // If applying to specific courses, filter to ensure only instructor's courses
-        $selectedCourses = $appliesToAllCourses ? null : 
-            array_intersect($request->courses, $instructorCourseIds);
-        
-        if (!$appliesToAllCourses && empty($selectedCourses)) {
-            return back()
-                ->withErrors(['courses' => 'You must select at least one of your own courses.'])
-                ->withInput();
-        }
-
         // Update the discount
-        $discount->name = $request->name;
+        $discount->code = $request->code;
         $discount->description = $request->description;
-        $discount->discount_type = $request->discount_type;
-        $discount->discount_value = $request->discount_value;
-        $discount->applies_to_all_courses = $appliesToAllCourses;
-        
-        // If applies to all courses, store all instructor course IDs
-        $discount->courses = $appliesToAllCourses ? $instructorCourseIds : $selectedCourses;
-        
+        $discount->type = $request->type;
+        $discount->value = $request->value;
+        $discount->min_order_value = $request->min_order_value;
+        $discount->max_discount_value = $request->max_discount_value;
+        $discount->usage_limit = $request->usage_limit;
         $discount->start_date = $request->start_date;
         $discount->end_date = $request->end_date;
         $discount->is_active = $request->has('is_active');
         
         $discount->save();
+        
+        // Sync courses with pivot table
+        if (!empty($selectedCourses)) {
+            $discount->courses()->sync($selectedCourses);
+        } else {
+            $discount->courses()->detach();
+        }
 
         return redirect()
             ->route('instructor.discounts.index')

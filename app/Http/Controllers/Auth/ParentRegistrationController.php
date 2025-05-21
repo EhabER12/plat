@@ -59,7 +59,7 @@ class ParentRegistrationController extends Controller
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
-                'password_hash' => Hash::make($request->password),
+                'password' => Hash::make($request->password),
                 'phone' => $request->phone,
                 'address' => $request->address,
                 'profile_image' => $profileImagePath,

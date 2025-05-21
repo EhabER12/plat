@@ -10,55 +10,55 @@
         border-radius: 5px;
         margin-bottom: 20px;
     }
-    
+
     .quiz-header h1 {
         margin-bottom: 15px;
     }
-    
+
     .quiz-info {
         display: flex;
         flex-wrap: wrap;
         gap: 20px;
         margin-bottom: 20px;
     }
-    
+
     .quiz-info-item {
         display: flex;
         align-items: center;
     }
-    
+
     .quiz-info-icon {
         margin-left: 8px;
         color: #6c757d;
     }
-    
+
     .attempt-card {
         margin-bottom: 20px;
         border-radius: 5px;
         overflow: hidden;
     }
-    
+
     .attempt-header {
         padding: 15px;
         color: #fff;
     }
-    
+
     .attempt-passed {
         background-color: #198754;
     }
-    
+
     .attempt-failed {
         background-color: #dc3545;
     }
-    
+
     .attempt-inprogress {
         background-color: #0d6efd;
     }
-    
+
     .attempt-body {
         padding: 15px;
     }
-    
+
     .countdown-timer {
         font-size: 1.2rem;
         font-weight: bold;
@@ -76,7 +76,7 @@
     <div class="quiz-header">
         <h1>{{ $quiz->title }}</h1>
         <p>{{ $quiz->description }}</p>
-        
+
         <div class="quiz-info">
             <div class="quiz-info-item">
                 <i class="fas fa-book quiz-info-icon"></i>
@@ -94,14 +94,14 @@
                 <i class="fas fa-percent quiz-info-icon"></i>
                 <span>درجة النجاح: {{ $quiz->passing_percentage }}%</span>
             </div>
-            
+
             @if($quiz->max_attempts)
                 <div class="quiz-info-item">
                     <i class="fas fa-redo quiz-info-icon"></i>
                     <span>عدد المحاولات المسموحة: {{ $quiz->max_attempts }}</span>
                 </div>
             @endif
-            
+
             <div class="quiz-info-item">
                 <i class="fas fa-hourglass-half quiz-info-icon"></i>
                 <span class="{{ $quiz->hasEnded() ? 'text-danger' : ($quiz->hasNotStarted() ? 'text-info' : 'text-success') }}">
@@ -109,7 +109,7 @@
                 </span>
             </div>
         </div>
-        
+
         <!-- Alert messages based on quiz status -->
         @if($quiz->hasEnded())
             <div class="alert alert-danger">
@@ -123,7 +123,7 @@
             </div>
         @endif
     </div>
-    
+
     @if(session('success'))
         <div class="alert alert-success">
             {{ session('success') }}
@@ -135,7 +135,7 @@
             {{ session('error') }}
         </div>
     @endif
-    
+
     <!-- Previous Attempts -->
     @if($attempts->count() > 0)
         <h3 class="mb-4">محاولاتك السابقة</h3>
@@ -143,10 +143,10 @@
             @foreach($attempts as $attempt)
                 <div class="col-md-6">
                     <div class="card attempt-card">
-                        <div class="attempt-header 
+                        <div class="attempt-header
                             {{ $attempt->status == 'completed' ? ($attempt->is_passed ? 'attempt-passed' : 'attempt-failed') : 'attempt-inprogress' }}">
                             <h5 class="m-0">
-                                المحاولة #{{ $loop->iteration }} - 
+                                المحاولة #{{ $loop->iteration }} -
                                 @if($attempt->status == 'completed')
                                     {{ $attempt->is_passed ? 'ناجح' : 'راسب' }}
                                 @elseif($attempt->status == 'in_progress')
@@ -161,7 +161,7 @@
                                 <span>تاريخ المحاولة:</span>
                                 <span>{{ $attempt->created_at->format('Y-m-d H:i') }}</span>
                             </div>
-                            
+
                             @if($attempt->status == 'completed')
                                 <div class="d-flex justify-content-between mb-2">
                                     <span>الدرجة:</span>
@@ -192,11 +192,11 @@
             @endforeach
         </div>
     @endif
-    
+
     <!-- Start New Attempt -->
     <div class="mt-5">
         <h3 class="mb-4">بدء محاولة جديدة</h3>
-        
+
         @if($quiz->hasEnded())
             <div class="alert alert-danger">
                 لقد انتهت فترة هذا الامتحان ولا يمكن بدء محاولات جديدة.
@@ -223,8 +223,8 @@
                         <li>يجب الإجابة على جميع الأسئلة.</li>
                         <li>عند انتهاء الوقت سيتم تسليم الامتحان تلقائياً.</li>
                     </ul>
-                    
-                    <form action="{{ route('student.quiz-attempts.start', $quiz->quiz_id) }}" method="POST">
+
+                    <form action="{{ route('student.quiz-attempts.start', $quiz->id) }}" method="POST">
                         @csrf
                         <button type="submit" class="btn btn-success btn-lg">
                             بدء الامتحان الآن
@@ -235,4 +235,4 @@
         @endif
     </div>
 </div>
-@endsection 
+@endsection

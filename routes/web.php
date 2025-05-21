@@ -10,6 +10,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\InstructorMiddleware;
 use App\Http\Controllers\CourseController;
+use App\Http\Controllers\BookController;
 
 // Pages Routes
 Route::get('/', [PageController::class, 'home'])->name('home');
@@ -22,6 +23,7 @@ Route::get('/courses/{courseId}', [PageController::class, 'courseDetail'])->name
 // Instructor Profiles Routes
 Route::get('/instructors', [App\Http\Controllers\InstructorProfileController::class, 'index'])->name('instructors.index');
 Route::get('/instructors/{id}', [App\Http\Controllers\InstructorProfileController::class, 'show'])->name('instructors.show');
+Route::get('/instructor/profile/{id?}', [App\Http\Controllers\InstructorProfileController::class, 'show'])->name('instructor.profile');
 
 // Authentication Routes
 Route::middleware('guest')->group(function () {
@@ -32,11 +34,11 @@ Route::middleware('guest')->group(function () {
     // Registration
     Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
     Route::post('/register', [RegisterController::class, 'register']);
-    
+
     // Parent Registration
     Route::get('/register/parent', [App\Http\Controllers\Auth\ParentRegistrationController::class, 'showRegistrationForm'])->name('register.parent');
     Route::post('/register/parent', [App\Http\Controllers\Auth\ParentRegistrationController::class, 'register']);
-    
+
     // Password Reset Routes
     Route::get('/forgot-password', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'showLinkRequestForm'])
         ->name('password.request');
@@ -146,7 +148,7 @@ Route::middleware('auth')->group(function () {
 
         // Reports
         Route::get('/reports', [InstructorDashboardController::class, 'reports'])->name('instructor.reports');
-        
+
         // Top Students Analysis
         Route::get('/top-students', [InstructorDashboardController::class, 'topStudents'])->name('instructor.top-students');
 
@@ -175,7 +177,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/coupons/{id}/edit', [App\Http\Controllers\Instructor\CouponController::class, 'edit'])->name('instructor.coupons.edit');
         Route::patch('/coupons/{id}', [App\Http\Controllers\Instructor\CouponController::class, 'update'])->name('instructor.coupons.update');
         Route::delete('/coupons/{id}', [App\Http\Controllers\Instructor\CouponController::class, 'destroy'])->name('instructor.coupons.destroy');
-        
+
         // Discount Management
         Route::get('/discounts', [App\Http\Controllers\Instructor\DiscountController::class, 'index'])->name('instructor.discounts.index');
         Route::get('/discounts/create', [App\Http\Controllers\Instructor\DiscountController::class, 'create'])->name('instructor.discounts.create');
@@ -183,6 +185,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/discounts/{id}/edit', [App\Http\Controllers\Instructor\DiscountController::class, 'edit'])->name('instructor.discounts.edit');
         Route::patch('/discounts/{id}', [App\Http\Controllers\Instructor\DiscountController::class, 'update'])->name('instructor.discounts.update');
         Route::delete('/discounts/{id}', [App\Http\Controllers\Instructor\DiscountController::class, 'destroy'])->name('instructor.discounts.destroy');
+
+        // Book Management
+        Route::get('/books', [App\Http\Controllers\Instructor\BookController::class, 'index'])->name('instructor.books.index');
+        Route::get('/books/create', [App\Http\Controllers\Instructor\BookController::class, 'create'])->name('instructor.books.create');
+        Route::post('/books', [App\Http\Controllers\Instructor\BookController::class, 'store'])->name('instructor.books.store');
+        Route::get('/books/{book}/edit', [App\Http\Controllers\Instructor\BookController::class, 'edit'])->name('instructor.books.edit');
+        Route::put('/books/{book}', [App\Http\Controllers\Instructor\BookController::class, 'update'])->name('instructor.books.update');
+        Route::delete('/books/{book}', [App\Http\Controllers\Instructor\BookController::class, 'destroy'])->name('instructor.books.destroy');
     });
 
     // Payment Routes
@@ -195,6 +205,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/pending/{paymentId}', [PaymentController::class, 'showPendingPayment'])->name('pending');
         Route::get('/success/{paymentId}', [PaymentController::class, 'showSuccessPayment'])->name('success');
         Route::get('/failed/{paymentId}', [PaymentController::class, 'showFailedPayment'])->name('failed');
+        Route::get('/failed-payment', [PaymentController::class, 'showGenericFailure'])->name('generic-failed');
 
         // Coupon routes
         Route::post('/apply-coupon/{courseId}', [PaymentController::class, 'applyCoupon'])->name('apply-coupon');
@@ -202,7 +213,7 @@ Route::middleware('auth')->group(function () {
 
         // Paymob webhook callback from dashboard
         Route::post('/paymob/callback', [PaymentController::class, 'paymobCallback'])->name('paymob.callback');
-        
+
         // Paymob response pages (redirects to success/failure pages)
         Route::get('/paymob/response/{status}', [PaymentController::class, 'paymobResponse'])->name('paymob.response');
 
@@ -217,10 +228,10 @@ Route::middleware('auth')->group(function () {
     // IMPORTANT: These routes receive the actual payment notifications from Paymob when users complete payment
     Route::post('/api/acceptance/post_pay', [PaymentController::class, 'paymobCallback']);
     Route::get('/api/acceptance/post_pay', [PaymentController::class, 'paymobCallback']);
-    
+
     // Development-only route to manually complete a payment (only enable in development)
     Route::get('/payment/debug/complete/{transactionId}', [PaymentController::class, 'debugCompletePayment']);
-    
+
     // Route for handling unknown transactions (when payment is received but transaction not found)
     Route::get('/payment/unknown-transaction', [PaymentController::class, 'showUnknownTransaction'])->name('payment.unknown-transaction');
 
@@ -237,13 +248,16 @@ Route::middleware('auth')->group(function () {
 
         // مسارات تقدم الطالب في مشاهدة الفيديوهات
         Route::post('/save-progress', [App\Http\Controllers\Student\StudentProgressController::class, 'saveProgress'])->name('student.save-progress');
-        
-        // معالج لطلبات GET بطريقة خطأ عن طريق إعادة التوجيه إلى الصفحة الحالية
+
+        // تحويل طلبات GET لحفظ التقدم إلى طلبات POST (redirect)
         Route::get('/save-progress', function() {
-            // يعود مرة أخرى إلى الصفحة السابقة مع رسالة تحذيرية
-            return redirect()->back()->with('warning', 'تم استخدام طريقة GET للوصول إلى مسار حفظ التقدم. يرجى استخدام طريقة POST.');
-        });
-        
+            // في حالة استخدام طريقة GET، نقوم بإعادة توجيه الطلب مع رسالة خطأ
+            return response()->json([
+                'success' => false,
+                'error' => 'طريقة GET غير مسموح بها لحفظ التقدم. يجب استخدام POST.'
+            ], 405);
+        })->name('student.save-progress.get');
+
         Route::get('/course/{courseId}/progress', [App\Http\Controllers\Student\StudentProgressController::class, 'getCourseProgress'])->name('student.course.progress');
         Route::get('/video/{videoId}/progress', [App\Http\Controllers\Student\StudentProgressController::class, 'getVideoProgress'])->name('student.video.progress');
 
@@ -252,7 +266,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/certificates/{id}', [App\Http\Controllers\Student\CertificateController::class, 'show'])->name('student.certificates.show');
         Route::get('/certificates/{id}/download', [App\Http\Controllers\Student\CertificateController::class, 'download'])->name('student.certificates.download');
         Route::post('/course/{courseId}/certificate/request', [App\Http\Controllers\Student\CertificateController::class, 'request'])->name('student.certificate.request');
-        
+
         // Messages
         Route::get('/messages', [App\Http\Controllers\Student\MessagesController::class, 'index'])->name('student.messages.index');
         Route::get('/messages/{instructorId}', [App\Http\Controllers\Student\MessagesController::class, 'show'])->name('student.messages.show');
@@ -279,22 +293,43 @@ Route::middleware('auth')->group(function () {
 
         // Quiz routes
         Route::get('/quizzes', [App\Http\Controllers\Student\QuizController::class, 'index'])->name('student.quizzes.index');
-        Route::get('/quizzes/{quizId}', [App\Http\Controllers\Student\QuizController::class, 'show'])->name('student.quizzes.show');
-        
+        Route::get('/quizzes/{id}', [App\Http\Controllers\Student\QuizController::class, 'show'])->name('student.quizzes.show');
+
         // Quiz Attempts routes
-        Route::post('/quizzes/{quizId}/start', [App\Http\Controllers\Student\QuizAttemptController::class, 'start'])->name('student.quiz-attempts.start');
+        Route::post('/quizzes/{id}/start', [App\Http\Controllers\Student\QuizAttemptController::class, 'start'])->name('student.quiz-attempts.start');
         Route::get('/quiz-attempts/{attemptId}/continue', [App\Http\Controllers\Student\QuizAttemptController::class, 'continue'])->name('student.quiz-attempts.continue');
         Route::get('/quiz-attempts/{attemptId}/take', [App\Http\Controllers\Student\QuizAttemptController::class, 'take'])->name('student.quiz-attempts.take');
         Route::put('/quiz-attempts/{attemptId}/save-progress', [App\Http\Controllers\Student\QuizAttemptController::class, 'saveProgress'])->name('student.quiz-attempts.save-progress');
         Route::post('/quiz-attempts/{attemptId}/submit', [App\Http\Controllers\Student\QuizAttemptController::class, 'submit'])->name('student.quiz-attempts.submit');
         Route::get('/quiz-attempts/{attemptId}', [App\Http\Controllers\Student\QuizAttemptController::class, 'show'])->name('student.quiz-attempts.show');
+
+        // Motivation System Routes
+        Route::get('/motivation', [App\Http\Controllers\Student\MotivationController::class, 'index'])->name('student.motivation.index');
+        Route::get('/motivation/badges', [App\Http\Controllers\Student\MotivationController::class, 'badges'])->name('student.motivation.badges');
+        Route::get('/motivation/achievements', [App\Http\Controllers\Student\MotivationController::class, 'achievements'])->name('student.motivation.achievements');
+
+        // Notifications Routes
+        Route::get('/notifications', [App\Http\Controllers\Student\NotificationsController::class, 'index'])->name('student.notifications.index');
+        Route::get('/notifications/{id}', [App\Http\Controllers\Student\NotificationsController::class, 'show'])->name('student.notifications.show');
+        Route::post('/notifications/{id}/mark-as-read', [App\Http\Controllers\Student\NotificationsController::class, 'markAsRead'])->name('student.notifications.mark-as-read');
+        Route::post('/notifications/mark-all-read', [App\Http\Controllers\Student\NotificationsController::class, 'markAllAsRead'])->name('student.notifications.mark-all-read');
+        Route::delete('/notifications/{id}', [App\Http\Controllers\Student\NotificationsController::class, 'destroy'])->name('student.notifications.destroy');
     });
+
+    // Ruta adicional para guardar progreso (accesible desde /save-progress)
+    Route::post('/save-progress', [App\Http\Controllers\Student\StudentProgressController::class, 'saveProgress'])
+        ->middleware(['auth', \App\Http\Middleware\StudentMiddleware::class]);
+
+    // Ruta para capturar peticiones mal direccionadas a /student/save-progress
+    Route::post('/student/save-progress', [App\Http\Controllers\Student\StudentProgressController::class, 'saveProgress'])
+        ->name('student.save-progress')
+        ->middleware(['auth', \App\Http\Middleware\StudentMiddleware::class]);
 
     // Admin Routes - Protected by admin middleware
     Route::middleware(AdminMiddleware::class)->prefix('admin')->group(function () {
         // Dashboard
         Route::get('/', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
-        
+
         // Create Demo Data (for development only)
         Route::get('/create-demo-data', [AdminDashboardController::class, 'createDemoData'])->name('admin.create-demo-data');
 
@@ -315,13 +350,13 @@ Route::middleware('auth')->group(function () {
         Route::post('/certificates', [App\Http\Controllers\Admin\CertificateController::class, 'store'])->name('admin.certificates.store');
         Route::get('/certificates/{id}', [App\Http\Controllers\Admin\CertificateController::class, 'show'])->name('admin.certificates.show');
         Route::post('/certificates/{id}/invalidate', [App\Http\Controllers\Admin\CertificateController::class, 'invalidate'])->name('admin.certificates.invalidate');
-        
+
         // Instructor Verification Management
         Route::get('/instructor-verifications', [AdminDashboardController::class, 'instructorVerifications'])
             ->name('admin.instructor.verifications');
-        Route::get('/instructor-verifications/{id}', [AdminDashboardController::class, 'showInstructorVerification'])
+        Route::get('/instructor-verifications/{verification_id}', [AdminDashboardController::class, 'showInstructorVerification'])
             ->name('admin.instructor.verification.show');
-        Route::post('/instructor-verifications/{id}', [AdminDashboardController::class, 'processInstructorVerification'])
+        Route::post('/instructor-verifications/{verification_id}', [AdminDashboardController::class, 'processInstructorVerification'])
             ->name('admin.instructor.verification.process');
 
         // Course Management
@@ -390,7 +425,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/coupons/{id}/edit', [App\Http\Controllers\Admin\CouponController::class, 'edit'])->name('admin.coupons.edit');
         Route::patch('/coupons/{id}', [App\Http\Controllers\Admin\CouponController::class, 'update'])->name('admin.coupons.update');
         Route::delete('/coupons/{id}', [App\Http\Controllers\Admin\CouponController::class, 'destroy'])->name('admin.coupons.destroy');
-        
+
         // Discount Management
         Route::get('/discounts', [App\Http\Controllers\Admin\DiscountController::class, 'index'])->name('admin.discounts.index');
         Route::get('/discounts/create', [App\Http\Controllers\Admin\DiscountController::class, 'create'])->name('admin.discounts.create');
@@ -398,7 +433,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/discounts/{id}/edit', [App\Http\Controllers\Admin\DiscountController::class, 'edit'])->name('admin.discounts.edit');
         Route::patch('/discounts/{id}', [App\Http\Controllers\Admin\DiscountController::class, 'update'])->name('admin.discounts.update');
         Route::delete('/discounts/{id}', [App\Http\Controllers\Admin\DiscountController::class, 'destroy'])->name('admin.discounts.destroy');
-        
+
         // Banned Words Management
         Route::get('/banned-words', [App\Http\Controllers\Admin\BannedWordsController::class, 'index'])->name('admin.banned-words.index');
         Route::get('/banned-words/create', [App\Http\Controllers\Admin\BannedWordsController::class, 'create'])->name('admin.banned-words.create');
@@ -419,6 +454,24 @@ Route::middleware('auth')->group(function () {
         Route::post('notifications/mark-multiple-read', [\App\Http\Controllers\Admin\NotificationsController::class, 'markMultipleAsRead'])->name('admin.notifications.mark-multiple-read');
         Route::post('notifications/mark-all-read', [\App\Http\Controllers\Admin\NotificationsController::class, 'markAllAsRead'])->name('admin.notifications.mark-all-read');
         Route::delete('notifications/{id}', [\App\Http\Controllers\Admin\NotificationsController::class, 'destroy'])->name('admin.notifications.destroy');
+
+        // Badges Management
+        Route::get('/badges', [App\Http\Controllers\Admin\BadgeController::class, 'index'])->name('admin.badges.index');
+        Route::get('/badges/create', [App\Http\Controllers\Admin\BadgeController::class, 'create'])->name('admin.badges.create');
+        Route::post('/badges', [App\Http\Controllers\Admin\BadgeController::class, 'store'])->name('admin.badges.store');
+        Route::get('/badges/{id}', [App\Http\Controllers\Admin\BadgeController::class, 'show'])->name('admin.badges.show');
+        Route::get('/badges/{id}/edit', [App\Http\Controllers\Admin\BadgeController::class, 'edit'])->name('admin.badges.edit');
+        Route::put('/badges/{id}', [App\Http\Controllers\Admin\BadgeController::class, 'update'])->name('admin.badges.update');
+        Route::delete('/badges/{id}', [App\Http\Controllers\Admin\BadgeController::class, 'destroy'])->name('admin.badges.destroy');
+
+        // Achievements Management
+        Route::get('/achievements', [App\Http\Controllers\Admin\AchievementController::class, 'index'])->name('admin.achievements.index');
+        Route::get('/achievements/create', [App\Http\Controllers\Admin\AchievementController::class, 'create'])->name('admin.achievements.create');
+        Route::post('/achievements', [App\Http\Controllers\Admin\AchievementController::class, 'store'])->name('admin.achievements.store');
+        Route::get('/achievements/{id}', [App\Http\Controllers\Admin\AchievementController::class, 'show'])->name('admin.achievements.show');
+        Route::get('/achievements/{id}/edit', [App\Http\Controllers\Admin\AchievementController::class, 'edit'])->name('admin.achievements.edit');
+        Route::put('/achievements/{id}', [App\Http\Controllers\Admin\AchievementController::class, 'update'])->name('admin.achievements.update');
+        Route::delete('/achievements/{id}', [App\Http\Controllers\Admin\AchievementController::class, 'destroy'])->name('admin.achievements.destroy');
     });
 
     // Course Materials Download - Accessible to enrolled students and instructors
@@ -440,6 +493,10 @@ Route::middleware('auth')->group(function () {
         ->middleware(['auth', 'verified']);
     Route::get('/encrypted-video/{videoId}/{token}', [App\Http\Controllers\VideoStreamController::class, 'encryptedVideo'])
         ->name('encrypted-video');
+
+    // Rutas adicionales para el progreso del video
+    Route::get('/video/{videoId}/progress', [App\Http\Controllers\Student\StudentProgressController::class, 'getVideoProgress'])
+        ->middleware(['auth', \App\Http\Middleware\StudentMiddleware::class]);
 
     // Blocked Access Route
     Route::get('/blocked-access', [App\Http\Controllers\BlockedAccessController::class, 'show'])
@@ -467,19 +524,119 @@ Route::post('/verify-certificate', [App\Http\Controllers\Admin\CertificateContro
 Route::get('/student/parent/link-request/{token}', [App\Http\Controllers\Student\ParentLinkController::class, 'showLinkRequest'])->name('student.parent-link-request');
 Route::post('/student/parent/link-request/{token}/respond', [App\Http\Controllers\Student\ParentLinkController::class, 'respondToLinkRequest'])->name('student.respond-to-parent-link');
 
-// Parent Routes
+// Basic parent route with just role middleware
 Route::middleware(['auth', \App\Http\Middleware\RoleMiddleware::class.':parent'])->prefix('parent')->group(function () {
-    Route::get('/', [App\Http\Controllers\ParentDashboardController::class, 'index'])->name('parent.dashboard');
-    Route::get('/student/{studentId}', [App\Http\Controllers\ParentDashboardController::class, 'studentActivity'])->name('parent.student-activity');
-    Route::get('/activities', [App\Http\Controllers\ParentDashboardController::class, 'activities'])->name('parent.activities');
+    // Waiting approval page - accessible to any parent
+    Route::get('/waiting-approval', [App\Http\Controllers\ParentDashboardController::class, 'waitingApproval'])->name('parent.waiting-approval');
+
+    // Link request form - accessible to any parent
     Route::get('/link-request', [App\Http\Controllers\ParentDashboardController::class, 'linkRequestForm'])->name('parent.link-request');
     Route::post('/link-request', [App\Http\Controllers\ParentDashboardController::class, 'storeLinkRequest'])->name('parent.store-link-request');
     Route::post('/link-request/{requestId}/resubmit', [App\Http\Controllers\ParentDashboardController::class, 'resubmitLinkRequest'])->name('parent.resubmit-link-request');
-    
-    // Profile management
+});
+
+// Parent routes that require verification
+Route::middleware(['auth', \App\Http\Middleware\RoleMiddleware::class.':parent', 'verified.parent'])->prefix('parent')->group(function () {
+    // Dashboard and student monitoring - requires verification
+    Route::get('/', [App\Http\Controllers\ParentDashboardController::class, 'index'])->name('parent.dashboard');
+    Route::get('/student/{studentId}', [App\Http\Controllers\ParentDashboardController::class, 'studentActivity'])->name('parent.student-activity');
+    Route::get('/activities', [App\Http\Controllers\ParentDashboardController::class, 'activities'])->name('parent.activities');
+
+    // Profile management - requires verification
     Route::match(['get', 'post'], '/profile', [App\Http\Controllers\ParentDashboardController::class, 'profile'])->name('parent.profile');
     Route::post('/profile/password', [App\Http\Controllers\ParentDashboardController::class, 'updatePassword'])->name('parent.profile.update-password');
 });
 
 // Language Route - Public Route
 Route::get('/language/{locale}', [App\Http\Controllers\LanguageController::class, 'switch'])->name('language.switch');
+
+// Book Routes
+Route::get('/books', [App\Http\Controllers\BookController::class, 'index'])->name('books.index');
+Route::get('/books/{book}', [App\Http\Controllers\BookController::class, 'show'])->name('books.show');
+Route::get('/books/{book}/download', [App\Http\Controllers\BookController::class, 'download'])->name('books.download')->middleware('auth');
+Route::get('/books/{book}/cover', [App\Http\Controllers\BookController::class, 'showCover'])->name('books.cover');
+Route::get('/books/{book}/pdf', [App\Http\Controllers\BookController::class, 'showPdf'])->name('books.pdf')->middleware('auth');
+
+// Direct file access route for new book file structure
+Route::get('/books/{bookId}/{type}/{filename}', function ($bookId, $type, $filename) {
+    // Validate the type to prevent directory traversal
+    if (!in_array($type, ['pdf', 'cover'])) {
+        abort(404);
+    }
+
+    $path = storage_path("app/public/books/{$bookId}/{$type}/{$filename}");
+
+    if (!file_exists($path)) {
+        abort(404);
+    }
+
+    $contentType = $type == 'pdf' ? 'application/pdf' : 'image/jpeg';
+
+    // Set appropriate headers
+    $headers = [
+        'Content-Type' => $contentType,
+        'Cache-Control' => 'public, max-age=86400',
+    ];
+
+    if ($type == 'pdf') {
+        $headers['Content-Disposition'] = 'inline; filename="' . $filename . '"';
+        $headers['Accept-Ranges'] = 'bytes';
+        $headers['X-Content-Type-Options'] = 'nosniff';
+    }
+
+    return response()->file($path, $headers);
+})->middleware('auth')->name('books.direct.file');
+
+// Direct file access route - Simple fallback method for old format
+Route::get('/direct-books/{type}/{filename}', function ($type, $filename) {
+    // Validate the type to prevent directory traversal
+    if (!in_array($type, ['pdf', 'covers'])) {
+        abort(404);
+    }
+
+    // First check the proper storage path
+    $path = storage_path("app/public/books/{$type}/{$filename}");
+
+    if (!file_exists($path)) {
+        // Try public path as fallback
+        $path = public_path("storage/books/{$type}/{$filename}");
+
+        if (!file_exists($path)) {
+            abort(404);
+        }
+    }
+
+    // Determine content type and filename for headers
+    if ($type == 'pdf') {
+        $contentType = 'application/pdf';
+        // Extract book name from filename for better display
+        $displayName = preg_replace('/^\d+-/', '', $filename);
+        $displayName = str_replace('.pdf', '', $displayName);
+        $displayName = str_replace('-', ' ', $displayName);
+
+        // Set headers for better PDF handling
+        $headers = [
+            'Content-Type' => $contentType,
+            'Content-Disposition' => 'inline; filename="' . $displayName . '.pdf"',
+            'Cache-Control' => 'public, max-age=86400',
+            'Accept-Ranges' => 'bytes',
+            'X-Content-Type-Options' => 'nosniff',
+        ];
+    } else {
+        $contentType = 'image/jpeg';
+        $headers = [
+            'Content-Type' => $contentType,
+            'Cache-Control' => 'public, max-age=86400',
+        ];
+    }
+
+    return response()->file($path, $headers);
+});
+
+// Student message read route
+Route::post('student/messages/mark-read', [App\Http\Controllers\Student\MessageReadController::class, 'markRead'])
+    ->name('student.messages.mark-read');
+
+// Instructor message read route
+Route::post('instructor/messages/mark-read', [App\Http\Controllers\Instructor\MessageReadController::class, 'markRead'])
+    ->name('instructor.messages.mark-read');

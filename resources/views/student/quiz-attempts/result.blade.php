@@ -10,11 +10,11 @@
         border-radius: 5px;
         margin-bottom: 20px;
     }
-    
+
     .result-header h1 {
         margin-bottom: 15px;
     }
-    
+
     .score-card {
         background-color: #fff;
         border-radius: 10px;
@@ -23,7 +23,7 @@
         margin-bottom: 30px;
         text-align: center;
     }
-    
+
     .score-circle {
         width: 150px;
         height: 150px;
@@ -36,25 +36,25 @@
         font-weight: bold;
         color: #fff;
     }
-    
+
     .score-pass {
         background-color: #28a745;
     }
-    
+
     .score-fail {
         background-color: #dc3545;
     }
-    
+
     .score-percent {
         font-size: 2.5rem;
         line-height: 1;
     }
-    
+
     .score-label {
         font-size: 1rem;
         opacity: 0.8;
     }
-    
+
     .question-card {
         border: 1px solid #ddd;
         border-radius: 8px;
@@ -62,16 +62,16 @@
         background-color: #fff;
         overflow: hidden;
     }
-    
+
     .question-header {
         padding: 15px;
         border-bottom: 1px solid #ddd;
     }
-    
+
     .question-body {
         padding: 20px;
     }
-    
+
     .question-result {
         display: inline-block;
         padding: 5px 10px;
@@ -81,36 +81,36 @@
         color: #fff;
         margin-right: 10px;
     }
-    
+
     .question-correct {
         background-color: #28a745;
     }
-    
+
     .question-incorrect {
         background-color: #dc3545;
     }
-    
+
     .option-row {
         padding: 15px;
         border: 1px solid #eee;
         border-radius: 5px;
         margin-bottom: 10px;
     }
-    
+
     .option-correct {
         background-color: #d4edda;
         border-color: #c3e6cb;
     }
-    
+
     .option-incorrect {
         background-color: #f8d7da;
         border-color: #f5c6cb;
     }
-    
+
     .option-selected {
         border-right: 4px solid #007bff;
     }
-    
+
     .result-summary {
         background-color: #fff;
         border-radius: 10px;
@@ -118,14 +118,14 @@
         padding: 20px;
         margin-bottom: 20px;
     }
-    
+
     .summary-item {
         display: flex;
         justify-content: space-between;
         padding: 10px 0;
         border-bottom: 1px solid #eee;
     }
-    
+
     .summary-item:last-child {
         border-bottom: none;
     }
@@ -138,7 +138,7 @@
         <h1>نتيجة الامتحان</h1>
         <p>{{ $quiz->title }}</p>
     </div>
-    
+
     <div class="row">
         <div class="col-md-8">
             <!-- Score Card -->
@@ -147,7 +147,7 @@
                     <div class="score-percent">{{ round($attempt->score_percentage) }}%</div>
                     <div class="score-label">{{ $attempt->is_passed ? 'ناجح' : 'راسب' }}</div>
                 </div>
-                
+
                 <div class="row mt-4">
                     <div class="col-6">
                         <h5>مجموع الدرجات</h5>
@@ -159,16 +159,16 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Questions and Answers -->
             <h3 class="mb-4">الأسئلة والإجابات</h3>
-            
+
             @foreach($quiz->questions_json as $index => $question)
                 @php
                     $questionId = $question['id'] ?? $index;
                     $userAnswer = $attempt->answers_json[$questionId] ?? null;
                     $isCorrect = false;
-                    
+
                     if ($question['type'] == 'multiple_choice') {
                         $correctOptions = collect($question['options'])->where('is_correct', true)->pluck('text')->toArray();
                         $isCorrect = !empty($userAnswer) && (is_array($userAnswer) ? count(array_diff($correctOptions, $userAnswer)) === 0 && count(array_diff($userAnswer, $correctOptions)) === 0 : in_array($userAnswer, $correctOptions));
@@ -178,7 +178,7 @@
                         $isCorrect = strtolower(trim($userAnswer)) == strtolower(trim($question['correct_answer']));
                     }
                 @endphp
-                
+
                 <div class="question-card">
                     <div class="question-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
@@ -191,19 +191,19 @@
                     </div>
                     <div class="question-body">
                         <p class="fw-bold mb-4">{{ $question['text'] }}</p>
-                        
+
                         @if($question['type'] == 'multiple_choice')
                             @foreach($question['options'] as $option)
                                 @php
                                     $isUserAnswer = is_array($userAnswer) ? in_array($option['text'], $userAnswer) : $userAnswer == $option['text'];
                                     $isCorrectOption = isset($option['is_correct']) && $option['is_correct'];
-                                    
+
                                     $optionClasses = 'option-row';
                                     if ($isUserAnswer) $optionClasses .= ' option-selected';
                                     if ($isCorrectOption) $optionClasses .= ' option-correct';
                                     if ($isUserAnswer && !$isCorrectOption) $optionClasses .= ' option-incorrect';
                                 @endphp
-                                
+
                                 <div class="{{ $optionClasses }}">
                                     <div class="d-flex align-items-center">
                                         <div class="me-3">
@@ -266,27 +266,27 @@
                 </div>
             @endforeach
         </div>
-        
+
         <div class="col-md-4">
             <!-- Summary -->
             <div class="result-summary">
                 <h4 class="mb-4">ملخص المحاولة</h4>
-                
+
                 <div class="summary-item">
                     <span>تاريخ المحاولة:</span>
                     <span>{{ $attempt->created_at->format('Y-m-d H:i') }}</span>
                 </div>
-                
+
                 <div class="summary-item">
                     <span>وقت البدء:</span>
                     <span>{{ $attempt->start_time->format('H:i:s') }}</span>
                 </div>
-                
+
                 <div class="summary-item">
                     <span>وقت الانتهاء:</span>
                     <span>{{ $attempt->end_time->format('H:i:s') }}</span>
                 </div>
-                
+
                 <div class="summary-item">
                     <span>الوقت المستغرق:</span>
                     <span>
@@ -294,43 +294,43 @@
                         {{ $attempt->time_spent_seconds % 60 }} ثانية
                     </span>
                 </div>
-                
+
                 <div class="summary-item">
                     <span>عدد الأسئلة:</span>
                     <span>{{ count($quiz->questions_json) }}</span>
                 </div>
-                
+
                 <div class="summary-item">
                     <span>الإجابات الصحيحة:</span>
                     <span>{{ $attempt->correct_answers_count }}</span>
                 </div>
-                
+
                 <div class="summary-item">
                     <span>الإجابات الخاطئة:</span>
                     <span>{{ count($quiz->questions_json) - $attempt->correct_answers_count }}</span>
                 </div>
             </div>
-            
+
             <!-- Actions -->
             <div class="d-grid gap-2">
-                <a href="{{ route('student.quizzes.show', $quiz->quiz_id) }}" class="btn btn-primary">
+                <a href="{{ route('student.quizzes.show', $quiz->id) }}" class="btn btn-primary">
                     <i class="fas fa-chevron-right"></i> العودة إلى تفاصيل الامتحان
                 </a>
-                
+
                 @if($canRetake)
-                    <form action="{{ route('student.quiz-attempts.start', $quiz->quiz_id) }}" method="POST">
+                    <form action="{{ route('student.quiz-attempts.start', $quiz->id) }}" method="POST">
                         @csrf
                         <button type="submit" class="btn btn-outline-primary w-100">
                             <i class="fas fa-redo"></i> إعادة المحاولة
                         </button>
                     </form>
                 @endif
-                
+
                 <a href="{{ route('student.quizzes.index') }}" class="btn btn-outline-secondary">
                     <i class="fas fa-list"></i> جميع الامتحانات
                 </a>
             </div>
-            
+
             @if($attempt->instructor_feedback)
                 <div class="mt-4 p-3 bg-light rounded">
                     <h5>ملاحظات المدرس:</h5>
@@ -340,4 +340,4 @@
         </div>
     </div>
 </div>
-@endsection 
+@endsection

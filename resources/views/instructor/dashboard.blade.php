@@ -258,62 +258,178 @@
         </a>
     </div>
 
-    <!-- Stats Row -->
+    <!-- Course Stats Section -->
     <div class="row mb-4">
-        <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
-            <div class="stat-card fade-in" style="animation-delay: 0.1s">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <div class="stat-icon bg-primary-subtle text-primary">
-                            <i class="fas fa-book"></i>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2 stat-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Courses</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $totalCourses }}</div>
                         </div>
-                        <h4 class="stat-value">{{ $totalCourses }}</h4>
-                        <p class="stat-label mb-0">الدورات</p>
-                    </div>
-                    <div class="align-self-end">
-                        <div class="small mb-2">
-                            <span class="text-success">{{ $approvedCourses }}</span> معتمدة
-                        </div>
-                        <div class="small">
-                            <span class="text-warning">{{ $pendingCourses }}</span> قيد المراجعة
+                        <div class="col-auto">
+                            <i class="fas fa-book-open fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
-            <div class="stat-card fade-in" style="animation-delay: 0.2s">
-                <div class="stat-icon bg-success-subtle text-success">
-                    <i class="fas fa-users"></i>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2 stat-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Published Courses</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $publishedCourses }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
                 </div>
-                <h4 class="stat-value">{{ $totalStudents }}</h4>
-                <p class="stat-label mb-0">الطلاب المسجلين</p>
             </div>
         </div>
 
-        <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
-            <div class="stat-card fade-in" style="animation-delay: 0.3s">
-                <div class="stat-icon bg-warning-subtle text-warning">
-                    <i class="fas fa-dollar-sign"></i>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2 stat-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Pending Courses</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $pendingCourses }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
                 </div>
-                <h4 class="stat-value">${{ number_format($totalRevenue, 2) }}</h4>
-                <p class="stat-label mb-0">إجمالي الإيرادات</p>
             </div>
         </div>
 
-        <div class="col-lg-3 col-md-6">
-            <div class="stat-card fade-in" style="animation-delay: 0.4s">
-                <div class="stat-icon bg-info-subtle text-info">
-                    <i class="fas fa-star"></i>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2 stat-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Students</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $totalStudents }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
                 </div>
-                <h4 class="stat-value">
-                    {{ isset($courses) && $courses->sum('ratings_count') > 0 ? number_format($courses->sum('ratings_count') / $courses->count(), 1) : '0.0' }}
-                </h4>
-                <p class="stat-label mb-0">متوسط التقييم</p>
             </div>
         </div>
     </div>
+    
+    <!-- Books Stats Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="h4 mb-3">Books Statistics</h2>
+        </div>
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2 stat-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Total Books</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $totalBooks }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-book fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2 stat-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Published Books</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $publishedBooks }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2 stat-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Draft Books</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $draftBooks }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-edit fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Books Section -->
+    @if(count($recentBooks) > 0)
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Books</h6>
+                    <a href="{{ route('instructor.books.index') }}" class="btn btn-sm btn-primary">View All Books</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Cover</th>
+                                    <th>Title</th>
+                                    <th>Price</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($recentBooks as $book)
+                                <tr>
+                                    <td>
+                                        <img src="{{ $book->getCoverImageUrlAttribute() }}" alt="{{ $book->title }}" width="40" height="60" class="img-thumbnail">
+                                    </td>
+                                    <td>{{ $book->title }}</td>
+                                    <td>${{ number_format($book->price, 2) }}</td>
+                                    <td>
+                                        @if($book->is_published)
+                                        <span class="badge badge-success">Published</span>
+                                        @else
+                                        <span class="badge badge-warning">Draft</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <a href="{{ route('instructor.books.edit', $book) }}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 
     <!-- Main Content -->
     <div class="row">

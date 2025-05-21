@@ -72,33 +72,70 @@ class VideoStreamController extends Controller
                 return $this->streamHlsVideo($request, $video, $videoAccess);
             }
 
-            // لنتحقق أولاً من الفيديو المحدد الذي كان في رسالة الخطأ
+            // لنتحقق من مسارات الفيديو المختلفة
+            $videoFound = false;
             $basenameFile = basename($video->video_path);
             $courseId = $video->course_id;
             
-            // المسار المحدد من الصورة السابقة
-            $directPath = storage_path('app/public/courses/' . $courseId . '/videos/' . $basenameFile);
-            if (file_exists($directPath)) {
-                Log::info('تم العثور على الفيديو في المسار المباشر', ['path' => $directPath]);
+            // المسارات المحتملة للفيديو
+            $possiblePaths = [
+                // المسار المباشر بالضبط كما هو في قاعدة البيانات
+                storage_path('app/' . $video->video_path),
                 
-                // خصائص الملف
-                $size = filesize($directPath);
-                $mime = mime_content_type($directPath) ?: 'video/mp4';
+                // المسار المحدد من الصورة السابقة
+                storage_path('app/public/courses/' . $courseId . '/videos/' . $basenameFile),
                 
-                // التعامل مع طلبات النطاق
-                $range = $request->header('Range');
-                if ($range) {
-                    return $this->handleRangeRequest($directPath, $size, $mime, $range);
+                // مسار بديل آخر محتمل
+                public_path('storage/courses/' . $courseId . '/videos/' . $basenameFile),
+                
+                // مسار أخير محتمل
+                public_path('uploads/courses/' . $courseId . '/videos/' . $basenameFile)
+            ];
+            
+            // تسجيل كل المسارات المحتملة للتصحيح
+            Log::info('Checking possible video paths', [
+                'possible_paths' => $possiblePaths,
+                'video_id' => $video->video_id
+            ]);
+            
+            foreach ($possiblePaths as $path) {
+                if (file_exists($path)) {
+                    Log::info('تم العثور على الفيديو في المسار', ['path' => $path]);
+                    
+                    // خصائص الملف
+                    $size = filesize($path);
+                    $mime = mime_content_type($path) ?: 'video/mp4';
+                    
+                    // التعامل مع طلبات النطاق
+                    $range = $request->header('Range');
+                    if ($range) {
+                        return $this->handleRangeRequest($path, $size, $mime, $range);
+                    }
+                    
+                    $videoFound = true;
+                    return response()->file($path, [
+                        'Content-Type' => $mime,
+                        'Content-Length' => $size,
+                        'Accept-Ranges' => 'bytes',
+                        'Access-Control-Allow-Origin' => '*',
+                        'Access-Control-Allow-Methods' => 'GET, OPTIONS',
+                        'Access-Control-Allow-Headers' => 'Origin, X-Requested-With, Content-Type, Accept, Range'
+                    ]);
                 }
-                
-                return response()->file($directPath, [
-                    'Content-Type' => $mime,
-                    'Content-Length' => $size,
-                    'Accept-Ranges' => 'bytes',
-                    'Access-Control-Allow-Origin' => '*',
-                    'Access-Control-Allow-Methods' => 'GET, OPTIONS',
-                    'Access-Control-Allow-Headers' => 'Origin, X-Requested-With, Content-Type, Accept, Range'
+            }
+            
+            // إذا لم يتم العثور على الفيديو في أي من المسارات
+            if (!$videoFound) {
+                Log::error('لم يتم العثور على ملف الفيديو في أي من المسارات المحتملة', [
+                    'video_id' => $video->video_id,
+                    'course_id' => $courseId,
+                    'paths_checked' => $possiblePaths
                 ]);
+                
+                return response()->json([
+                    'error' => 'Video file not found', 
+                    'message' => 'الملف غير موجود في المسار المحدد، يرجى التواصل مع الدعم الفني'
+                ], 404);
             }
 
             // Check for fingerprint (additional security)
@@ -649,12 +686,17 @@ class VideoStreamController extends Controller
                 }
             }
         } catch (\Exception $e) {
-            Log::error('Unexpected error in video streaming: ' . $e->getMessage(), [
+            Log::error('خطأ في تشغيل الفيديو: ' . $e->getMessage(), [
                 'token' => $token,
-                'error' => $e->getMessage(),
+                'exception' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            return response()->json(['error' => 'An unexpected error occurred while streaming the video: ' . $e->getMessage()], 500);
+
+            return response()->json([
+                'error' => 'Server error', 
+                'message' => 'حدث خطأ أثناء محاولة تشغيل الفيديو. يرجى إعادة المحاولة لاحقًا أو الاتصال بالدعم الفني.',
+                'details' => env('APP_DEBUG') ? $e->getMessage() : null
+            ], 500);
         }
     }
 

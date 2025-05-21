@@ -74,6 +74,7 @@ class PaymentController extends Controller
                 // Create enrollment
                 Enrollment::create([
                     'student_id' => $user->user_id,
+                    'user_id' => $user->user_id,
                     'course_id' => $course->course_id,
                     'status' => 'active',
                     'enrolled_at' => now()
@@ -256,9 +257,10 @@ class PaymentController extends Controller
             // Create an enrollment record
             $enrollment = Enrollment::create([
                 'student_id' => $user->user_id,
+                'user_id' => $user->user_id,
                 'course_id' => $course->course_id,
-                'enrolled_at' => now(),
                 'status' => 'active',
+                'enrolled_at' => now(),
                 'payment_id' => $payment->payment_id,
             ]);
 
@@ -391,6 +393,7 @@ class PaymentController extends Controller
                         'course_id' => $payment->course_id,
                     ],
                     [
+                        'user_id' => $payment->student_id,
                         'enrolled_at' => now(),
                         'status' => 'active',
                         'payment_id' => $payment->payment_id,
@@ -540,6 +543,7 @@ class PaymentController extends Controller
             // Create payment record
             $payment = Payment::create([
                 'student_id' => $user->user_id,
+                'user_id' => $user->user_id,
                 'course_id' => $course->course_id,
                 'amount' => $course->price,
                 'payment_method' => 'paymob',
@@ -591,7 +595,7 @@ class PaymentController extends Controller
                 if ($request->expectsJson() || $request->ajax() || $request->header('Accept') === 'application/json') {
                 return response()->json(['status' => 'error', 'message' => 'Invalid signature'], 400);
                 } else {
-                    return redirect()->route('payment.failed')->with('error', 'Invalid payment signature');
+                    return redirect()->route('payment.generic-failed')->with('error', 'Invalid payment signature');
                 }
             }
 
@@ -631,7 +635,7 @@ class PaymentController extends Controller
                 if ($request->expectsJson() || $request->ajax() || $request->header('Accept') === 'application/json') {
                     return response()->json(['status' => 'error', 'message' => 'Missing transaction/order ID'], 400);
                 } else {
-                    return redirect()->route('payment.failed')->with('error', 'Missing transaction details');
+                    return redirect()->route('payment.generic-failed')->with('error', 'Missing transaction details');
                 }
             }
 
@@ -733,7 +737,7 @@ class PaymentController extends Controller
                 if ($request->expectsJson() || $request->ajax() || $request->header('Accept') === 'application/json') {
                 return response()->json(['status' => 'error', 'message' => 'Payment not found'], 404);
                 } else {
-                    return redirect()->route('payment.failed')->with('error', 'Payment details not found');
+                    return redirect()->route('payment.generic-failed')->with('error', 'Payment details not found');
                 }
             }
 
@@ -763,6 +767,7 @@ class PaymentController extends Controller
                         'course_id' => $payment->course_id,
                     ],
                     [
+                        'user_id' => $payment->student_id,
                         'enrolled_at' => now(),
                         'status' => 'active',
                         'payment_id' => $payment->payment_id,
@@ -798,7 +803,7 @@ class PaymentController extends Controller
                     return redirect()->route('payment.success', ['payment' => $payment->payment_id])
                         ->with('success', 'تم إتمام الدفع بنجاح!');
                 } else {
-                    return redirect()->route('payment.failed', ['payment' => $payment->payment_id])
+                    return redirect()->route('payment.generic-failed', ['payment' => $payment->payment_id])
                         ->with('error', 'فشلت عملية الدفع.');
                 }
             }
@@ -812,7 +817,7 @@ class PaymentController extends Controller
             if ($request->expectsJson() || $request->ajax() || $request->header('Accept') === 'application/json') {
                 return response()->json(['status' => 'error', 'message' => 'Internal server error: ' . $e->getMessage()], 500);
             } else {
-                return redirect()->route('payment.failed')
+                return redirect()->route('payment.generic-failed')
                     ->with('error', 'حدث خطأ أثناء معالجة الدفع. الرجاء المحاولة مرة أخرى.');
             }
         }
@@ -922,12 +927,13 @@ class PaymentController extends Controller
                     $payment->save();
                     
                     // Create enrollment if not exists
-                    Enrollment::firstOrCreate(
+                    $enrollment = Enrollment::firstOrCreate(
                         [
                             'student_id' => $payment->student_id,
                             'course_id' => $payment->course_id,
                         ],
                         [
+                            'user_id' => $payment->student_id,
                             'enrolled_at' => now(),
                             'status' => 'active',
                             'payment_id' => $payment->payment_id,
@@ -954,7 +960,7 @@ class PaymentController extends Controller
                 }
                 
                 // Payment failed - redirect to failure page
-                return redirect()->route('payment.failed', $payment->payment_id)
+                return redirect()->route('payment.generic-failed', $payment->payment_id)
                     ->with('error', 'فشلت عملية الدفع. يرجى المحاولة مرة أخرى أو الاتصال بالدعم.');
             }
 
@@ -1097,6 +1103,7 @@ class PaymentController extends Controller
                         // Create an enrollment record
                         $enrollment = Enrollment::create([
                             'student_id' => $payment->student_id,
+                            'user_id' => $payment->user_id,
                             'course_id' => $payment->course_id,
                             'enrolled_at' => now(),
                             'status' => 'active',
@@ -1115,7 +1122,7 @@ class PaymentController extends Controller
                         DB::rollBack();
                         Log::error('Error completing Vodafone Cash payment: ' . $e->getMessage());
                         
-                        return redirect()->route('payment.failed', $payment->payment_id)
+                        return redirect()->route('payment.generic-failed', $payment->payment_id)
                             ->with('error', 'Failed to complete enrollment: ' . $e->getMessage());
                     }
                 } else {
@@ -1214,10 +1221,11 @@ class PaymentController extends Controller
             // Create enrollment
                 Enrollment::create([
                     'student_id' => $user->user_id,
+                    'user_id' => $user->user_id,
                     'course_id' => $course->course_id,
                     'status' => 'active',
-                'enrolled_at' => now(),
-                'payment_id' => $payment->payment_id
+                    'enrolled_at' => now(),
+                    'payment_id' => $payment->payment_id
                 ]);
 
             // Record instructor earnings
@@ -1287,6 +1295,7 @@ class PaymentController extends Controller
                     'course_id' => $payment->course_id,
                 ],
                 [
+                    'user_id' => $payment->student_id,
                     'enrolled_at' => now(),
                     'status' => 'active',
                     'payment_id' => $payment->payment_id,
@@ -1434,6 +1443,7 @@ class PaymentController extends Controller
                 // Create a payment record
                 $payment = Payment::create([
                 'student_id' => $userId,
+                'user_id' => $userId,
                 'course_id' => $courseId,
                     'amount' => $course->price,
                 'payment_method' => 'paymob',
@@ -1450,6 +1460,7 @@ class PaymentController extends Controller
             // Create enrollment
             $enrollment = Enrollment::create([
                 'student_id' => $userId,
+                'user_id' => $userId,
                 'course_id' => $courseId,
                     'enrolled_at' => now(),
                     'status' => 'active',
@@ -1546,5 +1557,15 @@ class PaymentController extends Controller
         
         return redirect()->route('payment.checkout', $courseId)
             ->with('info', 'Coupon has been removed.');
+    }
+
+    /**
+     * Show the generic payment failure page.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function showGenericFailure()
+    {
+        return view('payments.generic-failed');
     }
 }

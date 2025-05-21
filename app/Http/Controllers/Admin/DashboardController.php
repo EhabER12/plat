@@ -61,9 +61,8 @@ class DashboardController extends Controller
         $course_categories = Category::withCount('courses')->take(8)->get();
         
         // Get latest notifications
-        $importantNotifications = \App\Models\AdminNotification::where('severity', '>=', 3)
+        $importantNotifications = \App\Models\AdminNotification::where('severity', 'high')
             ->where('is_read', false)
-            ->with('user')
             ->latest()
             ->take(5)
             ->get();
@@ -307,11 +306,12 @@ class DashboardController extends Controller
         if ($reportType === 'revenue') {
                 $data = $this->getRevenueReportData($timeframe);
                 $recentPayments = DB::table('payments')
-                    ->join('users', 'payments.student_id', '=', 'users.user_id')
+                    ->join('users', 'payments.student_id', '=', 'users.id')
                     ->join('courses', 'payments.course_id', '=', 'courses.course_id')
-                    ->select('payments.*', 'users.name as student_name', 'courses.title as course_title')
+                    ->select('payments.id as payment_id', 'payments.amount', 'payments.payment_method', 'payments.payment_date', 'payments.status', 
+                            'payments.student_id', 'payments.course_id', 'users.name as student_name', 'courses.title as course_title')
                     ->where('payments.status', 'completed')
-                    ->orderBy('payments.paid_at', 'desc')
+                    ->orderBy('payments.payment_date', 'desc')
                     ->take(10)
                     ->get();
 
@@ -326,8 +326,8 @@ class DashboardController extends Controller
                         'title' => $payment->course_title
                     ];
                     // Format date for display
-                    if (property_exists($payment, 'paid_at')) {
-                        $payment->payment_date = $payment->paid_at;
+                    if (property_exists($payment, 'payment_date')) {
+                        $payment->payment_date = $payment->payment_date;
                         // Try to convert to Carbon date object if it's a string
                         if (is_string($payment->payment_date)) {
                             try {
@@ -340,13 +340,15 @@ class DashboardController extends Controller
                 }
 
                 return view('admin.reports', compact('data', 'reportType', 'timeframe', 'recentPayments'));
-        } elseif ($reportType === 'users') {
+        } 
+        elseif ($reportType === 'users') {
                 $data = $this->getUsersReportData($timeframe);
                 return view('admin.reports', compact('data', 'reportType', 'timeframe'));
-        } else { // enrollment
+        } 
+        else { // enrollment
                 $data = $this->getEnrollmentReportData($timeframe);
                 $recentEnrollments = DB::table('enrollments')
-                    ->join('users', 'enrollments.student_id', '=', 'users.user_id')
+                    ->join('users', 'enrollments.user_id', '=', 'users.id')
                     ->join('courses', 'enrollments.course_id', '=', 'courses.course_id')
                     ->select('enrollments.*', 'users.name as student_name', 'courses.title as course_title')
                     ->orderBy('enrollments.enrolled_at', 'desc')
@@ -356,7 +358,7 @@ class DashboardController extends Controller
                 // Transform the data for easy display
                 foreach ($recentEnrollments as $enrollment) {
                     $enrollment->student = (object)[
-                        'user_id' => $enrollment->student_id,
+                        'user_id' => $enrollment->user_id,
                         'name' => $enrollment->student_name
                     ];
                     $enrollment->course = (object)[
@@ -369,7 +371,7 @@ class DashboardController extends Controller
                         // Try to convert to Carbon date object if it's a string
                         if (is_string($enrollment->enrollment_date)) {
                             try {
-                                $enrollment->enrollment_date = \Carbon\Carbon::parse($enrollment->enrollment_date);
+                                $enrollment->enrollment_date = \Carbon\Carbon::parse($enrollment->enrolled_at);
                             } catch (\Exception $e) {
                                 // Keep as string if parsing fails
                             }
@@ -783,13 +785,14 @@ class DashboardController extends Controller
     }
 
     /**
-     * Show instructor verifications page.
+     * Show instructor verifications list.
      *
      * @return \Illuminate\View\View
      */
     public function instructorVerifications()
     {
         $pendingVerifications = InstructorVerification::with('user')
+            ->where('status', 'pending')
             ->orderBy('submitted_at', 'desc')
             ->paginate(10);
 
@@ -799,12 +802,12 @@ class DashboardController extends Controller
     /**
      * Show instructor verification details.
      *
-     * @param  int  $id
+     * @param  int  $verification_id
      * @return \Illuminate\View\View
      */
-    public function showInstructorVerification($id)
+    public function showInstructorVerification($verification_id)
     {
-        $verification = InstructorVerification::with('user')->findOrFail($id);
+        $verification = InstructorVerification::with('user')->findOrFail($verification_id);
         return view('admin.instructor_verification_detail', compact('verification'));
     }
 
@@ -812,17 +815,17 @@ class DashboardController extends Controller
      * Process instructor verification.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  int  $verification_id
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function processInstructorVerification(Request $request, $id)
+    public function processInstructorVerification(Request $request, $verification_id)
     {
         $validated = $request->validate([
             'status' => 'required|in:approved,rejected',
             'admin_notes' => 'nullable|string|max:1000',
         ]);
 
-        $verification = InstructorVerification::findOrFail($id);
+        $verification = InstructorVerification::findOrFail($verification_id);
         $verification->status = $validated['status'];
         $verification->admin_notes = $validated['admin_notes'];
         $verification->reviewed_at = now();

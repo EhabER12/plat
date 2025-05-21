@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class RegisterController extends Controller
 {
@@ -63,23 +64,43 @@ class RegisterController extends Controller
             }
 
             // Create user with proper password field
-            $user = User::create([
+            $userData = [
                 'name' => $request->name,
                 'email' => $request->email,
-                'password_hash' => Hash::make($request->password),
+                'password' => Hash::make($request->password),
                 'phone' => $request->phone,
                 'address' => $request->address,
                 'profile_image' => $profileImagePath,
                 'status' => true,
-            ]);
+            ];
 
-            // Add user role from selection
-            DB::table('user_roles')->insert([
-                'user_id' => $user->user_id,
-                'role' => $request->role,
-                'created_at' => now(),
-                'updated_at' => now(),
+            // Create the user
+            $user = User::create($userData);
+
+            // Ensure we have a user ID before continuing
+            if (!$user || !$user->user_id) {
+                DB::rollBack();
+                throw new \Exception('فشل في إنشاء حساب المستخدم - لم يتم الحصول على معرف المستخدم');
+            }
+            
+            // Debug info - dump user info
+            Log::info('User created:', [
+                'user_id' => $user->user_id
             ]);
+            
+            // Add user role from selection - use user_id since it's now properly set
+            try {
+                DB::table('user_roles')->insert([
+                    'user_id' => $user->user_id,
+                    'role' => $request->role,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Log::error('Failed to add user role: ' . $e->getMessage() . ' - User ID: ' . $user->user_id);
+                throw new \Exception('فشل في إضافة دور المستخدم: ' . $e->getMessage());
+            }
             
             // إذا كان الدور هو "parent"، أضف سجل في جدول parent_student_relations
             if ($request->role === 'parent') {
@@ -137,7 +158,7 @@ class RegisterController extends Controller
             return redirect('/');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['email' => 'Registration failed. Please try again.'])->withInput();
+            return back()->withErrors(['email' => 'Registration failed. Please try again. Error: ' . $e->getMessage()])->withInput();
         }
     }
 }

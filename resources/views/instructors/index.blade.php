@@ -1,24 +1,24 @@
 @extends('layouts.app')
 
-@section('title', 'Our Instructors - TOTO Learning Platform')
+@section('title', 'المدربون - منصة تعليمية')
 
 @section('content')
-    <!-- Instructors Header Section -->
+    <!-- قسم رأس صفحة المدربين -->
     <section class="instructors-header-section">
         <div class="container">
             <div class="row">
                 <div class="col-lg-12 text-center">
-                    <h1 class="section-title animate__animated animate__fadeInDown">Meet Our <span class="text-highlight">Expert Instructors</span></h1>
+                    <h1 class="section-title animate__animated animate__fadeInDown">تعرف على <span class="text-highlight">مدربينا المتميزين</span></h1>
                     <p class="section-description animate__animated animate__fadeInUp animate__delay-1s">
-                        Learn from industry professionals with years of experience in their fields.
-                        Our instructors are passionate about teaching and committed to your success.
+                        تعلم على أيدي محترفين متخصصين ذوي خبرة طويلة في مجالاتهم.
+                        مدربونا شغوفون بالتعليم وملتزمون بنجاحك.
                     </p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Instructors Grid Section -->
+    <!-- قسم شبكة المدربين -->
     <section class="instructors-grid-section">
         <div class="container">
             <div class="row" id="instructorsGrid">
@@ -36,14 +36,14 @@
                                             </div>
                                         @endif
                                         <div class="instructor-overlay">
-                                            <span class="view-profile-btn">View Profile</span>
+                                            <span class="view-profile-btn">عرض الملف الشخصي</span>
                                         </div>
                                     </div>
                                     <div class="instructor-details">
                                         <h4 class="instructor-name">{{ $instructor->name }}</h4>
                                         <div class="instructor-meta">
-                                            <span class="instructor-courses"><i class="fas fa-book-open"></i> {{ $instructor->courses_count }} Courses</span>
-                                            <span class="instructor-students"><i class="fas fa-user-graduate"></i> {{ $instructor->enrollments_count }} Students</span>
+                                            <span class="instructor-courses"><i class="fas fa-book-open"></i> {{ $instructor->courses_count }} دورة</span>
+                                            <span class="instructor-students"><i class="fas fa-user-graduate"></i> {{ $instructor->enrollments_count }} طالب</span>
                                         </div>
                                         <div class="instructor-rating">
                                             <div class="rating-stars">
@@ -59,7 +59,7 @@
                                             </div>
                                             <span class="rating-value">{{ number_format($instructor->average_rating, 1) }} ({{ $instructor->total_reviews }})</span>
                                         </div>
-                                        <p class="instructor-bio">{{ Str::limit($instructor->bio ?? 'Professional instructor dedicated to helping students achieve their learning goals.', 100) }}</p>
+                                        <p class="instructor-bio">{{ Str::limit($instructor->bio ?? 'مدرب محترف متخصص في مساعدة الطلاب على تحقيق أهدافهم التعليمية.', 100) }}</p>
                                         <div class="instructor-social">
                                             @if(isset($instructor->linkedin_profile))
                                                 <a href="{{ $instructor->linkedin_profile }}" target="_blank" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
@@ -79,7 +79,7 @@
                 @else
                     <div class="col-12">
                         <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i> No instructors found. Please check back later.
+                            <i class="fas fa-info-circle me-2"></i> لم يتم العثور على مدربين. يرجى التحقق مرة أخرى لاحقًا.
                         </div>
                     </div>
                 @endif
@@ -87,21 +87,21 @@
         </div>
     </section>
 
-    <!-- Become an Instructor Section -->
+    <!-- قسم كن مدربًا -->
     <section class="become-instructor-section" data-aos="fade-up">
         <div class="container">
             <div class="become-instructor-wrapper">
                 <div class="row align-items-center">
                     <div class="col-lg-6">
                         <div class="become-instructor-content">
-                            <h2 class="animate__animated animate__fadeInLeft">Want to Share Your Knowledge?</h2>
-                            <p class="animate__animated animate__fadeInLeft animate__delay-1s">Join our community of instructors and help students around the world learn new skills. Create engaging courses and earn money while making a difference.</p>
-                            <a href="{{ route('instructor.verification.form') }}" class="btn btn-primary btn-lg animate__animated animate__fadeInUp animate__delay-2s">Become an Instructor</a>
+                            <h2 class="animate__animated animate__fadeInRight">هل ترغب في مشاركة معرفتك؟</h2>
+                            <p class="animate__animated animate__fadeInRight animate__delay-1s">انضم إلى مجتمع المدربين لدينا وساعد الطلاب حول العالم على تعلم مهارات جديدة. قم بإنشاء دورات تعليمية مميزة واكسب المال مع إحداث فرق في حياة الآخرين.</p>
+                            <a href="{{ route('instructor.verification.form') }}" class="btn btn-primary btn-lg animate__animated animate__fadeInUp animate__delay-2s">كن مدربًا الآن</a>
                         </div>
                     </div>
                     <div class="col-lg-6">
-                        <div class="become-instructor-image animate__animated animate__fadeInRight">
-                            <img src="https://img.freepik.com/free-photo/teacher-explaining-lesson-her-students_23-2148668633.jpg" alt="Become an Instructor" class="img-fluid rounded">
+                        <div class="become-instructor-image animate__animated animate__fadeInLeft">
+                            <img src="https://img.freepik.com/free-photo/teacher-explaining-lesson-her-students_23-2148668633.jpg" alt="كن مدربًا" class="img-fluid rounded">
                         </div>
                     </div>
                 </div>
@@ -115,9 +115,9 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
 <style>
     :root {
-        --primary: #4361ee;
-        --secondary: #3a0ca3;
-        --accent: #f72585;
+        --primary: #003366;
+        --secondary: #002244;
+        --accent: #FFD700;
         --light: #f8f9fa;
         --dark: #212529;
         --text: #333;
@@ -125,6 +125,11 @@
         --card-shadow: 0 10px 30px rgba(0,0,0,0.1);
         --hover-shadow: 0 20px 40px rgba(0,0,0,0.15);
         --transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    }
+
+    /* تطبيق الخط العربي على جميع العناصر */
+    body, h1, h2, h3, h4, h5, h6, p, span, a, button {
+        font-family: 'Tajawal', 'Cairo', sans-serif !important;
     }
 
     .instructors-header-section {
@@ -151,7 +156,7 @@
     }
 
     .instructors-header-section .section-title {
-        font-size: 3rem;
+        font-size: 2.8rem;
         font-weight: 700;
         margin-bottom: 20px;
         position: relative;
@@ -168,7 +173,7 @@
         content: '';
         position: absolute;
         bottom: 5px;
-        left: 0;
+        right: 0; /* تغيير من left إلى right للدعم العربي */
         width: 100%;
         height: 12px;
         background-color: var(--accent);
@@ -182,6 +187,7 @@
         margin: 0 auto;
         position: relative;
         z-index: 1;
+        line-height: 1.8;
     }
 
     .instructors-grid-section {
@@ -249,7 +255,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(67, 97, 238, 0.7);
+        background: rgba(0, 51, 102, 0.7);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -290,18 +296,19 @@
         position: relative;
         z-index: 1;
         background-color: white !important;
+        text-align: right; /* محاذاة النص إلى اليمين للغة العربية */
     }
 
     .instructor-details::before {
         content: '';
         position: absolute;
         top: 0;
+        right: 0; /* تغيير من left إلى right للدعم العربي */
         left: 0;
-        right: 0;
         height: 3px;
-        background: linear-gradient(90deg, var(--primary), var(--accent));
+        background: linear-gradient(90deg, var(--accent), var(--primary));
         transform: scaleX(0);
-        transform-origin: left;
+        transform-origin: right; /* تغيير من left إلى right للدعم العربي */
         transition: transform 0.4s ease;
         z-index: -1;
     }
@@ -327,7 +334,7 @@
 
     .instructor-meta i {
         color: var(--primary);
-        margin-right: 5px;
+        margin-left: 5px; /* تغيير من margin-right إلى margin-left للدعم العربي */
     }
 
     .instructor-rating {
@@ -340,7 +347,7 @@
 
     .rating-stars {
         color: #ffc107;
-        margin-right: 8px;
+        margin-left: 8px; /* تغيير من margin-right إلى margin-left للدعم العربي */
         font-size: 1rem;
     }
 
@@ -353,7 +360,7 @@
         font-size: 0.95rem;
         color: var(--text-light);
         margin-bottom: 20px;
-        line-height: 1.6;
+        line-height: 1.8;
         flex-grow: 1;
         min-height: 60px;
     }
@@ -361,6 +368,7 @@
     .instructor-social {
         display: flex;
         gap: 10px;
+        justify-content: flex-end; /* محاذاة الأيقونات إلى اليمين للغة العربية */
     }
 
     .social-icon {
@@ -401,14 +409,15 @@
         content: '';
         position: absolute;
         top: 0;
-        left: 0;
+        right: 0; /* تغيير من left إلى right للدعم العربي */
         width: 100%;
         height: 10px;
-        background: linear-gradient(90deg, var(--primary), var(--accent));
+        background: linear-gradient(90deg, var(--accent), var(--primary));
     }
 
     .become-instructor-content {
-        padding-right: 30px;
+        padding-left: 30px; /* تغيير من padding-right إلى padding-left للدعم العربي */
+        text-align: right; /* محاذاة النص إلى اليمين للغة العربية */
     }
 
     .become-instructor-content h2 {
@@ -433,8 +442,8 @@
         content: '';
         position: absolute;
         top: 20px;
+        right: 20px; /* تغيير من left إلى right للدعم العربي */
         left: 20px;
-        right: 20px;
         bottom: 20px;
         border: 5px solid var(--primary);
         border-radius: 10px;
@@ -455,7 +464,7 @@
         }
 
         .become-instructor-content {
-            padding-right: 0;
+            padding-left: 0; /* تغيير من padding-right إلى padding-left للدعم العربي */
             margin-bottom: 50px;
             text-align: center;
         }
@@ -480,6 +489,12 @@
 
         .become-instructor-content h2 {
             font-size: 1.8rem;
+        }
+
+        .instructor-meta {
+            flex-direction: column;
+            align-items: flex-end; /* محاذاة العناصر إلى اليمين للغة العربية */
+            gap: 5px;
         }
     }
 
@@ -514,6 +529,22 @@
     .instructor-col *, .instructor-card *, .instructor-image *, .instructor-details * {
         background-image: none !important;
     }
+
+    /* تحسينات إضافية للغة العربية */
+    .btn {
+        font-weight: 600;
+        letter-spacing: 0;
+    }
+
+    .btn-primary {
+        background-color: var(--primary);
+        border-color: var(--primary);
+    }
+
+    .btn-primary:hover {
+        background-color: var(--secondary);
+        border-color: var(--secondary);
+    }
 </style>
 @endsection
 
@@ -521,23 +552,24 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize AOS animation library
+        // تهيئة مكتبة الرسوم المتحركة AOS
         AOS.init({
             duration: 800,
             easing: 'ease-out',
-            once: true
+            once: true,
+            mirror: true // تمكين التأثيرات المرآة للدعم العربي
         });
 
-        // Add staggered animation to instructor cards
+        // إضافة تأثيرات متدرجة لبطاقات المدربين
         const instructorCards = document.querySelectorAll('.instructor-col');
-        
+
         // إزالة الخلفية بطريقة برمجية للتأكد
         document.querySelectorAll('.instructor-card, .instructor-image, .instructor-details, .instructor-col').forEach(el => {
             el.style.backgroundImage = 'none';
             el.style.backgroundColor = el.classList.contains('instructor-image') ? '#f8f9fa' : '#ffffff';
         });
-        
-        // Alternative animation if AOS doesn't work well
+
+        // تأثير بديل في حالة عدم عمل AOS بشكل جيد
         function animateCards() {
             instructorCards.forEach((card, index) => {
                 setTimeout(() => {
@@ -545,8 +577,8 @@
                 }, 100 * index);
             });
         }
-        
-        // Check if IntersectionObserver is supported
+
+        // التحقق من دعم IntersectionObserver
         if ('IntersectionObserver' in window) {
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
@@ -558,16 +590,16 @@
             }, {
                 threshold: 0.1
             });
-            
+
             instructorCards.forEach(card => {
                 observer.observe(card);
             });
         } else {
-            // Fallback for browsers that don't support IntersectionObserver
+            // بديل للمتصفحات التي لا تدعم IntersectionObserver
             animateCards();
         }
 
-        // Card hover effect enhancement
+        // تحسين تأثير التحويم على البطاقات
         instructorCards.forEach(card => {
             card.addEventListener('mouseenter', function() {
                 instructorCards.forEach(otherCard => {
@@ -577,13 +609,25 @@
                     }
                 });
             });
-            
+
             card.addEventListener('mouseleave', function() {
                 instructorCards.forEach(otherCard => {
                     otherCard.style.opacity = '1';
                     otherCard.style.transform = 'scale(1)';
                 });
             });
+        });
+
+        // تحسين عرض النص العربي
+        document.querySelectorAll('.instructor-name, .instructor-bio, .instructor-meta, .section-title, .section-description').forEach(el => {
+            el.style.fontFamily = "'Tajawal', 'Cairo', sans-serif";
+            el.style.lineHeight = "1.8";
+        });
+
+        // تأكد من أن الأيقونات في الاتجاه الصحيح
+        document.querySelectorAll('.instructor-meta i').forEach(icon => {
+            icon.style.marginLeft = "5px";
+            icon.style.marginRight = "0";
         });
     });
 </script>

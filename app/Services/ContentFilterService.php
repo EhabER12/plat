@@ -158,41 +158,69 @@ class ContentFilterService
             'notify_admin' => $notifyAdmin
         ]);
         
-        // فلترة المحتوى
-        $filterResult = $this->filterContent($content, [
-            'minSeverity' => 1,
-            'types' => ['general', 'contact_info', 'profanity'],
-        ]);
-        
-        // Log the filter results
-        Log::info('Content filter results', [
-            'user_id' => $user->user_id,
-            'message_id' => $messageModel->getKey(),
-            'has_banned_content' => $filterResult['has_banned_content'],
-            'found_words_count' => count($filterResult['found_words'] ?? []),
-            'highest_severity' => $filterResult['highest_severity'] ?? 0
-        ]);
-        
-        // إرسال إشعار للمشرفين عند اكتشاف محتوى محظور
-        if ($notifyAdmin && $filterResult['has_banned_content']) {
-            $notification = $this->notifyAdminAboutBannedContent(
-                $user,
-                $messageModel,
-                $filterResult['found_words'],
-                $filterResult['highest_severity']
-            );
+        try {
+            // فلترة المحتوى
+            $filterResult = $this->filterContent($content, [
+                'minSeverity' => 1,
+                'types' => ['general', 'contact_info', 'profanity'],
+            ]);
             
-            // Log notification creation
-            Log::warning('Admin notification created for banned content', [
-                'notification_id' => $notification->id,
+            // Log the filter results
+            Log::info('Content filter results', [
                 'user_id' => $user->user_id,
                 'message_id' => $messageModel->getKey(),
-                'found_words' => array_column($filterResult['found_words'], 'word'),
-                'severity' => $filterResult['highest_severity']
+                'has_banned_content' => $filterResult['has_banned_content'],
+                'found_words_count' => count($filterResult['found_words'] ?? []),
+                'highest_severity' => $filterResult['highest_severity'] ?? 0
             ]);
+            
+            // إرسال إشعار للمشرفين عند اكتشاف محتوى محظور
+            if ($notifyAdmin && $filterResult['has_banned_content']) {
+                try {
+                    $notification = $this->notifyAdminAboutBannedContent(
+                        $user,
+                        $messageModel,
+                        $filterResult['found_words'],
+                        $filterResult['highest_severity']
+                    );
+                    
+                    // Log notification creation
+                    Log::warning('Admin notification created for banned content', [
+                        'notification_id' => $notification->id,
+                        'user_id' => $user->user_id,
+                        'message_id' => $messageModel->getKey(),
+                        'found_words' => array_column($filterResult['found_words'], 'word'),
+                        'severity' => $filterResult['highest_severity']
+                    ]);
+                } catch (\Exception $e) {
+                    // Log notification error but don't prevent message from being sent
+                    Log::error('Failed to send notification about banned content', [
+                        'error' => $e->getMessage(),
+                        'user_id' => $user->user_id,
+                        'message_id' => $messageModel->getKey()
+                    ]);
+                }
+            }
+            
+            return $filterResult;
+        } catch (\Exception $e) {
+            // Log error but return empty result to prevent message send failure
+            Log::error('Error filtering message content', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => $user->user_id,
+                'message_id' => $messageModel->getKey()
+            ]);
+            
+            // Return a safe default result
+            return [
+                'has_banned_content' => false,
+                'original_content' => $content,
+                'filtered_content' => $content,
+                'found_words' => [],
+                'highest_severity' => 0
+            ];
         }
-        
-        return $filterResult;
     }
     
     /**

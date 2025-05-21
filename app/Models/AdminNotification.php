@@ -4,8 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class AdminNotification extends Model
 {
@@ -18,13 +16,9 @@ class AdminNotification extends Model
      */
     protected $fillable = [
         'type',
-        'user_id',
-        'related_id',
-        'related_type',
-        'content',
-        'data',
+        'title',
+        'message',
         'is_read',
-        'read_at',
         'severity'
     ];
 
@@ -35,26 +29,9 @@ class AdminNotification extends Model
      */
     protected $casts = [
         'is_read' => 'boolean',
-        'read_at' => 'datetime',
-        'data' => 'array',
-        'severity' => 'integer'
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime'
     ];
-
-    /**
-     * العلاقة مع المستخدم المرتبط بالإشعار.
-     */
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'user_id', 'user_id');
-    }
-
-    /**
-     * العلاقة مع العنصر المرتبط (قد يكون رسالة، مستخدم، إلخ).
-     */
-    public function related(): MorphTo
-    {
-        return $this->morphTo();
-    }
 
     /**
      * تعليم الإشعار كمقروء.
@@ -62,8 +39,7 @@ class AdminNotification extends Model
     public function markAsRead()
     {
         $this->update([
-            'is_read' => true,
-            'read_at' => now()
+            'is_read' => true
         ]);
         
         return $this;
@@ -88,8 +64,8 @@ class AdminNotification extends Model
     /**
      * نطاق للاستعلام حسب مستوى الأهمية.
      */
-    public function scopeMinSeverity($query, $level)
+    public function scopeHighSeverity($query)
     {
-        return $query->where('severity', '>=', $level);
+        return $query->where('severity', 'high');
     }
 }

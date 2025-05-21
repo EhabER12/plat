@@ -312,6 +312,27 @@
         color: #718096;
     }
 </style>
+<script>
+// Fix for XMLHttpRequest URL issue
+(function() {
+    // Store original XMLHttpRequest open method
+    const originalXhrOpen = XMLHttpRequest.prototype.open;
+    
+    // Replace with custom implementation to fix URLs
+    XMLHttpRequest.prototype.open = function(method, url, async, user, password) {
+        // Check if URL contains student/save-progress and replace it
+        if (typeof url === 'string' && url.includes('/student/save-progress')) {
+            console.warn('Intercepted request to /student/save-progress. Redirecting to /save-progress');
+            url = url.replace('/student/save-progress', '/save-progress');
+        }
+        
+        // Call original method with fixed URL
+        return originalXhrOpen.call(this, method, url, async, user, password);
+    };
+    
+    console.log('XMLHttpRequest interceptor installed');
+})();
+</script>
 @endsection
 
 @section('content')
@@ -598,17 +619,17 @@
         // منع أي طلبات GET للمسار student/save-progress
         document.addEventListener('submit', function(e) {
             const formAction = e.target.action || '';
-            if (formAction.includes('/student/save-progress')) {
+            if (formAction.includes('/save-progress')) {
                 e.preventDefault();
                 console.warn('تم منع محاولة إرسال نموذج GET لحفظ التقدم. يجب استخدام POST فقط.');
             }
         });
         
-        // Intercept fetch or XMLHttpRequest calls that use GET with /student/save-progress
+        // Intercept fetch or XMLHttpRequest calls that use GET with /save-progress
         const originalFetch = window.fetch;
         window.fetch = function(url, options = {}) {
-            if (url && typeof url === 'string' && url.includes('/student/save-progress') && (!options || !options.method || options.method === 'GET')) {
-                console.error('تم اكتشاف محاولة لاستخدام fetch مع طريقة GET لـ /student/save-progress - تم منعها.');
+            if (url && typeof url === 'string' && url.includes('/save-progress') && (!options || !options.method || options.method === 'GET')) {
+                console.error('تم اكتشاف محاولة لاستخدام fetch مع طريقة GET لـ /save-progress - تم منعها.');
                 console.trace('Stack trace for debugging:');
                 // تعديل الطلب ليكون POST بدلاً من GET
                 options = options || {};
@@ -623,7 +644,7 @@
         
         // إضافة إعداد الفيديو من خلال fetch للحصول على التوكن أولاً
         const setupVideo = async function() {
-        const videoPlayer = document.getElementById('videoPlayer');
+            const videoPlayer = document.getElementById('videoPlayer');
             const videoLoading = document.getElementById('videoLoading');
             
             if (!videoPlayer) return;
@@ -641,6 +662,18 @@
                 videoLoading.classList.remove('d-none');
                 videoPlayer.style.display = 'none';
                 
+                // محاولة استرجاع تقدم الفيديو أولاً
+                let videoProgress = null;
+                try {
+                    videoProgress = await getVideoProgress(videoId);
+                    console.log('Retrieved video progress:', videoProgress);
+                    
+                    // تخزين التقدم في متغير عام للاستخدام لاحقًا
+                    window.savedVideoProgress = videoProgress;
+                } catch (progressError) {
+                    console.warn('Could not retrieve video progress:', progressError);
+                }
+                
                 // الحصول على توكن الفيديو من الخادم
                 const tokenUrl = `/video/token/${courseId}/${videoId}`;
                 console.log('Fetching token from:', tokenUrl);
@@ -651,9 +684,16 @@
                 console.log('Server response status:', response.status);
                 
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('Error fetching token:', errorText);
-                    throw new Error(`فشل الحصول على توكن الفيديو: ${response.status} ${response.statusText}`);
+                    let errorMessage = 'فشل الحصول على توكن الفيديو';
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.message || errorData.error || errorMessage;
+                    } catch (e) {
+                        // إذا لم نتمكن من تحليل JSON، نستخدم النص العادي
+                        const errorText = await response.text();
+                        errorMessage = errorText || `${response.status} ${response.statusText}`;
+                    }
+                    throw new Error(errorMessage);
                 }
                 
                 const data = await response.json();
@@ -684,43 +724,88 @@
                 // إضافة المصدر الجديد
                 videoPlayer.insertBefore(source, videoPlayer.firstChild);
                 
-                // تحميل الفيديو من المصدر الجديد
+                // تعريف دالة منفصلة لاستعادة موضع الفيديو
+                function restoreVideoPosition() {
+                    // التأكد من تحميل الفيديو بالكامل والحصول على المدة
+                    if (videoPlayer.readyState >= 2 && videoPlayer.duration > 0) {
+                        const progress = window.savedVideoProgress;
+                        if (progress && progress.exists && progress.last_position > 0) {
+                            const savedPosition = parseFloat(progress.last_position);
+                            // التأكد من أن الموضع المحفوظ ضمن مدة الفيديو وأقل من 95% من المدة الكلية
+                            if (savedPosition > 0 && savedPosition < videoPlayer.duration && savedPosition < (videoPlayer.duration * 0.95)) {
+                                videoPlayer.currentTime = savedPosition;
+                                console.log('Restored video position to:', savedPosition);
+                            }
+                        }
+                        return true;
+                    }
+                    return false;
+                }
+                
+                // تحديث معلومات وضع المعالجة للفيديو
+                videoPlayer.addEventListener('loadstart', function() {
+                    console.log('Video loading started');
+                });
+                
+                // محاولة استعادة الموضع عدة مرات للتأكد من نجاح العملية
+                videoPlayer.addEventListener('loadedmetadata', function() {
+                    console.log('Video metadata loaded, duration:', videoPlayer.duration);
+                    setTimeout(() => restoreVideoPosition(), 500);
+                });
+                
+                videoPlayer.addEventListener('canplay', function() {
+                    console.log('Video can play now');
+                    // إخفاء شاشة التحميل وإظهار الفيديو
+                    videoLoading.classList.add('d-none');
+                    videoPlayer.style.display = 'block';
+                    
+                    // محاولة استعادة الموضع مرة أخرى
+                    if (!restoreVideoPosition()) {
+                        // إذا فشلت المحاولة الأولى، حاول مرة أخرى بعد فترة قصيرة
+                        setTimeout(() => restoreVideoPosition(), 1000);
+                    }
+                });
+                
+                // محاولة أخيرة بعد فترة أطول
+                setTimeout(() => restoreVideoPosition(), 2000);
+                
+                // محاولة تحميل الفيديو
                 videoPlayer.load();
                 
-                // إخفاء شاشة التحميل وإظهار الفيديو
-                videoLoading.classList.add('d-none');
-                videoPlayer.style.display = 'block';
+                // إعداد مهلة زمنية للتحقق من تحميل الفيديو
+                setTimeout(() => {
+                    if (videoPlayer.readyState === 0) {
+                        console.warn('Video load timeout - readyState still 0 after timeout');
+                        // سنترك معالجة الخطأ لحدث error الخاص بعنصر الفيديو
+                    }
+                }, 10000); // 10 ثوان كمهلة زمنية
                 
                 console.log('Video setup completed successfully');
                 
-            // استرجاع آخر موضع للفيديو إذا كان موجودًا
-            const lastPosition = localStorage.getItem(`video_${videoId}_position`);
-            
-            if (lastPosition && parseFloat(lastPosition) > 0) {
-                videoPlayer.addEventListener('loadedmetadata', function() {
-                    if (parseFloat(lastPosition) < videoPlayer.duration * 0.9) {
-                        videoPlayer.currentTime = parseFloat(lastPosition);
+                // إعداد تتبع الفيديو للحفظ الدوري
+                let lastSaveTime = 0;
+                const SAVE_INTERVAL = 10000; // كل 10 ثواني
+                
+                videoPlayer.addEventListener('timeupdate', function() {
+                    const now = Date.now();
+                    if (now - lastSaveTime > SAVE_INTERVAL) {
+                        lastSaveTime = now;
+                        saveVideoProgress(videoPlayer.currentTime, videoPlayer.duration);
                     }
                 });
-            }
-            
-            // حفظ موضع الفيديو كل 5 ثواني
-            setInterval(() => {
-                if (videoPlayer.currentTime > 0) {
-                    localStorage.setItem(`video_${videoId}_position`, videoPlayer.currentTime);
-                }
-            }, 5000);
-            
-            // حفظ الموضع عند إيقاف الفيديو مؤقتًا
-            videoPlayer.addEventListener('pause', function() {
-                saveVideoProgress(videoPlayer.currentTime, videoPlayer.duration);
-            });
-            
-            // حفظ التقدم عند انتهاء الفيديو
-            videoPlayer.addEventListener('ended', function() {
-                saveVideoProgress(videoPlayer.duration, videoPlayer.duration, true);
-                localStorage.removeItem(`video_${videoId}_position`);
-            });
+                
+                // حفظ الموضع عند إيقاف الفيديو مؤقتًا
+                videoPlayer.addEventListener('pause', function() {
+                    saveVideoProgress(videoPlayer.currentTime, videoPlayer.duration);
+                });
+                
+                // حفظ التقدم عند انتهاء الفيديو
+                videoPlayer.addEventListener('ended', function() {
+                    saveVideoProgress(videoPlayer.duration, videoPlayer.duration, true);
+                });
+                
+                // التحقق من وجود طلبات معلقة وإرسالها
+                sendPendingProgressRequests();
                 
             } catch (error) {
                 console.error('Error setting up video:', error);
@@ -866,79 +951,241 @@
         function saveVideoProgress(currentTime, duration, completed = false) {
             if (!duration) return;
             
-                const videoIdFromUrl = new URLSearchParams(window.location.search).get('videoId');
-                const videoId = videoIdFromUrl ? videoIdFromUrl.split(':')[0] : null;
+            const videoIdFromUrl = new URLSearchParams(window.location.search).get('videoId');
+            const videoId = videoIdFromUrl ? videoIdFromUrl.split(':')[0] : null;
             if (!videoId) return;
             
             const percentage = Math.min(Math.round((currentTime / duration) * 100), 100);
             
-                console.log('Attempting to save progress:', {
+            // حفظ التقدم محلياً في localStorage حتى لو فشل الطلب للسيرفر
+            const progressData = {
+                percentage: percentage,
+                currentTime: currentTime,
+                duration: duration,
+                completed: completed || percentage >= 90,
+                timestamp: Date.now()
+            };
+            
+            // حفظ البيانات في localStorage بشكل فوري
+            try {
+                localStorage.setItem(`video_${videoId}_progress`, JSON.stringify(progressData));
+                console.log(`Saved to localStorage: video_${videoId}_progress`, progressData);
+            } catch (e) {
+                console.error('Error saving to localStorage:', e);
+            }
+            
+            console.log('Saving progress to server:', {
+                video_id: videoId,
+                progress: percentage,
+                current_time: currentTime,
+                completed: completed || percentage >= 90
+            });
+            
+            // استخدام FormData بدلاً من JSON
+            const formData = new FormData();
+            formData.append('video_id', videoId);
+            formData.append('progress', percentage);
+            formData.append('current_time', currentTime);
+            formData.append('completed', (completed || percentage >= 90) ? '1' : '0');
+            
+            // الحصول على CSRF Token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            
+            // استخدام طريقة بديلة لإرسال البيانات باستخدام XMLHttpRequest للتشخيص
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/save-progress', true);
+            xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
+            xhr.setRequestHeader('Accept', 'application/json');
+            
+            xhr.onload = function() {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    console.log('Progress saved successfully on server:', xhr.responseText);
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        // تحديث المتغير العام للتقدم المحفوظ
+                        if (data.success) {
+                            window.savedVideoProgress = {
+                                exists: true,
+                                percentage: percentage,
+                                last_position: currentTime,
+                                completed: completed || percentage >= 90
+                            };
+                            
+                            if (completed || percentage >= 90) {
+                                // تحديث حالة إكمال الفيديو في واجهة المستخدم
+                                const videoItem = document.querySelector(`.video-item[href*="videoId=${videoId}"]`);
+                                if (videoItem) {
+                                    const completion = videoItem.querySelector('.video-completed');
+                                    if (completion) {
+                                        completion.classList.add('done');
+                                        completion.innerHTML = '<i class="fas fa-check"></i>';
+                                    }
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Error parsing response:', e);
+                    }
+                } else {
+                    console.error('Error saving progress on server. Status:', xhr.status);
+                    console.error('Response:', xhr.responseText);
+                    
+                    // في حالة فشل الطلب، نقوم بتخزين الطلب للمحاولة لاحقاً
+                    const pendingProgressRequests = JSON.parse(localStorage.getItem('pendingProgressRequests') || '[]');
+                    pendingProgressRequests.push({
+                        video_id: videoId,
+                        progress: percentage,
+                        current_time: currentTime,
+                        completed: completed || percentage >= 90,
+                        timestamp: Date.now()
+                    });
+                    localStorage.setItem('pendingProgressRequests', JSON.stringify(pendingProgressRequests));
+                }
+            };
+            
+            xhr.onerror = function() {
+                console.error('Request failed completely');
+                
+                // في حالة فشل الطلب، نقوم بتخزين الطلب للمحاولة لاحقاً
+                const pendingProgressRequests = JSON.parse(localStorage.getItem('pendingProgressRequests') || '[]');
+                pendingProgressRequests.push({
                     video_id: videoId,
                     progress: percentage,
                     current_time: currentTime,
-                    completed: completed || percentage >= 90
+                    completed: completed || percentage >= 90,
+                    timestamp: Date.now()
                 });
+                localStorage.setItem('pendingProgressRequests', JSON.stringify(pendingProgressRequests));
+            };
+            
+            xhr.send(formData);
+        }
+
+        // إضافة دالة لإرسال الطلبات المعلقة
+        function sendPendingProgressRequests() {
+            const pendingProgressRequests = JSON.parse(localStorage.getItem('pendingProgressRequests') || '[]');
+            if (pendingProgressRequests.length === 0) return;
+            
+            console.log(`Attempting to send ${pendingProgressRequests.length} pending progress requests`);
+            
+            // أخذ الطلب الأول وإرساله
+            const request = pendingProgressRequests.shift();
+            localStorage.setItem('pendingProgressRequests', JSON.stringify(pendingProgressRequests));
+            
+            if (request && request.video_id) {
+                console.log('Sending pending request:', request);
                 
-                // استخدام FormData بدلاً من JSON
+                // استخدام FormData للطلب المعلق
                 const formData = new FormData();
-                formData.append('video_id', videoId);
-                formData.append('progress', percentage);
-                formData.append('current_time', currentTime);
-                formData.append('completed', (completed || percentage >= 90) ? '1' : '0');
+                formData.append('video_id', request.video_id);
+                formData.append('progress', request.progress);
+                formData.append('current_time', request.current_time);
+                formData.append('completed', request.completed ? '1' : '0');
                 
                 // الحصول على CSRF Token
                 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
                 
-                // استخدام طريقة بديلة لإرسال البيانات باستخدام XMLHttpRequest للتشخيص
+                // إرسال الطلب باستخدام XMLHttpRequest
                 const xhr = new XMLHttpRequest();
-                xhr.open('POST', '/student/save-progress', true);
+                xhr.open('POST', '/save-progress', true);
                 xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
                 xhr.setRequestHeader('Accept', 'application/json');
                 
                 xhr.onload = function() {
                     if (xhr.status >= 200 && xhr.status < 300) {
-                        console.log('Progress saved successfully', xhr.responseText);
-                        try {
-                            const data = JSON.parse(xhr.responseText);
-                            if (data.success && (completed || percentage >= 90)) {
-                    // تحديث حالة إكمال الفيديو في واجهة المستخدم
-                    const videoItem = document.querySelector(`.video-item[href*="videoId=${videoId}"]`);
-                    if (videoItem) {
-                        const completion = videoItem.querySelector('.video-completed');
-                        if (completion) {
-                            completion.classList.add('done');
-                            completion.innerHTML = '<i class="fas fa-check"></i>';
-                        }
-                    }
-                            }
-                        } catch (e) {
-                            console.error('Error parsing response:', e);
-                        }
+                        console.log('Pending request saved successfully');
                     } else {
-                        console.error('Error saving progress. Status:', xhr.status);
-                        console.error('Response:', xhr.responseText);
+                        console.error('Error sending pending request');
+                        // إعادة إضافة الطلب للمحاولة لاحقًا
+                        const pendingRequests = JSON.parse(localStorage.getItem('pendingProgressRequests') || '[]');
+                        pendingRequests.push(request);
+                        localStorage.setItem('pendingProgressRequests', JSON.stringify(pendingRequests));
                     }
                 };
                 
                 xhr.onerror = function() {
-                    console.error('Request failed completely');
+                    console.error('Pending request failed completely');
+                    // إعادة إضافة الطلب للمحاولة لاحقًا
+                    const pendingRequests = JSON.parse(localStorage.getItem('pendingProgressRequests') || '[]');
+                    pendingRequests.push(request);
+                    localStorage.setItem('pendingProgressRequests', JSON.stringify(pendingRequests));
                 };
                 
-                // إرسال البيانات
                 xhr.send(formData);
             }
             
-            // إعداد تتبع الفيديو للحفظ الدوري
-            let lastSaveTime = 0;
-            const SAVE_INTERVAL = 10000; // كل 10 ثواني
+            // جدولة إرسال الطلب التالي بعد ثانية
+            if (pendingProgressRequests.length > 0) {
+                setTimeout(sendPendingProgressRequests, 1000);
+            }
+        }
+
+        // استرجاع تقدم الفيديو من الخادم أو التخزين المحلي
+        async function getVideoProgress(videoId) {
+            // التحقق أولاً من التخزين المحلي للحصول على آخر موضع
+            const localProgress = localStorage.getItem(`video_${videoId}_progress`);
+            let localData = null;
             
-            videoPlayer.addEventListener('timeupdate', function() {
-                const now = Date.now();
-                if (now - lastSaveTime > SAVE_INTERVAL) {
-                    lastSaveTime = now;
-                    saveVideoProgress(videoPlayer.currentTime, videoPlayer.duration);
+            if (localProgress) {
+                try {
+                    localData = JSON.parse(localProgress);
+                    console.log('Found local progress data:', localData);
+                } catch (e) {
+                    console.error('Error parsing local progress:', e);
                 }
-            });
+            }
+            
+            try {
+                // محاولة الحصول على التقدم من الخادم
+                const response = await fetch(`/video/${videoId}/progress`);
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Server progress data:', data);
+                    
+                    if (data.success) {
+                        // التحقق مما إذا كانت البيانات المحلية أحدث
+                        if (localData && localData.timestamp && 
+                            (!data.data.exists || localData.percentage > data.data.percentage)) {
+                            console.log('Using local progress data as it is more recent');
+                            return {
+                                exists: true,
+                                percentage: localData.percentage,
+                                last_position: localData.currentTime,
+                                completed: localData.completed
+                            };
+                        }
+                        
+                        return data.data;
+                    }
+                }
+                
+                // إذا فشل طلب الخادم ولدينا بيانات محلية، نستخدمها
+                if (localData) {
+                    console.log('Server request failed, using local progress data');
+                    return {
+                        exists: true,
+                        percentage: localData.percentage,
+                        last_position: localData.currentTime,
+                        completed: localData.completed
+                    };
+                }
+                
+                return { exists: false, percentage: 0, last_position: 0, completed: false };
+            } catch (e) {
+                console.error('Error fetching video progress:', e);
+                
+                // في حالة الخطأ، استخدام البيانات المحلية إن وجدت
+                if (localData) {
+                    return {
+                        exists: true,
+                        percentage: localData.percentage,
+                        last_position: localData.currentTime,
+                        completed: localData.completed
+                    };
+                }
+                
+                return { exists: false, percentage: 0, last_position: 0, completed: false };
+            }
         }
     });
 </script>

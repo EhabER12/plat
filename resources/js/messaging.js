@@ -1,33 +1,40 @@
-// File: messaging.js - Handles real-time messaging functions
+// File: messaging.js - تعامل مع وظائف الرسائل في الواجهة
 
 import './bootstrap';
 
-// Set up message handling once DOM is loaded
+// تهيئة النظام عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', function() {
+    // عناصر واجهة المستخدم
     const messageForm = document.getElementById('messageForm');
     const messageInput = document.getElementById('message-input');
     const messagesContainer = document.getElementById('messages-container');
     const receiverId = document.getElementById('receiver-id')?.value;
     const courseId = document.getElementById('course-id')?.value;
-    const lastMessageId = document.getElementById('last-message-id')?.value;
+    const lastMessageIdElement = document.getElementById('last-message-id');
     const userRole = document.getElementById('user-role')?.value;
     
-    // Set up Echo listeners for real-time messages
-    if (receiverId) {
-        window.Echo.private(`chat.${document.getElementById('current-user-id').value}`)
-            .listen('NewMessageSent', (e) => {
-                // Only add message if it's from the user we're currently chatting with
-                if (e.message.sender_id == receiverId) {
-                    addMessageToContainer(e.message, 'received');
-                    markMessageAsRead(e.message.id);
-                } else {
-                    // Update unread count for other contacts
-                    updateContactUnreadCount(e.message.sender_id);
-                }
-            });
+    // إضافة عنصر لعرض حالة الرسائل (نجاح/فشل)
+    const statusElement = document.createElement('div');
+    if (messageForm) {
+        statusElement.className = 'alert';
+        statusElement.style.display = 'none';
+        statusElement.style.marginBottom = '10px';
+        messageForm.parentNode.insertBefore(statusElement, messageForm);
     }
     
-    // Handle message submission
+    // إظهار رسالة حالة
+    function showStatus(message, isError = false) {
+        statusElement.textContent = message;
+        statusElement.className = isError ? 'alert alert-danger' : 'alert alert-success';
+        statusElement.style.display = 'block';
+        
+        // إخفاء بعد 5 ثوان
+        setTimeout(() => {
+            statusElement.style.display = 'none';
+        }, 5000);
+    }
+    
+    // إضافة مستمع لحدث النموذج
     if (messageForm) {
         messageForm.addEventListener('submit', function(event) {
             event.preventDefault();
@@ -35,25 +42,37 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Send message via AJAX
+    // إرسال رسالة عبر AJAX
     function sendMessage() {
-        if (!messageInput.value.trim()) return;
+        // التحقق من القيمة
+        if (!messageInput || !messageInput.value.trim()) return;
         
-        // Create form data
+        // تعطيل النموذج أثناء الإرسال
+        const submitButton = messageForm.querySelector('button[type="submit"]');
+        if (submitButton) submitButton.disabled = true;
+        messageInput.disabled = true;
+        
+        // إنشاء بيانات النموذج
         const formData = new FormData();
         formData.append('content', messageInput.value);
         formData.append('receiver_id', receiverId);
         if (courseId) formData.append('course_id', courseId);
         
-        // Get CSRF token from meta tag
-        const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        // الحصول على رمز CSRF من الصفحة
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (!token) {
+            showStatus('لم يتم العثور على رمز CSRF. يرجى تحديث الصفحة.', true);
+            if (submitButton) submitButton.disabled = false;
+            messageInput.disabled = false;
+            return;
+        }
         
-        // Determine endpoint based on user role
+        // تحديد نقطة النهاية استنادًا إلى دور المستخدم
         const endpoint = userRole === 'instructor' 
             ? '/instructor/messages' 
             : '/student/messages';
         
-        // Send AJAX request
+        // إرسال طلب AJAX
         axios.post(endpoint, formData, {
             headers: {
                 'X-CSRF-TOKEN': token,
@@ -62,80 +81,123 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => {
             if (response.data.success) {
-                // Add sent message to UI
+                // إضافة الرسالة المرسلة إلى واجهة المستخدم
                 addMessageToContainer(response.data.message, 'sent');
                 
-                // Clear input field
+                // مسح حقل الإدخال
                 messageInput.value = '';
+                
+                // التمرير لأسفل
+                if (messagesContainer) {
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+            } else {
+                showStatus('خطأ: ' + (response.data.message || 'خطأ غير معروف'), true);
             }
         })
         .catch(error => {
-            console.error('Error sending message:', error);
+            console.error('خطأ في إرسال الرسالة:', error);
+            showStatus('حدث خطأ أثناء إرسال الرسالة. يرجى المحاولة مرة أخرى.', true);
+        })
+        .finally(() => {
+            // إعادة تمكين النموذج
+            if (submitButton) submitButton.disabled = false;
+            messageInput.disabled = false;
         });
     }
     
-    // Add a message to the messages container
+    // إضافة رسالة إلى حاوية الرسائل
     function addMessageToContainer(message, type) {
-        // Create message element
+        if (!messagesContainer) return;
+        
+        // إنشاء عنصر الرسالة
         const messageElement = document.createElement('div');
         messageElement.classList.add('message', type === 'sent' ? 'sent' : 'received');
         messageElement.dataset.id = message.id || message.message_id;
         
-        // Create message content
+        // إنشاء محتوى الرسالة
         const messageContent = document.createElement('div');
         messageContent.classList.add('message-content');
         messageContent.textContent = message.content;
         
-        // Create message time
+        // إنشاء وقت الرسالة
         const messageTime = document.createElement('div');
         messageTime.classList.add('message-time');
         
-        // Format the time
+        // تنسيق الوقت
         const messageDate = new Date(message.created_at);
         messageTime.textContent = messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         
-        // Assemble message element
+        // تجميع عنصر الرسالة
         messageElement.appendChild(messageContent);
         messageElement.appendChild(messageTime);
         
-        // Add to container
+        // إضافة إلى الحاوية
         messagesContainer.appendChild(messageElement);
         
-        // Scroll to bottom
+        // التمرير لأسفل
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
         
-        // Update last message ID for polling
-        document.getElementById('last-message-id').value = message.id || message.message_id;
-    }
-    
-    // Mark message as read
-    function markMessageAsRead(messageId) {
-        // Implementation depends on backend API
-    }
-    
-    // Update unread count for a contact in the sidebar
-    function updateContactUnreadCount(senderId) {
-        const contactElement = document.querySelector(`.contact-item[data-id="${senderId}"]`);
-        if (contactElement) {
-            const badgeElement = contactElement.querySelector('.unread-badge');
-            if (badgeElement) {
-                const currentCount = parseInt(badgeElement.textContent) || 0;
-                badgeElement.textContent = currentCount + 1;
-                badgeElement.style.display = 'flex';
-            } else {
-                // Create new badge if it doesn't exist
-                const newBadge = document.createElement('div');
-                newBadge.classList.add('unread-badge');
-                newBadge.textContent = '1';
-                contactElement.querySelector('.contact-info').appendChild(newBadge);
-            }
+        // تحديث معرف آخر رسالة للاستطلاع
+        if (lastMessageIdElement) {
+            lastMessageIdElement.value = message.id || message.message_id;
+        }
+        
+        // تحديد الرسالة كمقروءة إذا كانت مستلمة
+        if (type === 'received') {
+            markMessageAsRead(message.id || message.message_id);
         }
     }
     
-    // Poll for new messages as fallback for Echo
-    function pollForNewMessages() {
-        if (!receiverId) return;
+    // وضع علامة الرسالة كمقروءة
+    function markMessageAsRead(messageId) {
+        if (!messageId) return;
         
+        const endpoint = userRole === 'instructor' 
+            ? '/instructor/messages/mark-read' 
+            : '/student/messages/mark-read';
+            
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (!token) return;
+        
+        axios.post(endpoint, {
+            message_id: messageId
+        }, {
+            headers: {
+                'X-CSRF-TOKEN': token,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        }).catch(error => {
+            console.error('خطأ في تحديث حالة القراءة:', error);
+        });
+    }
+    
+    // تحديث عدد الرسائل غير المقروءة لجهة اتصال في الشريط الجانبي
+    function updateContactUnreadCount(senderId) {
+        const contactElement = document.querySelector(`.contact-item[data-id="${senderId}"]`);
+        if (!contactElement) return;
+        
+        const badgeElement = contactElement.querySelector('.unread-badge');
+        if (badgeElement) {
+            const currentCount = parseInt(badgeElement.textContent) || 0;
+            badgeElement.textContent = currentCount + 1;
+            badgeElement.style.display = 'flex';
+        } else {
+            // إنشاء شارة جديدة إذا لم تكن موجودة
+            const newBadge = document.createElement('div');
+            newBadge.classList.add('unread-badge');
+            newBadge.textContent = '1';
+            const contactInfo = contactElement.querySelector('.contact-info');
+            if (contactInfo) contactInfo.appendChild(newBadge);
+        }
+    }
+    
+    // استطلاع للرسائل الجديدة
+    function pollForNewMessages() {
+        if (!receiverId || !lastMessageIdElement) return;
+        
+        const lastMessageId = lastMessageIdElement.value;
         const endpoint = userRole === 'instructor' 
             ? '/instructor/messages/get-new' 
             : '/student/messages/get-new';
@@ -144,30 +206,61 @@ document.addEventListener('DOMContentLoaded', function() {
             ? { student_id: receiverId, last_message_id: lastMessageId }
             : { instructor_id: receiverId, last_message_id: lastMessageId };
             
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (!token) return;
+        
         axios.post(endpoint, requestData, {
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                'X-CSRF-TOKEN': token,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
             }
         })
         .then(response => {
-            if (response.data.success && response.data.messages.length > 0) {
+            if (response.data.success && response.data.messages && response.data.messages.length > 0) {
                 response.data.messages.forEach(message => {
-                    // Check if message is not already in the container
-                    if (!document.querySelector(`.message[data-id="${message.message_id}"]`)) {
-                        const type = message.sender_id == document.getElementById('current-user-id').value ? 'sent' : 'received';
+                    // التحقق من أن الرسالة ليست موجودة بالفعل في الحاوية
+                    const messageId = message.id || message.message_id;
+                    const currentUserId = document.getElementById('current-user-id')?.value;
+                    if (messageId && !document.querySelector(`.message[data-id="${messageId}"]`)) {
+                        const type = message.sender_id == currentUserId ? 'sent' : 'received';
                         addMessageToContainer(message, type);
                     }
                 });
             }
         })
         .catch(error => {
-            console.error('Error polling for messages:', error);
+            console.error('خطأ في استطلاع الرسائل الجديدة:', error);
         });
     }
     
-    // Set up polling as a fallback
+    // إعداد استطلاع دوري للرسائل الجديدة
     if (receiverId) {
-        // Poll every 10 seconds
-        setInterval(pollForNewMessages, 10000);
+        // استطلاع كل 5 ثوان
+        setInterval(pollForNewMessages, 5000);
+        
+        // استطلاع فوري عند تحميل الصفحة
+        setTimeout(pollForNewMessages, 1000);
+    }
+    
+    // استمع لأحداث Echo إذا كانت متاحة
+    const currentUserId = document.getElementById('current-user-id')?.value;
+    if (currentUserId && window.Echo) {
+        try {
+            // الاستماع للرسائل الجديدة
+            window.Echo.private(`chat.${currentUserId}`)
+                .listen('NewMessageSent', (e) => {
+                    if (e.message.sender_id == receiverId) {
+                        // إضافة الرسالة المستلمة إلى الحاوية
+                        addMessageToContainer(e.message, 'received');
+                    } else {
+                        // تحديث عدد الرسائل غير المقروءة لجهات الاتصال الأخرى
+                        updateContactUnreadCount(e.message.sender_id);
+                    }
+                });
+            console.log('تم إعداد مستمع Echo بنجاح');
+        } catch (error) {
+            console.warn('فشل إعداد Echo، سيتم الاعتماد على الاستطلاع:', error);
+        }
     }
 }); 

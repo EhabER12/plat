@@ -108,8 +108,7 @@
                         
                         <!-- Latest 3 Notifications -->
                         @php
-                            $latestNotifications = \App\Models\AdminNotification::with('user')
-                                ->orderBy('created_at', 'desc')
+                            $latestNotifications = \App\Models\AdminNotification::orderBy('created_at', 'desc')
                                 ->take(3)
                                 ->get();
                         @endphp
@@ -126,7 +125,7 @@
                                             @else
                                                 <span class="badge badge-secondary me-2">{{ $notification->type }}</span>
                                             @endif
-                                            {{ Str::limit($notification->content, 80) }}
+                                            {{ Str::limit($notification->title . ': ' . $notification->message, 80) }}
                                         </div>
                                         <small class="text-muted">{{ $notification->created_at->diffForHumans() }}</small>
                                     </div>
@@ -156,7 +155,7 @@
                                                     {{ $notification->type }}
                                                 @endif
                                             </span>
-                                            {{ Str::limit($notification->content, 80) }}
+                                            {{ Str::limit($notification->title . ': ' . $notification->message, 80) }}
                                         </div>
                                         <small class="text-white">{{ $notification->created_at->diffForHumans() }}</small>
                                     </div>
@@ -445,7 +444,7 @@
                                         <td>{{ $transaction->transaction_id }}</td>
                                         <td>
                                             @php
-                                                $user = DB::table('users')->where('user_id', $transaction->user_id)->first();
+                                                $user = DB::table('users')->where('id', $transaction->user_id)->first();
                                             @endphp
                                             {{ $user ? $user->name : 'User #' . $transaction->user_id }}
                                         </td>

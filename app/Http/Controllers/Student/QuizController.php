@@ -26,7 +26,7 @@ class QuizController extends Controller
         // Get all courses the student is enrolled in
         $enrolledCourseIds = Enrollment::where('student_id', $student->user_id)
             ->pluck('course_id');
-            
+
         // Debug: Show enrolled course IDs
         $debug = [
             'student_id' => $student->user_id,
@@ -37,12 +37,12 @@ class QuizController extends Controller
         $quizzes = Quiz::whereIn('course_id', $enrolledCourseIds)
             ->with('course')
             ->get();
-            
+
         // Debug: Add quiz info
         $debug['quiz_count'] = $quizzes->count();
         $debug['quizzes'] = $quizzes->map(function($quiz) {
             return [
-                'id' => $quiz->quiz_id,
+                'id' => $quiz->id,
                 'title' => $quiz->title,
                 'course_id' => $quiz->course_id,
                 'is_published' => $quiz->is_published,
@@ -54,10 +54,10 @@ class QuizController extends Controller
 
         // Get the student's attempts for these quizzes
         $attempts = QuizAttempt::where('user_id', $student->user_id)
-            ->whereIn('quiz_id', $quizzes->pluck('quiz_id')->toArray())
+            ->whereIn('quiz_id', $quizzes->pluck('id')->toArray())
             ->get()
             ->groupBy('quiz_id');
-            
+
         // Debug: Add attempts info
         $debug['attempts_count'] = $attempts->count();
 
@@ -67,16 +67,16 @@ class QuizController extends Controller
     /**
      * Display the quiz details and instructions.
      *
-     * @param  int  $quizId
+     * @param  int  $id
      * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
      */
-    public function show($quizId)
+    public function show($id)
     {
         $student = Auth::user();
 
         // Find the quiz
         $quiz = Quiz::with('course')
-            ->findOrFail($quizId);
+            ->findOrFail($id);
 
         // Check if the student is enrolled in the course
         $isEnrolled = Enrollment::where('student_id', $student->user_id)
@@ -104,7 +104,7 @@ class QuizController extends Controller
 
         // Get the student's attempts for this quiz
         $attempts = QuizAttempt::where('user_id', $student->user_id)
-            ->where('quiz_id', $quizId)
+            ->where('quiz_id', $id)
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -113,15 +113,15 @@ class QuizController extends Controller
 
         // Calculate attempts left
         $attemptsLeft = $quiz->max_attempts === null ? null : max(0, $quiz->max_attempts - $attempts->count());
-        
+
         // Check if the student has an in-progress attempt
         $hasInProgressAttempt = $attempts->where('status', 'in_progress')->count() > 0;
 
         return view('student.quizzes.show', compact(
-            'quiz', 
-            'isAvailable', 
-            'availabilityMessage', 
-            'attempts', 
+            'quiz',
+            'isAvailable',
+            'availabilityMessage',
+            'attempts',
             'canTakeQuiz',
             'attemptsLeft',
             'hasInProgressAttempt'
@@ -153,19 +153,19 @@ class QuizController extends Controller
 
         // Check if the quiz is available
         if (!$quiz->isAvailable()) {
-            return redirect()->route('student.quizzes.show', $quizId)
+            return redirect()->route('student.quizzes.show', $id)
                 ->with('error', 'هذا الاختبار غير متاح حاليًا.');
         }
 
         // Check if the student can attempt the quiz
         if (!$quiz->canBeAttemptedBy($student->user_id)) {
-            return redirect()->route('student.quizzes.show', $quizId)
+            return redirect()->route('student.quizzes.show', $id)
                 ->with('error', 'لقد وصلت إلى الحد الأقصى من المحاولات لهذا الاختبار.');
         }
 
         // Check if there's an ongoing attempt
         $ongoingAttempt = QuizAttempt::where('user_id', $student->user_id)
-            ->where('quiz_id', $quizId)
+            ->where('quiz_id', $id)
             ->where('status', 'in_progress')
             ->first();
 
@@ -175,7 +175,7 @@ class QuizController extends Controller
 
         // Create a new attempt
         $attempt = new QuizAttempt();
-        $attempt->quiz_id = $quizId;
+        $attempt->quiz_id = $id;
         $attempt->user_id = $student->user_id;
         $attempt->start_time = Carbon::now();
         $attempt->status = 'in_progress';
@@ -274,7 +274,7 @@ class QuizController extends Controller
         } catch (\Exception $e) {
             // Log the error
             Log::error('Error submitting quiz: ' . $e->getMessage());
-            
+
             return redirect()->route('student.quizzes.show', $attempt->quiz_id ?? $request->input('quiz_id'))
                 ->with('error', 'حدث خطأ أثناء تسليم الامتحان. الرجاء المحاولة مرة أخرى.');
         }
@@ -303,4 +303,4 @@ class QuizController extends Controller
 
         return view('student.quizzes.result', compact('attempt'));
     }
-} 
+}

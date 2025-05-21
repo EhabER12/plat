@@ -54,7 +54,7 @@ class Withdrawal extends Model
      */
     public function instructor(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'instructor_id', 'user_id');
+        return $this->belongsTo(User::class, 'instructor_id', 'id');
     }
 
     /**
@@ -62,7 +62,7 @@ class Withdrawal extends Model
      */
     public function processor(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'processed_by', 'user_id');
+        return $this->belongsTo(User::class, 'processed_by', 'id');
     }
 
     /**

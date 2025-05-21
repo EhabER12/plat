@@ -36,7 +36,7 @@
                     <p class="text-muted mb-3">Instructor</p>
                     
                     <div class="d-flex justify-content-center mb-2">
-                        <a href="{{ route('instructors.show', $user->user_id) }}" class="btn btn-outline-primary ms-1" target="_blank">
+                        <a href="{{ route('instructors.show', $user->id) }}" class="btn btn-outline-primary ms-1" target="_blank">
                             <i class="fas fa-eye me-2"></i> View Public Profile
                         </a>
                     </div>

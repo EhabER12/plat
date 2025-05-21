@@ -69,10 +69,10 @@
                 <div class="stats-icon" style="background: linear-gradient(135deg, #E74C3C 0%, #C0392B 100%);">
                     <i class="fas fa-exclamation-triangle fa-lg text-white"></i>
                 </div>
-                <div class="stats-number">{{ $stats['critical'] }}</div>
-                <div class="stats-label">إشعارات حرجة</div>
-                <a href="{{ route('admin.notifications.index', ['severity' => '4']) }}" class="view-details">
-                    <span>عرض الإشعارات الحرجة</span> <i class="fas fa-arrow-right"></i>
+                <div class="stats-number">{{ $stats['high_severity'] }}</div>
+                <div class="stats-label">إشعارات عالية الخطورة</div>
+                <a href="{{ route('admin.notifications.index', ['severity' => 'high']) }}" class="view-details">
+                    <span>عرض الإشعارات الخطيرة</span> <i class="fas fa-arrow-right"></i>
                 </a>
             </div>
         </div>
@@ -160,7 +160,7 @@
                                                     <span class="badge badge-secondary">{{ $notification->type }}</span>
                                                 @endif
 
-                                                @if($notification->severity >= 4)
+                                                @if($notification->severity == 'high')
                                                     <span class="badge badge-danger ms-1">خطير</span>
                                                 @endif
                                             </h6>
@@ -168,16 +168,12 @@
                                         </div>
                                         <div class="notification-content mb-2">
                                             <a href="{{ route('admin.notifications.show', $notification->id) }}" class="text-reset">
-                                                {{ Str::limit($notification->content, 100) }}
+                                                <strong>{{ $notification->title }}</strong>: {{ Str::limit($notification->message, 100) }}
                                             </a>
                                         </div>
                                         <div class="d-flex justify-content-between align-items-center">
                                             <div>
-                                                @if($notification->user)
-                                                    <span class="badge bg-light text-dark border">
-                                                        <i class="fas fa-user me-1"></i> {{ $notification->user->name }}
-                                                    </span>
-                                                @endif
+                                                <!-- No user relationship -->
                                             </div>
                                             <div class="notification-actions">
                                                 <a href="{{ route('admin.notifications.show', $notification->id) }}" class="btn btn-sm btn-outline-primary">
@@ -238,42 +234,42 @@
             <div class="card shadow mb-4">
                 <div class="card-header py-3 bg-white">
                     <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-user-shield me-2"></i> المستخدمون المبلغ عنهم
+                        <i class="fas fa-bell me-2"></i> الإشعارات حسب النوع
                     </h6>
                 </div>
                 <div class="card-body">
-                    @if($flaggedUsers->count() > 0)
-                    <div class="flagged-users-list">
-                        @foreach($flaggedUsers as $user)
-                        <div class="flagged-user-item d-flex justify-content-between align-items-center p-3 mb-2 rounded shadow-sm">
-                            <div class="d-flex align-items-center">
-                                <div class="avatar-wrapper me-3">
-                                    <img src="{{ $user->profile_image ? asset('storage/' . $user->profile_image) : asset('images/default-avatar.png') }}" alt="{{ $user->name }}" class="rounded-circle" width="50" height="50">
-                                </div>
-                                <div>
-                                    <h6 class="mb-0">{{ $user->name }}</h6>
-                                    <span class="text-muted small">{{ $user->email }}</span>
-                                </div>
-                            </div>
-                            <div>
-                                @php
-                                    $count = \App\Models\AdminNotification::where('user_id', $user->user_id)
-                                        ->where('type', 'flagged_content')
-                                        ->count();
-                                @endphp
-                                <span class="badge bg-warning text-dark rounded-pill fs-6">
-                                    {{ $count }}
-                                </span>
-                            </div>
+                    <div class="list-group">
+                        <a href="{{ route('admin.notifications.index', ['type' => 'general']) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-bell text-primary me-2"></i> إشعارات عامة</span>
+                            <span class="badge badge-primary badge-pill">{{ \App\Models\AdminNotification::where('type', 'general')->count() }}</span>
+                        </a>
+                        <a href="{{ route('admin.notifications.index', ['type' => 'flagged_content']) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-flag text-warning me-2"></i> محتوى محظور</span>
+                            <span class="badge badge-warning badge-pill">{{ \App\Models\AdminNotification::where('type', 'flagged_content')->count() }}</span>
+                        </a>
+                        <a href="{{ route('admin.notifications.index', ['type' => 'system_alert']) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-exclamation-circle text-danger me-2"></i> تنبيهات النظام</span>
+                            <span class="badge badge-danger badge-pill">{{ \App\Models\AdminNotification::where('type', 'system_alert')->count() }}</span>
+                        </a>
+                    </div>
+
+                    <div class="mt-4">
+                        <h6 class="font-weight-bold mb-3">حسب مستوى الخطورة</h6>
+                        <div class="list-group">
+                            <a href="{{ route('admin.notifications.index', ['severity' => 'low']) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                <span><i class="fas fa-arrow-down text-info me-2"></i> منخفضة</span>
+                                <span class="badge badge-info badge-pill">{{ \App\Models\AdminNotification::where('severity', 'low')->count() }}</span>
+                            </a>
+                            <a href="{{ route('admin.notifications.index', ['severity' => 'medium']) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                <span><i class="fas fa-minus text-secondary me-2"></i> متوسطة</span>
+                                <span class="badge badge-secondary badge-pill">{{ \App\Models\AdminNotification::where('severity', 'medium')->count() }}</span>
+                            </a>
+                            <a href="{{ route('admin.notifications.index', ['severity' => 'high']) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                <span><i class="fas fa-arrow-up text-danger me-2"></i> عالية</span>
+                                <span class="badge badge-danger badge-pill">{{ \App\Models\AdminNotification::where('severity', 'high')->count() }}</span>
+                            </a>
                         </div>
-                        @endforeach
                     </div>
-                    @else
-                    <div class="text-center py-4">
-                        <i class="fas fa-users-slash fa-3x text-gray-300 mb-3"></i>
-                        <p class="text-muted">لا يوجد مستخدمون مبلغ عنهم</p>
-                    </div>
-                    @endif
                 </div>
             </div>
             

@@ -128,21 +128,24 @@ class ParentStudentController extends Controller
         ]);
 
         $relation = ParentStudentRelation::findOrFail($id);
+        $previousStatus = $relation->verification_status;
+        
         $relation->verification_status = $request->verification_status;
         $relation->verification_notes = $request->verification_notes;
+        $relation->verified_at = now();
+        $relation->verified_by = $user->user_id;
         
         if ($request->verification_status === 'approved') {
             $relation->student_id = $request->student_id;
-            $relation->verified_at = now();
         }
         
         $relation->save();
 
-        // Notify the parent about the verification result
-        // TODO: Add notification logic here
+        // نتجاهل إرسال الإشعارات مؤقتًا لتجنب مشكلة الجدول
+        // سنكتفي بعرض رسالة نجاح للمدير
 
         return redirect()->route('admin.parent-verifications.index')
-            ->with('success', 'تم تحديث حالة التحقق بنجاح.');
+            ->with('success', 'تم تحديث حالة التحقق بنجاح. يمكن لولي الأمر الآن الوصول إلى لوحة التحكم ومتابعة الطالب.');
     }
 
     /**

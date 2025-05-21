@@ -18,7 +18,7 @@ class DiscountController extends Controller
      */
     public function index()
     {
-        $discounts = Discount::with('creator')
+        $discounts = Discount::with(['creator', 'courses'])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
             
@@ -48,12 +48,14 @@ class DiscountController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
+            'code' => 'required|string|max:50|unique:discounts,code',
             'description' => 'nullable|string',
-            'discount_type' => 'required|in:percentage,fixed',
-            'discount_value' => 'required|numeric|min:0',
-            'applies_to_all_courses' => 'boolean',
-            'courses' => 'required_if:applies_to_all_courses,0|array',
+            'type' => 'required|in:percentage,fixed',
+            'value' => 'required|numeric|min:0',
+            'min_order_value' => 'nullable|numeric|min:0',
+            'max_discount_value' => 'nullable|numeric|min:0',
+            'usage_limit' => 'nullable|integer|min:1',
+            'courses' => 'array',
             'courses.*' => 'exists:courses,course_id',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
@@ -68,18 +70,25 @@ class DiscountController extends Controller
 
         // Create the discount
         $discount = new Discount();
-        $discount->name = $request->name;
+        $discount->code = $request->code;
         $discount->description = $request->description;
-        $discount->discount_type = $request->discount_type;
-        $discount->discount_value = $request->discount_value;
-        $discount->applies_to_all_courses = $request->has('applies_to_all_courses');
-        $discount->courses = $discount->applies_to_all_courses ? null : $request->courses;
+        $discount->type = $request->type;
+        $discount->value = $request->value;
+        $discount->min_order_value = $request->min_order_value;
+        $discount->max_discount_value = $request->max_discount_value;
+        $discount->usage_limit = $request->usage_limit;
+        $discount->usage_count = 0;
         $discount->start_date = $request->start_date;
         $discount->end_date = $request->end_date;
         $discount->is_active = $request->has('is_active');
         $discount->created_by = Auth::id();
         
         $discount->save();
+        
+        // Associate courses with the discount
+        if ($request->has('courses') && is_array($request->courses)) {
+            $discount->courses()->attach($request->courses);
+        }
 
         return redirect()
             ->route('admin.discounts.index')
@@ -94,12 +103,14 @@ class DiscountController extends Controller
      */
     public function edit($id)
     {
-        $discount = Discount::findOrFail($id);
+        $discount = Discount::with('courses')->findOrFail($id);
         $courses = Course::where('approval_status', 'approved')
             ->orderBy('title')
             ->get();
+        
+        $selectedCourses = $discount->courses ? $discount->courses->pluck('course_id')->toArray() : [];
             
-        return view('admin.discounts.edit', compact('discount', 'courses'));
+        return view('admin.discounts.edit', compact('discount', 'courses', 'selectedCourses'));
     }
 
     /**
@@ -114,12 +125,14 @@ class DiscountController extends Controller
         $discount = Discount::findOrFail($id);
         
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
+            'code' => 'required|string|max:50|unique:discounts,code,' . $discount->discount_id . ',discount_id',
             'description' => 'nullable|string',
-            'discount_type' => 'required|in:percentage,fixed',
-            'discount_value' => 'required|numeric|min:0',
-            'applies_to_all_courses' => 'boolean',
-            'courses' => 'required_if:applies_to_all_courses,0|array',
+            'type' => 'required|in:percentage,fixed',
+            'value' => 'required|numeric|min:0',
+            'min_order_value' => 'nullable|numeric|min:0',
+            'max_discount_value' => 'nullable|numeric|min:0',
+            'usage_limit' => 'nullable|integer|min:1',
+            'courses' => 'array',
             'courses.*' => 'exists:courses,course_id',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
@@ -133,17 +146,25 @@ class DiscountController extends Controller
         }
 
         // Update the discount
-        $discount->name = $request->name;
+        $discount->code = $request->code;
         $discount->description = $request->description;
-        $discount->discount_type = $request->discount_type;
-        $discount->discount_value = $request->discount_value;
-        $discount->applies_to_all_courses = $request->has('applies_to_all_courses');
-        $discount->courses = $discount->applies_to_all_courses ? null : $request->courses;
+        $discount->type = $request->type;
+        $discount->value = $request->value;
+        $discount->min_order_value = $request->min_order_value;
+        $discount->max_discount_value = $request->max_discount_value;
+        $discount->usage_limit = $request->usage_limit;
         $discount->start_date = $request->start_date;
         $discount->end_date = $request->end_date;
         $discount->is_active = $request->has('is_active');
         
         $discount->save();
+        
+        // Update course associations
+        if ($request->has('courses')) {
+            $discount->courses()->sync($request->courses);
+        } else {
+            $discount->courses()->detach();
+        }
 
         return redirect()
             ->route('admin.discounts.index')
@@ -159,6 +180,11 @@ class DiscountController extends Controller
     public function destroy($id)
     {
         $discount = Discount::findOrFail($id);
+        
+        // Delete course associations first
+        $discount->courses()->detach();
+        
+        // Then delete the discount
         $discount->delete();
 
         return redirect()

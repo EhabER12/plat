@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Discount extends Model
 {
@@ -23,16 +24,18 @@ class Discount extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
+        'code',
+        'type',
+        'value',
         'description',
-        'discount_type',  // 'percentage' or 'fixed'
-        'discount_value', // percentage or fixed amount
-        'applies_to_all_courses',
-        'courses',  // JSON array of course IDs
+        'min_order_value',
+        'max_discount_value',
+        'usage_limit',
+        'usage_count',
         'start_date',
         'end_date',
         'is_active',
-        'created_by', // user_id of admin or instructor who created it
+        'created_by'
     ];
 
     /**
@@ -41,9 +44,11 @@ class Discount extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'discount_value' => 'decimal:2',
-        'applies_to_all_courses' => 'boolean',
-        'courses' => 'array',
+        'value' => 'decimal:2',
+        'min_order_value' => 'decimal:2',
+        'max_discount_value' => 'decimal:2',
+        'usage_limit' => 'integer',
+        'usage_count' => 'integer',
         'start_date' => 'datetime',
         'end_date' => 'datetime',
         'is_active' => 'boolean',
@@ -57,6 +62,24 @@ class Discount extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by', 'user_id');
+    }
+
+    /**
+     * Get the courses associated with this discount.
+     */
+    public function courses(): BelongsToMany
+    {
+        return $this->belongsToMany(Course::class, 'discount_courses', 'discount_id', 'course_id')
+                    ->withTimestamps();
+    }
+
+    /**
+     * Check if the discount applies to all courses.
+     */
+    public function applies_to_all_courses(): bool
+    {
+        // Check if this discount applies to all courses in the system
+        return $this->courses()->count() == Course::count();
     }
 
     /**
@@ -79,10 +102,10 @@ class Discount extends Model
             return $price;
         }
 
-        if ($this->discount_type === 'percentage') {
-            return $price - ($price * $this->discount_value / 100);
+        if ($this->type === 'percentage') {
+            return $price - ($price * $this->value / 100);
         } else {
-            return max(0, $price - $this->discount_value);
+            return max(0, $price - $this->value);
         }
     }
 
@@ -95,7 +118,7 @@ class Discount extends Model
             return false;
         }
         
-        return $this->applies_to_all_courses || 
-            (is_array($this->courses) && in_array($courseId, $this->courses));
+        return $this->applies_to_all_courses() || 
+            $this->courses()->where('course_id', $courseId)->exists();
     }
 }

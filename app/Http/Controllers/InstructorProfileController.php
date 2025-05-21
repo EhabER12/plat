@@ -45,7 +45,7 @@ class InstructorProfileController extends Controller
 
             $instructor->average_rating = $totalReviews > 0 ? round($totalRating / $totalReviews, 1) : 0;
             $instructor->total_reviews = $totalReviews;
-            
+
             return $instructor;
         })
         ->sortByDesc('average_rating')
@@ -57,11 +57,16 @@ class InstructorProfileController extends Controller
     /**
      * Display the specified instructor's profile.
      *
-     * @param  int  $id
+     * @param  int|null  $id
      * @return \Illuminate\View\View
      */
-    public function show($id)
+    public function show($id = null)
     {
+        // If no ID is provided, redirect to instructors index
+        if ($id === null) {
+            return redirect()->route('instructors.index');
+        }
+
         $instructor = User::whereHas('roles', function($query) {
             $query->where('role', 'instructor');
         })
@@ -91,12 +96,12 @@ class InstructorProfileController extends Controller
             ->map(function($course) {
                 $course->average_rating = $course->reviews_count > 0 ?
                     round($course->reviews->sum('rating') / $course->reviews_count, 1) : 0;
-                
+
                 // Ensure thumbnail path is correct
                 if ($course->thumbnail && !str_starts_with($course->thumbnail, 'storage/')) {
                     $course->thumbnail = 'storage/' . $course->thumbnail;
                 }
-                
+
                 return $course;
             });
 

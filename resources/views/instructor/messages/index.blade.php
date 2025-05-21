@@ -30,7 +30,7 @@
                 @else
                     @foreach($contacts as $contact)
                         <div class="contact-item {{ $selectedContact && $selectedContact->user_id == $contact->user_id ? 'active' : '' }}"
-                            data-contact-id="{{ $contact->user_id }}" 
+                            data-id="{{ $contact->user_id }}" 
                             onclick="window.location.href='{{ route('instructor.messages.show', $contact->user_id) }}'">
                             <div class="contact-avatar{{ rand(0,1) ? ' online' : '' }}">
                                 {{ strtoupper(substr($contact->name, 0, 1)) }}
@@ -40,14 +40,11 @@
                                 <div class="contact-time">{{ $contact->last_message_time ?? 'No messages yet' }}</div>
                                 <div class="contact-preview">
                                     @if($contact->unread_count > 0)
-                                        <span class="unread-indicator"></span>
+                                        <span class="unread-badge">{{ $contact->unread_count }}</span>
                                     @endif
                                     {{ $contact->last_message_preview ?? 'Start a conversation' }}
                                 </div>
                             </div>
-                            @if($contact->unread_count > 0)
-                                <div class="unread-count">{{ $contact->unread_count }}</div>
-                            @endif
                         </div>
                     @endforeach
                 @endif
@@ -84,71 +81,83 @@
 
                 <!-- Chat Messages -->
                 <div class="chat-messages" id="messagesContainer">
-                    <div class="messages-container">
-                        @if($messages->isEmpty())
-                            <div class="empty-state">
-                                <div class="empty-state-icon">✉️</div>
-                                <p class="empty-state-message">Start a conversation</p>
-                                <p class="empty-state-text">Send a message to {{ $selectedContact->name }}</p>
-                            </div>
-                        @else
-                            @php $prevDate = null; @endphp
-                            @foreach($messages as $message)
-                                @php 
-                                    $currDate = $message->created_at->format('Y-m-d');
-                                    $showDate = $prevDate !== $currDate;
-                                    $prevDate = $currDate;
-                                    $isCurrentUser = $message->sender_id == Auth::user()->user_id;
-                                @endphp
-                                
-                                @if($showDate)
-                                    <div class="date-divider">
-                                        <span class="date-text">{{ $message->created_at->format('F j, Y') }}</span>
-                                    </div>
-                                @endif
-                                
-                                <div class="message-group">
-                                    <div class="message {{ $isCurrentUser ? 'sent' : 'received' }} animate__animated {{ $isCurrentUser ? 'animate__fadeInRight' : 'animate__fadeInLeft' }}" 
-                                        data-id="{{ $message->message_id }}">
-                                        <p>{{ $message->content }}</p>
-                                        <div class="message-time {{ $isCurrentUser ? 'sent' : 'received' }}">
-                                            {{ $message->created_at->format('g:i A') }}
-                                        </div>
+                    @if($messages->isEmpty())
+                        <div class="empty-state">
+                            <div class="empty-state-icon">✉️</div>
+                            <p class="empty-state-message">Start a conversation</p>
+                            <p class="empty-state-text">Send a message to {{ $selectedContact->name }}</p>
+                        </div>
+                    @else
+                        @php $prevDate = null; @endphp
+                        @foreach($messages as $message)
+                            @php 
+                                $currDate = $message->created_at->format('Y-m-d');
+                                $showDate = $prevDate !== $currDate;
+                                $prevDate = $currDate;
+                                $isCurrentUser = $message->sender_id == Auth::user()->user_id;
+                            @endphp
+                            
+                            @if($showDate)
+                                <div class="date-divider">
+                                    <span class="date-text">{{ $message->created_at->format('F j, Y') }}</span>
+                                </div>
+                            @endif
+                            
+                            <div class="message-group">
+                                <div class="message {{ $isCurrentUser ? 'sent' : 'received' }} animate__animated {{ $isCurrentUser ? 'animate__fadeInRight' : 'animate__fadeInLeft' }}" 
+                                    data-id="{{ $message->message_id }}">
+                                    <p>{{ $message->content }}</p>
+                                    <div class="message-time {{ $isCurrentUser ? 'sent' : 'received' }}">
+                                        {{ $message->created_at->format('g:i A') }}
                                     </div>
                                 </div>
-                            @endforeach
-                        @endif
-                    </div>
+                            </div>
+                        @endforeach
+                    @endif
                 </div>
 
                 <!-- Message Input -->
                 <div class="chat-input">
-                    <div class="chat-input-field">
-                        <textarea 
-                            id="messageInput" 
-                            placeholder="Type a message..." 
-                            rows="1" 
-                            class="chat-input"
-                            autofocus></textarea>
-                    </div>
-                    @if(count($courses) > 0)
-                    <div>
-                        <select id="courseSelector" class="course-selector">
-                            <option value="">No specific course</option>
-                            @foreach($courses as $course)
-                                <option value="{{ $course->course_id }}">{{ $course->title }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    @endif
-                    <div class="chat-input-buttons">
-                        <button type="button" class="chat-input-button" title="Attach file">
-                            <i class="fas fa-paperclip"></i>
-                        </button>
-                        <button type="submit" id="sendButton" class="chat-input-button send-button pulse">
-                            <i class="fas fa-paper-plane"></i> Send
-                        </button>
-                    </div>
+                    <form id="messageForm">
+                        <div class="chat-input-field">
+                            <textarea 
+                                id="messageInput" 
+                                placeholder="Type a message..." 
+                                rows="1" 
+                                class="chat-input"
+                                autofocus></textarea>
+                            <!-- Hidden form fields -->
+                            <input type="hidden" id="receiver-id" value="{{ $selectedContact->user_id }}">
+                            <input type="hidden" id="current-user-id" value="{{ Auth::user()->user_id }}">
+                            <input type="hidden" id="user-role" value="instructor">
+                            @if(isset($courses) && count($courses) > 0)
+                                <input type="hidden" id="course-id" value="{{ $courses->first()->course_id }}">
+                            @endif
+                            @if($messages->isNotEmpty())
+                                <input type="hidden" id="last-message-id" value="{{ $messages->last()->message_id }}">
+                            @else
+                                <input type="hidden" id="last-message-id" value="0">
+                            @endif
+                        </div>
+                        @if(isset($courses) && count($courses) > 0)
+                        <div>
+                            <select id="courseSelector" class="course-selector">
+                                <option value="">No specific course</option>
+                                @foreach($courses as $course)
+                                    <option value="{{ $course->course_id }}">{{ $course->title }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @endif
+                        <div class="chat-input-buttons">
+                            <button type="button" class="chat-input-button" title="Attach file">
+                                <i class="fas fa-paperclip"></i>
+                            </button>
+                            <button type="submit" id="sendButton" class="chat-input-button send-button pulse">
+                                <i class="fas fa-paper-plane"></i> Send
+                            </button>
+                        </div>
+                    </form>
                 </div>
             @endif
         </div>
@@ -159,24 +168,4 @@
 @section('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
 <script src="{{ asset('js/messaging.js') }}"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Set user ID for the messaging system
-    window.currentUserId = {{ Auth::id() }};
-    
-    // Check if we're on a messaging page with contact selected
-    if (document.getElementById('messagesContainer') && document.getElementById('messageInput')) {
-        // Create the messaging system instance
-        window.messagingSystem = new MessagingSystem({
-            typingDelay: 2000,
-            checkNewMessagesInterval: 5000,
-            animateNewMessages: true,
-            showTypingIndicator: true,
-            enableSoundEffects: false
-        });
-        
-        console.log('Instructor messaging system initialized');
-    }
-});
-</script>
 @endsection

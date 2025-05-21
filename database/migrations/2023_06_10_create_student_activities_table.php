@@ -22,7 +22,7 @@ return new class extends Migration
                 $table->unsignedBigInteger('related_id')->nullable(); // course_id, exam_id, etc.
                 $table->timestamps();
                 
-                $table->foreign('student_id')->references('user_id')->on('users')->onDelete('cascade');
+                $table->foreign('student_id')->references('id')->on('users')->onDelete('cascade');
             });
         }
     }

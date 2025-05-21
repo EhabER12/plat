@@ -50,6 +50,17 @@ class DashboardController extends Controller
             $approvedCourses = 0;
         }
 
+        // Books stats
+        $totalBooks = \App\Models\Book::where('user_id', $instructor->user_id)->count();
+        $publishedBooks = \App\Models\Book::where('user_id', $instructor->user_id)->where('is_published', true)->count();
+        $draftBooks = \App\Models\Book::where('user_id', $instructor->user_id)->where('is_published', false)->count();
+
+        // Get recent books for this instructor
+        $recentBooks = \App\Models\Book::where('user_id', $instructor->user_id)
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
         // Get recent courses for this instructor
         $recentCourses = Course::where('instructor_id', $instructor->user_id)
             ->with('category')
@@ -128,7 +139,7 @@ class DashboardController extends Controller
 
         // Recent ratings (empty collection)
         $recentRatings = collect([]);
-        
+
         // Get top-performing students
         $topPerformingStudents = $this->getTopPerformingStudents($instructor->user_id);
 
@@ -137,6 +148,10 @@ class DashboardController extends Controller
             'publishedCourses' => $publishedCourses,
             'pendingCourses' => $pendingCourses,
             'approvedCourses' => $approvedCourses,
+            'totalBooks' => $totalBooks,
+            'publishedBooks' => $publishedBooks,
+            'draftBooks' => $draftBooks,
+            'recentBooks' => $recentBooks,
             'recentCourses' => $recentCourses,
             'courses' => $courses,
             'totalStudents' => $totalStudents,
@@ -399,7 +414,15 @@ class DashboardController extends Controller
             $recentEnrollments = DB::table('enrollments')
                 ->join('users', 'enrollments.student_id', '=', 'users.user_id')
                 ->join('courses', 'enrollments.course_id', '=', 'courses.course_id')
-                ->select('enrollments.*', 'users.name as student_name', 'courses.title as course_title')
+                ->select(
+                    'enrollments.id as enrollment_id',
+                    'enrollments.student_id',
+                    'enrollments.course_id',
+                    'enrollments.enrolled_at',
+                    'enrollments.status',
+                    'users.name as student_name',
+                    'courses.title as course_title'
+                )
                 ->where('courses.instructor_id', $instructor->user_id);
 
             if ($courseId) {
@@ -631,32 +654,32 @@ class DashboardController extends Controller
         $examAttemptsTableExists = Schema::hasTable('exam_attempts');
         $enrollmentsTableExists = Schema::hasTable('enrollments');
         $coursesTableExists = Schema::hasTable('courses');
-        
+
         if (!$examAttemptsTableExists || !$enrollmentsTableExists || !$coursesTableExists) {
             return collect([]);
         }
-        
+
         // Check if is_passed column exists in exam_attempts table
         $examAttemptsHasPassedColumn = Schema::hasColumn('exam_attempts', 'is_passed');
-        
+
         // Get student IDs enrolled in this instructor's courses
         $studentIds = Enrollment::whereHas('course', function($query) use ($instructorId) {
             $query->where('instructor_id', $instructorId);
         })->pluck('student_id')->toArray();
-        
+
         if (empty($studentIds)) {
             return collect([]);
         }
-        
+
         // Create an empty collection for the top students
         $topStudents = collect([]);
-        
+
         // Avoid SQL strict mode issues by getting raw data with individual queries
         // and assembling the result manually
-        
+
         // First, fetch the basic user details for enrolled students
         $users = User::whereIn('user_id', $studentIds)->get();
-        
+
         foreach ($users as $user) {
             // Calculate exam statistics for each student
             $examStatsQuery = DB::table('exam_attempts')
@@ -665,29 +688,29 @@ class DashboardController extends Controller
                     DB::raw('AVG(CASE WHEN score IS NOT NULL THEN score ELSE 0 END) as avg_score'),
                     DB::raw('COUNT(DISTINCT exam_id) as exams_taken')
                 ]);
-                
+
             // Only add the is_passed calculation if the column exists
             if ($examAttemptsHasPassedColumn) {
                 $examStatsQuery->addSelect(
                     DB::raw('SUM(CASE WHEN is_passed = 1 THEN 1 ELSE 0 END) as exams_passed')
                 );
             }
-            
+
             $examStats = $examStatsQuery->first();
-            
+
             // Get number of courses enrolled
             $coursesEnrolled = DB::table('enrollments')
                 ->where('student_id', $user->user_id)
                 ->join('courses', 'enrollments.course_id', '=', 'courses.course_id')
                 ->where('courses.instructor_id', $instructorId)
                 ->count(DB::raw('DISTINCT enrollments.course_id'));
-            
+
             // Add statistics to user object
             $user->avg_score = $examStats ? $examStats->avg_score : 0;
             $user->exams_taken = $examStats ? $examStats->exams_taken : 0;
             $user->exams_passed = ($examStats && $examAttemptsHasPassedColumn) ? $examStats->exams_passed : 0;
             $user->courses_enrolled = $coursesEnrolled;
-            
+
             // Get course performance data
             $coursePerformance = Enrollment::where('student_id', $user->user_id)
                 ->whereHas('course', function($query) use ($instructorId) {
@@ -704,22 +727,22 @@ class DashboardController extends Controller
                         'completed' => $enrollment->completion_date !== null
                     ];
                 });
-            
+
             $user->course_performance = $coursePerformance;
-            
+
             // Calculate performance score
-            $user->performance_score = min(100, 
+            $user->performance_score = min(100,
                 ($user->avg_score ?? 0) * 0.6 +  // 60% weight on average score
                 ($user->exams_passed * 10) +     // 10 points per passed exam (max 40%)
                 min(20, $user->courses_enrolled * 5)  // 5 points per enrolled course (max 20%)
             );
-            
+
             $topStudents->push($user);
         }
-        
+
         // Sort by performance score and limit results
         $topStudents = $topStudents->sortByDesc('performance_score')->take($limit);
-        
+
         return $topStudents;
     }
 
@@ -731,32 +754,32 @@ class DashboardController extends Controller
     public function topStudents()
     {
         $instructor = Auth::user();
-        
+
         // Get more top students for the detailed analysis (increased limit)
         $topStudents = $this->getTopPerformingStudents($instructor->user_id, 15);
-        
+
         // Get course list for filtering
         $courses = Course::where('instructor_id', $instructor->user_id)
             ->select('course_id', 'title')
             ->get();
-        
+
         // Get exam statistics for top students' performance
         $examStats = [];
         $coursesWithExams = [];
-        
+
         if (Schema::hasTable('exams') && Schema::hasTable('exam_attempts') && !$topStudents->isEmpty()) {
             // Check if is_passed column exists in exam_attempts table
             $examAttemptsHasPassedColumn = Schema::hasColumn('exam_attempts', 'is_passed');
-            
+
             // Get all exams from this instructor's courses
             $examIds = DB::table('exams')
                 ->whereIn('course_id', Course::where('instructor_id', $instructor->user_id)->pluck('course_id'))
                 ->pluck('exam_id');
-                
+
             if (!$examIds->isEmpty()) {
                 // Get student IDs
                 $studentIds = $topStudents->pluck('user_id')->toArray();
-                
+
                 // Get exam stats for these students
                 $examStatsQuery = DB::table('exam_attempts')
                     ->select([
@@ -773,7 +796,7 @@ class DashboardController extends Controller
                     ->join('courses', 'courses.course_id', '=', 'exams.course_id')
                     ->whereIn('exam_attempts.exam_id', $examIds)
                     ->whereIn('exam_attempts.student_id', $studentIds);
-                    
+
                 // Only add the is_passed calculation if the column exists
                 if ($examAttemptsHasPassedColumn) {
                     $examStatsQuery->addSelect(
@@ -785,10 +808,10 @@ class DashboardController extends Controller
                         DB::raw('0 as passed_count')
                     );
                 }
-                
+
                 $examStats = $examStatsQuery->groupBy('exam_attempts.exam_id', 'exams.title', 'courses.title', 'courses.course_id')
                     ->get();
-                    
+
                 // Get courses with exams for filtering
                 $coursesWithExams = DB::table('courses')
                     ->select('courses.course_id', 'courses.title', DB::raw('COUNT(exams.exam_id) as exam_count'))
@@ -799,7 +822,7 @@ class DashboardController extends Controller
                     ->get();
             }
         }
-        
+
         // Calculate overall statistics
         $overallStats = [
             'avg_score' => $topStudents->avg('avg_score') ?? 0,
@@ -809,7 +832,7 @@ class DashboardController extends Controller
             'most_exams_passed' => $topStudents->sortByDesc('exams_passed')->first(),
             'highest_avg_score' => $topStudents->sortByDesc('avg_score')->first(),
         ];
-        
+
         return view('instructor.top-students', [
             'topStudents' => $topStudents,
             'courses' => $courses,

@@ -234,8 +234,8 @@ class PageController extends Controller
                 ->with([
                     'instructor:user_id,name,bio,profile_image',
                     'category:category_id,name',
-                    'videos:video_id,course_id,title,duration_seconds,position',
-                    'materials:material_id,course_id,title,file_url'
+                    'videos',
+                    'materials'
                 ])
                 ->first();
             

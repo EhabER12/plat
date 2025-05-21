@@ -4,22 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title') - Admin Dashboard</title>
-    
+
     <!-- Favicon -->
     <link rel="shortcut icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
-    
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+
     <!-- Font Awesome Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" rel="stylesheet">
-    
+
     <!-- Custom Admin CSS -->
     <link href="{{ asset('css/admin.css') }}" rel="stylesheet">
-    
+
     <!-- Custom Theme -->
     <link href="{{ asset('css/custom-theme.css') }}" rel="stylesheet">
-    
+
     <!-- Additional CSS -->
     @yield('styles')
 </head>
@@ -38,7 +38,7 @@
                     <i class="fas fa-tachometer-alt me-2"></i> Dashboard
                 </a>
                 <a href="{{ route('admin.notifications.index') }}" class="list-group-item list-group-item-action p-3 bg-transparent text-white border-0 {{ request()->routeIs('admin.notifications*') ? 'active' : '' }}">
-                    <i class="fas fa-bell me-2"></i> Notifications 
+                    <i class="fas fa-bell me-2"></i> Notifications
                     @php
                     $unreadCount = \App\Models\AdminNotification::where('is_read', false)->count();
                     @endphp
@@ -66,6 +66,12 @@
                 </a>
                 <a href="{{ route('admin.website-appearance') }}" class="list-group-item list-group-item-action p-3 bg-transparent text-white border-0 {{ request()->routeIs('admin.website-appearance*') ? 'active' : '' }}">
                     <i class="fas fa-paint-brush me-2"></i> Website Appearance
+                </a>
+                <a href="{{ route('admin.badges.index') }}" class="list-group-item list-group-item-action p-3 bg-transparent text-white border-0 {{ request()->routeIs('admin.badges*') ? 'active' : '' }}">
+                    <i class="fas fa-award me-2"></i> Badges
+                </a>
+                <a href="{{ route('admin.achievements.index') }}" class="list-group-item list-group-item-action p-3 bg-transparent text-white border-0 {{ request()->routeIs('admin.achievements*') ? 'active' : '' }}">
+                    <i class="fas fa-trophy me-2"></i> Achievements
                 </a>
                 <a href="{{ route('admin.reports') }}" class="list-group-item list-group-item-action p-3 bg-transparent text-white border-0 {{ request()->routeIs('admin.reports') ? 'active' : '' }}">
                     <i class="fas fa-chart-line me-2"></i> Reports
@@ -103,12 +109,12 @@
                     </div>
                 </div>
             </nav>
-            
+
             <!-- Main content container -->
             <div class="container-fluid p-4">
                 @yield('content')
             </div>
-            
+
             <!-- Footer -->
             <footer class="bg-light py-3 border-top">
                 <div class="container-fluid text-center">
@@ -117,13 +123,13 @@
             </footer>
         </div>
     </div>
-    
+
     <!-- Bootstrap JS with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <!-- jQuery (for some components) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    
+
     <!-- Custom Admin Scripts -->
     <script>
         // Toggle sidebar
@@ -136,8 +142,8 @@
             }
         });
     </script>
-    
+
     <!-- Page-specific scripts -->
     @yield('scripts')
 </body>
-</html> 
+</html>

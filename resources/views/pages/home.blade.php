@@ -4,100 +4,77 @@
 
 @section('content')
     <!-- Hero Section -->
-    <section class="hero-section" id="home">
-        <div class="container-fluid px-lg-5">
+    <section class="hero-section" id="home" style="background-color: #ffffff !important; background-image: none !important; background: #ffffff !important;">
+        <div class="container px-lg-5">
             <div class="row align-items-center min-vh-80">
-                <div class="col-lg-6 order-lg-1 order-2">
-                    <div class="hero-content" data-aos="fade-up" data-aos-duration="1000">
-                        <div class="hero-badge animate-pulse">
-                            <span class="badge-icon"><i class="fas fa-graduation-cap"></i></span>
-                            <span class="badge-text">منصة تعليمية متكاملة</span>
+                <div class="col-lg-6">
+                    <div class="hero-content" data-aos="fade-up" data-aos-duration="1000" style="text-align: right; direction: rtl;">
+                        <div class="d-flex align-items-center mb-3 justify-content-end">
+                            <span>بوابتك للتعلم مدى الحياة</span>
+                            <span class="icon me-2 ms-2"><i class="fas fa-book"></i></span>
                         </div>
-                        <h1 class="hero-title animate-typing">طور مهاراتك مع <span class="text-highlight">أفضل المدربين</span> في مكان واحد</h1>
-                        <p class="hero-description animate-fade-in">
-                            انضم إلى مجتمعنا التعليمي واكتسب المهارات التي تحتاجها للنجاح في عالم اليوم. دورات عالية الجودة بأسعار مناسبة.
+                        <h1 class="hero-title mb-4">أطلق إمكاناتك مع <span class="text-highlight">التعلم عبر الإنترنت</span></h1>
+                        <p class="hero-description mb-4">
+                            اكتشف عالمًا من المعرفة والفرص مع منصتنا التعليمية عبر الإنترنت وابدأ مسارًا مهنيًا جديدًا.
                         </p>
-                        <div class="hero-buttons animate-slide-up">
-                            <a href="/register" class="btn btn-primary btn-lg animated-button">ابدأ التعلم الآن</a>
-                            <a href="#how-it-works" class="btn btn-outline-light btn-lg ms-3 animated-button-outline">
-                                <i class="fas fa-play-circle me-2"></i> كيف يعمل
-                            </a>
+                        <div class="hero-buttons mb-5">
+                            <a href="/courses" class="btn btn-primary btn-lg">عرض جميع الدورات <i class="fas fa-arrow-left ms-2"></i></a>
                         </div>
-                        <div class="hero-stats mt-4 animate-slide-up" data-aos-delay="300">
-                            <div class="row">
-                                <div class="col-4">
-                                    <div class="hero-stat-item animate-counter" data-count="15000">
-                                        <h4>15K+</h4>
-                                        <p>طالب</p>
-                                    </div>
-                                </div>
-                                <div class="col-4">
-                                    <div class="hero-stat-item animate-counter" data-count="200">
-                                        <h4>200+</h4>
-                                        <p>دورة</p>
-                                    </div>
-                                </div>
-                                <div class="col-4">
-                                    <div class="hero-stat-item animate-counter" data-count="50">
-                                        <h4>50+</h4>
-                                        <p>مدرب</p>
-                                    </div>
-                                </div>
+                        <div class="d-flex align-items-center">
+                            <div class="student-info text-end">
+                                <h4 class="mb-1">2000 طالب</h4>
+                                <p class="mb-0">انضم إلى فصولنا الافتراضية</p>
+                            </div>
+                            <div class="student-avatars ms-4 me-0">
+                                <img src="assets/img/avatar-1.png" alt="طالب" class="rounded-circle">
+                                <img src="assets/img/avatar-2.png" alt="طالب" class="rounded-circle">
+                                <div class="avatar-count rounded-circle">+</div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-6 order-lg-2 order-1 mb-5 mb-lg-0">
-                    <div class="hero-image-container" data-aos="fade-left" data-aos-duration="1200">
-                        <div class="hero-image-wrapper">
-                            <img src="https://img.freepik.com/free-photo/students-knowing-right-answer_23-2149000158.jpg" alt="طلاب يتعلمون" class="hero-image img-fluid rounded-4 shadow-lg">
-                            <div class="image-overlay"></div>
-                            <div class="image-shape-1"></div>
-                            <div class="image-shape-2"></div>
-                            <div class="light-rays"></div>
-                        </div>
-                        <div class="floating-card card-stats animate-float">
-                            <div class="card-icon">
-                                <i class="fas fa-chart-line"></i>
-                            </div>
-                            <div class="card-content">
-                                <h5 class="counter" data-count="95">0</h5>
-                                <p>معدل الرضا</p>
+                <div class="col-lg-6">
+                    <div class="hero-image-container position-relative" data-aos="fade-left" data-aos-duration="1200">
+                        <img src="assets/img/hero-students.jpg" alt="طلاب يتعلمون" class="img-fluid rounded-4">
+                        
+                        <div class="rating-badge position-absolute">
+                            <div class="d-flex align-items-center">
+                                <div class="rating-icon me-2">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <div class="rating-info">
+                                    <h4 class="mb-0">4.5</h4>
+                                    <p class="mb-0">(2.4 ألف تقييم)</p>
+                                </div>
                             </div>
                         </div>
-                        <div class="floating-card card-message animate-float" data-float-delay="300">
-                            <div class="message-avatar">
-                                <img src="https://img.freepik.com/free-photo/young-student-wearing-hijab-using-laptop_23-2149066117.jpg" alt="طالب" class="avatar-img">
-                            </div>
-                            <div class="message-content">
-                                <p>"الدورات ساعدتني في تطوير مهاراتي!"</p>
-                            </div>
-                        </div>
-                        <div class="floating-notification animate-float" data-float-delay="600">
-                            <div class="notification-icon">
-                                <i class="fas fa-bell"></i>
-                            </div>
-                            <div class="notification-content">
-                                <p>دورة جديدة متاحة الآن!</p>
-                            </div>
-                        </div>
-                        <div class="floating-achievement animate-float" data-float-delay="900">
-                            <div class="achievement-icon">
-                                <i class="fas fa-award"></i>
-                            </div>
-                            <div class="achievement-content">
-                                <p>أكملت 3 دورات!</p>
+                        
+                        <div class="course-badge position-absolute">
+                            <div class="d-flex align-items-center">
+                                <div class="course-icon me-2">
+                                    <i class="fas fa-book-open"></i>
+                                </div>
+                                <div class="course-info">
+                                    <h4 class="mb-0">+100</h4>
+                                    <p class="mb-0">دورة تعليمية</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="hero-shape-divider">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="#ffffff" fill-opacity="1" d="M0,96L48,122.7C96,149,192,203,288,197.3C384,192,480,128,576,117.3C672,107,768,149,864,165.3C960,181,1056,171,1152,154.7C1248,139,1344,117,1392,106.7L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>
-        </div>
-        <div class="hero-particles" id="particles-js"></div>
-        <div class="moving-squares"></div>
+        
+        <!-- Educational decorative elements -->
+        <div class="hero-decoration hero-decoration-1"></div>
+        <div class="hero-decoration hero-decoration-2"></div>
+        <div class="hero-decoration hero-decoration-3"></div>
+        <div class="hero-decoration hero-decoration-4"></div>
+        <div class="hero-decoration hero-decoration-5"></div>
+        <div class="hero-decoration-dots hero-decoration-dots-1"></div>
+        <div class="hero-decoration-dots hero-decoration-dots-2"></div>
+        <div class="hero-decoration-circle hero-decoration-circle-1"></div>
+        <div class="hero-decoration-circle hero-decoration-circle-2"></div>
     </section>
 
     <!-- Stats Section -->
@@ -216,8 +193,31 @@
             <!-- جانب الفيديو -->
             <div style="flex: 1; min-width: 300px; padding: 20px; position: relative;">
                 <div style="position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.15); aspect-ratio: 16/9; border: 3px solid var(--primary-color);">
-                    <!-- إطار الفيديو من يوتيوب (يمكنك استبدال رابط الفيديو) -->
-                    <iframe width="100%" height="100%" src="{{ $videoSettings['video_embed_url'] ?? 'https://www.youtube.com/embed/dQw4w9WgXcQ' }}" title="فيديو تعريفي عن منصة TOTO" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="border: none;"></iframe>
+                    <!-- إطار الفيديو باستخدام laravel-video-embed -->
+                    @php
+                        // التأكد من أن الرابط يحتوي على t=4 لبدء التشغيل من المقطع الرابع
+                        $videoUrl = $videoSettings['video_embed_url'] ?? 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=4';
+                        if (strpos($videoUrl, 't=') === false) {
+                            $videoUrl .= (strpos($videoUrl, '?') !== false ? '&' : '?') . 't=4';
+                        }
+                        
+                        // إضافة enablejsapi=1 للسماح بالتحكم في الفيديو عبر JavaScript
+                        if (strpos($videoUrl, 'youtube.com') !== false && strpos($videoUrl, 'enablejsapi=1') === false) {
+                            $videoUrl .= (strpos($videoUrl, '?') !== false ? '&' : '?') . 'enablejsapi=1';
+                        }
+                        
+                        // تطبيق التنسيق المخصص على الفيديو المضمن
+                        $embedHtml = \Merujan99\LaravelVideoEmbed\Facades\LaravelVideoEmbed::parse($videoUrl);
+                        $embedHtml = str_replace('<iframe', '<iframe style="width:100%; height:100%; border:none; position:absolute; top:0; left:0;"', $embedHtml);
+                        
+                        // إضافة enablejsapi=1 لعنوان الـ iframe إذا كان يوتيوب
+                        if (strpos($embedHtml, 'youtube.com') !== false && strpos($embedHtml, 'enablejsapi=1') === false) {
+                            $embedHtml = preg_replace('/(src="[^"]*?)(")/i', '$1&enablejsapi=1&origin=' . urlencode(url('/')) . '$2', $embedHtml);
+                        }
+                    @endphp
+                    <div style="position:relative; width:100%; height:0; padding-bottom:56.25%;">
+                        {!! $embedHtml !!}
+                    </div>
                     
                     <!-- زخارف حول الفيديو -->
                     <div style="position: absolute; width: 80px; height: 80px; background-color: var(--secondary-color); border-radius: 50%; top: -20px; left: -20px; z-index: -1; opacity: 0.3;"></div>
@@ -225,7 +225,7 @@
                 </div>
                 
                 <!-- زر التشغيل (للزخرفة فقط) -->
-                <div style="position: absolute; width: 80px; height: 80px; background-color: var(--primary-color); border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; pointer-events: none; opacity: 0.9;">
+                <div style="position: absolute; width: 80px; height: 80px; background-color: var(--primary-color); border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; pointer-events: none; opacity: 0.9; z-index: 2; transition: opacity 0.5s ease;" class="video-play-btn">
                     <svg width="30" height="30" viewBox="0 0 24 24" fill="var(--secondary-color)">
                         <path d="M8 5v14l11-7z"></path>
                     </svg>
@@ -453,100 +453,122 @@
                 </p>
             </div>
 
-            <div class="row" data-aos="fade-up">
-                <div class="col-lg-6 mb-4">
-                    <div class="testimonial-card h-100">
-                        <div class="testimonial-content">
-                            <div class="testimonial-rating mb-3">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <p class="testimonial-text">"لقد غيرت هذه المنصة حياتي المهنية بالكامل. الدورات عالية الجودة والمدربون متميزون. استطعت الحصول على وظيفة أحلامي بعد إكمال دورة تطوير الويب الشاملة."</p>
-                            <div class="testimonial-author d-flex align-items-center mt-4">
-                                <img src="https://img.freepik.com/free-photo/young-bearded-man-with-striped-shirt_273609-5677.jpg" alt="محمد العلي" class="testimonial-avatar">
-                                <div class="ms-3">
-                                    <h5 class="mb-0">محمد العلي</h5>
-                                    <p class="text-muted mb-0">مطور ويب</p>
+            <div class="testimonials-grid-wrapper" data-aos="fade-up">
+                <div class="row g-4">
+                    <!-- الشهادة الأولى -->
+                    <div class="col-lg-6 col-xl-3">
+                        <div class="testimonial-grid-card h-100">
+                            <div class="testimonial-content">
+                                <div class="testimonial-quote-icon">
+                                    <i class="fas fa-quote-right"></i>
+                                </div>
+                                <div class="testimonial-rating mb-3">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <p class="testimonial-text">"لقد غيرت هذه المنصة حياتي المهنية بالكامل. الدورات عالية الجودة والمدربون متميزون. استطعت الحصول على وظيفة أحلامي بعد إكمال دورة تطوير الويب الشاملة."</p>
+                                <div class="testimonial-author d-flex align-items-center mt-4">
+                                    <img src="https://img.freepik.com/free-photo/young-bearded-man-with-striped-shirt_273609-5677.jpg" alt="محمد العلي" class="testimonial-avatar">
+                                    <div class="ms-3">
+                                        <h5 class="mb-0">محمد العلي</h5>
+                                        <p class="text-muted mb-0">مطور ويب</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="col-lg-6 mb-4">
-                    <div class="testimonial-card h-100">
-                        <div class="testimonial-content">
-                            <div class="testimonial-rating mb-3">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <p class="testimonial-text">"المنصة سهلة الاستخدام والمحتوى منظم بشكل رائع. أحب كيف يمكنني التعلم بسرعتي الخاصة والوصول إلى المواد في أي وقت. الدعم الفني ممتاز وسريع الاستجابة."</p>
-                            <div class="testimonial-author d-flex align-items-center mt-4">
-                                <img src="https://img.freepik.com/free-photo/young-beautiful-woman-pink-warm-sweater-natural-look-smiling-portrait-isolated-long-hair_285396-896.jpg" alt="نورة السعيد" class="testimonial-avatar">
-                                <div class="ms-3">
-                                    <h5 class="mb-0">نورة السعيد</h5>
-                                    <p class="text-muted mb-0">مصممة جرافيك</p>
+                    <!-- الشهادة الثانية -->
+                    <div class="col-lg-6 col-xl-3">
+                        <div class="testimonial-grid-card h-100">
+                            <div class="testimonial-content">
+                                <div class="testimonial-quote-icon">
+                                    <i class="fas fa-quote-right"></i>
+                                </div>
+                                <div class="testimonial-rating mb-3">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <p class="testimonial-text">"المنصة سهلة الاستخدام والمحتوى منظم بشكل رائع. أحب كيف يمكنني التعلم بسرعتي الخاصة والوصول إلى المواد في أي وقت. الدعم الفني ممتاز وسريع الاستجابة."</p>
+                                <div class="testimonial-author d-flex align-items-center mt-4">
+                                    <img src="https://img.freepik.com/free-photo/young-beautiful-woman-pink-warm-sweater-natural-look-smiling-portrait-isolated-long-hair_285396-896.jpg" alt="نورة السعيد" class="testimonial-avatar">
+                                    <div class="ms-3">
+                                        <h5 class="mb-0">نورة السعيد</h5>
+                                        <p class="text-muted mb-0">مصممة جرافيك</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="col-lg-6 mb-4">
-                    <div class="testimonial-card h-100">
-                        <div class="testimonial-content">
-                            <div class="testimonial-rating mb-3">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star-half-alt"></i>
-                            </div>
-                            <p class="testimonial-text">"كمدرس، أجد هذه المنصة مثالية لتقديم دوراتي. الأدوات التفاعلية والواجهة سهلة الاستخدام تجعل من السهل إنشاء محتوى جذاب للطلاب."</p>
-                            <div class="testimonial-author d-flex align-items-center mt-4">
-                                <img src="https://img.freepik.com/free-photo/close-up-portrait-young-bearded-man-white-shirt-isolated-white_155003-17821.jpg" alt="عبدالرحمن الشمري" class="testimonial-avatar">
-                                <div class="ms-3">
-                                    <h5 class="mb-0">عبدالرحمن الشمري</h5>
-                                    <p class="text-muted mb-0">مدرس لغة إنجليزية</p>
+                    <!-- الشهادة الثالثة -->
+                    <div class="col-lg-6 col-xl-3">
+                        <div class="testimonial-grid-card h-100">
+                            <div class="testimonial-content">
+                                <div class="testimonial-quote-icon">
+                                    <i class="fas fa-quote-right"></i>
+                                </div>
+                                <div class="testimonial-rating mb-3">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star-half-alt"></i>
+                                </div>
+                                <p class="testimonial-text">"كمدرس، أجد هذه المنصة مثالية لتقديم دوراتي. الأدوات التفاعلية والواجهة سهلة الاستخدام تجعل من السهل إنشاء محتوى جذاب للطلاب."</p>
+                                <div class="testimonial-author d-flex align-items-center mt-4">
+                                    <img src="https://img.freepik.com/free-photo/close-up-portrait-young-bearded-man-white-shirt-isolated-white_155003-17821.jpg" alt="عبدالرحمن الشمري" class="testimonial-avatar">
+                                    <div class="ms-3">
+                                        <h5 class="mb-0">عبدالرحمن الشمري</h5>
+                                        <p class="text-muted mb-0">مدرس لغة إنجليزية</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="col-lg-6 mb-4">
-                    <div class="testimonial-card h-100">
-                        <div class="testimonial-content">
-                            <div class="testimonial-rating mb-3">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <p class="testimonial-text">"أنا معجبة جداً بجودة الدورات وتنوعها. لقد أكملت للتو دورة في تحليل البيانات وأشعر بالثقة الكاملة في تطبيق المهارات الجديدة في عملي."</p>
-                            <div class="testimonial-author d-flex align-items-center mt-4">
-                                <img src="https://img.freepik.com/free-photo/young-woman-with-round-glasses-yellow-sweater_273609-7091.jpg" alt="سارة القحطاني" class="testimonial-avatar">
-                                <div class="ms-3">
-                                    <h5 class="mb-0">سارة القحطاني</h5>
-                                    <p class="text-muted mb-0">محللة بيانات</p>
+                    <!-- الشهادة الرابعة -->
+                    <div class="col-lg-6 col-xl-3">
+                        <div class="testimonial-grid-card h-100">
+                            <div class="testimonial-content">
+                                <div class="testimonial-quote-icon">
+                                    <i class="fas fa-quote-right"></i>
+                                </div>
+                                <div class="testimonial-rating mb-3">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <p class="testimonial-text">"أنا معجبة جداً بجودة الدورات وتنوعها. لقد أكملت للتو دورة في تحليل البيانات وأشعر بالثقة الكاملة في تطبيق المهارات الجديدة في عملي."</p>
+                                <div class="testimonial-author d-flex align-items-center mt-4">
+                                    <img src="https://img.freepik.com/free-photo/young-woman-with-round-glasses-yellow-sweater_273609-7091.jpg" alt="سارة القحطاني" class="testimonial-avatar">
+                                    <div class="ms-3">
+                                        <h5 class="mb-0">سارة القحطاني</h5>
+                                        <p class="text-muted mb-0">محللة بيانات</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                
+                <!-- Testimonial background decoration -->
+                <div class="testimonial-decoration testimonial-decoration-1"></div>
+                <div class="testimonial-decoration testimonial-decoration-2"></div>
             </div>
         </div>
     </section>
 
     <!-- How It Works Section -->
-    <section class="how-it-works-section py-5 bg-light" id="how-it-works">
+    <section class="how-it-works-section py-5" id="how-it-works">
         <div class="container-fluid px-lg-5">
             <div class="section-header text-center mb-5" data-aos="fade-up">
                 <h2 class="section-title">كيف <span class="text-highlight">تعمل المنصة</span></h2>
@@ -555,50 +577,82 @@
                 </p>
             </div>
 
-            <div class="row" data-aos="fade-up">
-                <div class="col-12">
-                    <div class="steps-container">
-                        <div class="step-line"></div>
-                        <div class="row">
-                            <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
-                                <div class="step-item" data-aos="fade-up" data-aos-delay="100">
+            <div class="how-it-works-wrapper position-relative" data-aos="fade-up">
+                <!-- Animated decorative elements -->
+                <div class="hiw-decoration hiw-decoration-1"></div>
+                <div class="hiw-decoration hiw-decoration-2"></div>
+                <div class="hiw-decoration hiw-decoration-3"></div>
+                
+                <div class="steps-container position-relative">
+                    <div class="step-line"></div>
+                    <div class="row">
+                        <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                            <div class="step-item" data-aos="zoom-in-up" data-aos-delay="100">
+                                <div class="step-icon-wrapper">
                                     <div class="step-icon">
                                         <i class="fas fa-user-plus"></i>
                                         <span class="step-number">1</span>
                                     </div>
+                                    <div class="step-pulse"></div>
+                                </div>
+                                <div class="step-content">
                                     <h3 class="step-title">التسجيل</h3>
                                     <p class="step-description">أنشئ حسابك مجاناً واملأ ملفك الشخصي للبدء في رحلتك التعليمية.</p>
+                                    <div class="step-arrow">
+                                        <i class="fas fa-long-arrow-alt-left"></i>
+                                    </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
-                                <div class="step-item" data-aos="fade-up" data-aos-delay="200">
+                        <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                            <div class="step-item" data-aos="zoom-in-up" data-aos-delay="200">
+                                <div class="step-icon-wrapper">
                                     <div class="step-icon">
                                         <i class="fas fa-search"></i>
                                         <span class="step-number">2</span>
                                     </div>
+                                    <div class="step-pulse"></div>
+                                </div>
+                                <div class="step-content">
                                     <h3 class="step-title">استكشاف</h3>
                                     <p class="step-description">تصفح مجموعتنا الواسعة من الدورات واختر ما يناسب اهتماماتك وأهدافك.</p>
+                                    <div class="step-arrow">
+                                        <i class="fas fa-long-arrow-alt-left"></i>
+                                    </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
-                                <div class="step-item" data-aos="fade-up" data-aos-delay="300">
+                        <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                            <div class="step-item" data-aos="zoom-in-up" data-aos-delay="300">
+                                <div class="step-icon-wrapper">
                                     <div class="step-icon">
                                         <i class="fas fa-credit-card"></i>
                                         <span class="step-number">3</span>
                                     </div>
+                                    <div class="step-pulse"></div>
+                                </div>
+                                <div class="step-content">
                                     <h3 class="step-title">التسجيل</h3>
                                     <p class="step-description">ادفع بسهولة باستخدام طرق الدفع المتعددة واحصل على وصول فوري للدورة.</p>
+                                    <div class="step-arrow">
+                                        <i class="fas fa-long-arrow-alt-left"></i>
+                                    </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
-                                <div class="step-item" data-aos="fade-up" data-aos-delay="400">
+                        <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                            <div class="step-item" data-aos="zoom-in-up" data-aos-delay="400">
+                                <div class="step-icon-wrapper">
                                     <div class="step-icon">
                                         <i class="fas fa-laptop"></i>
                                         <span class="step-number">4</span>
                                     </div>
+                                    <div class="step-pulse"></div>
+                                </div>
+                                <div class="step-content">
                                     <h3 class="step-title">التعلم</h3>
                                     <p class="step-description">ابدأ التعلم فوراً من أي جهاز وفي أي وقت مع الوصول الدائم للمحتوى.</p>
                                 </div>
@@ -609,24 +663,75 @@
             </div>
 
             <div class="row mt-5 align-items-center">
-                <div class="col-lg-6" data-aos="fade-right">
+                <div class="col-lg-6" data-aos="fade-right" data-aos-duration="1000">
                     <div class="how-it-works-content">
-                        <h3 class="mb-4">منصة تعليمية متكاملة للطلاب والمدرسين</h3>
-                        <p class="mb-4">
+                        <div class="content-badge">
+                            <span class="badge-text">منصة متكاملة</span>
+                        </div>
+                        <h3 class="mb-4 content-title">منصة تعليمية متكاملة للطلاب والمدرسين</h3>
+                        <p class="mb-4 content-description">
                             توفر منصتنا كل ما تحتاجه لتجربة تعليمية ناجحة. سواء كنت طالباً يبحث عن تطوير مهاراته أو مدرساً يرغب في مشاركة خبراته، فإن منصتنا توفر لك الأدوات والموارد اللازمة للنجاح.
                         </p>
-                        <ul class="check-list">
-                            <li><i class="fas fa-check-circle"></i> محتوى تفاعلي عالي الجودة</li>
-                            <li><i class="fas fa-check-circle"></i> اختبارات وتمارين عملية</li>
-                            <li><i class="fas fa-check-circle"></i> شهادات معتمدة بعد إكمال الدورة</li>
-                            <li><i class="fas fa-check-circle"></i> دعم فني على مدار الساعة</li>
+                        <ul class="check-list animated-list">
+                            <li class="check-item" data-aos="fade-up" data-aos-delay="100">
+                                <div class="check-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <span>محتوى تفاعلي عالي الجودة</span>
+                            </li>
+                            <li class="check-item" data-aos="fade-up" data-aos-delay="200">
+                                <div class="check-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <span>اختبارات وتمارين عملية</span>
+                            </li>
+                            <li class="check-item" data-aos="fade-up" data-aos-delay="300">
+                                <div class="check-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <span>شهادات معتمدة بعد إكمال الدورة</span>
+                            </li>
+                            <li class="check-item" data-aos="fade-up" data-aos-delay="400">
+                                <div class="check-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <span>دعم فني على مدار الساعة</span>
+                            </li>
                         </ul>
-                        <a href="/register" class="btn btn-primary mt-3">ابدأ الآن</a>
+                        <div class="mt-4" data-aos="fade-up" data-aos-delay="500">
+                            <a href="/register" class="btn-get-started">
+                                <span class="btn-text">ابدأ الآن</span>
+                                <span class="btn-icon"><i class="fas fa-arrow-left"></i></span>
+                            </a>
+                        </div>
                     </div>
                 </div>
-                <div class="col-lg-6" data-aos="fade-left">
-                    <div class="how-it-works-image">
-                        <img src="https://media.istockphoto.com/id/1358014313/photo/group-of-elementary-students-having-computer-class-with-their-teacher-in-the-classroom.jpg?s=612x612&w=0&k=20&c=3xsykmHXFa9ejL_sP2Xxiow7zdtmKvg15UxXFfgR98Q=" alt="كيفية عمل المنصة" class="img-fluid rounded-4 shadow-lg">
+                <div class="col-lg-6" data-aos="fade-left" data-aos-duration="1000">
+                    <div class="how-it-works-image-wrapper">
+                        <div class="image-container">
+                            <img src="https://media.istockphoto.com/id/1358014313/photo/group-of-elementary-students-having-computer-class-with-their-teacher-in-the-classroom.jpg?s=612x612&w=0&k=20&c=3xsykmHXFa9ejL_sP2Xxiow7zdtmKvg15UxXFfgR98Q=" alt="كيفية عمل المنصة" class="img-fluid rounded-4 shadow-lg main-image">
+                            <div class="image-shape-1"></div>
+                            <div class="image-shape-2"></div>
+                            <div class="image-overlay"></div>
+                        </div>
+                        <div class="floating-element floating-element-1" data-aos="fade-up" data-aos-delay="200">
+                            <div class="floating-icon">
+                                <i class="fas fa-graduation-cap"></i>
+                            </div>
+                            <div class="floating-text">
+                                <div class="counter">15K+</div>
+                                <div>طالب مسجل</div>
+                            </div>
+                        </div>
+                        <div class="floating-element floating-element-2" data-aos="fade-up" data-aos-delay="400">
+                            <div class="floating-icon">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </div>
+                            <div class="floating-text">
+                                <div class="counter">50+</div>
+                                <div>مدرس متخصص</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -793,6 +898,7 @@
 @endsection
 
 @section('styles')
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
     /* تنسيقات إصلاح شريط التنقل */
     .navbar {
@@ -936,8 +1042,10 @@
     .hero-section {
         position: relative;
         padding: 120px 0 100px;
-        background: linear-gradient(135deg, #0a2e4d 0%, #1a4e7d 100%);
-        color: white;
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+        background-image: none !important;
+        color: #333;
         overflow: hidden;
         min-height: 100vh;
     }
@@ -972,7 +1080,7 @@
         width: 100%;
         height: 100%;
         z-index: 0;
-        background: linear-gradient(45deg, rgba(255, 204, 0, 0.3), transparent);
+        background: transparent;
         transition: all 0.4s ease;
         z-index: -1;
     }
@@ -1743,68 +1851,350 @@
 
     /* قسم آراء الطلاب */
     .testimonials-section {
+        position: relative;
         padding: 80px 0;
         background-color: white;
-    }
-
-    .testimonial-card {
-        background-color: white;
-        border-radius: 15px;
-        padding: 30px;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-        transition: all 0.3s ease;
-        position: relative;
         overflow: hidden;
-        height: 100%;
-        border: 1px solid rgba(0, 0, 0, 0.05);
     }
-
-    .testimonial-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+    
+    .testimonials-carousel-wrapper {
+        max-width: 900px;
+        margin: 0 auto;
+        position: relative;
+        padding: 30px 0;
     }
-
-    .testimonial-card::before {
-        content: '\201C';
+    
+    .testimonial-carousel-card {
+        background-color: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        margin: 30px auto;
+        max-width: 800px;
+        position: relative;
+        z-index: 1;
+        transform: translateY(0);
+        transition: all 0.5s ease;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+    
+    .testimonial-carousel-card:before {
+        content: '';
         position: absolute;
-        top: 20px;
-        left: 20px;
-        font-size: 5rem;
-        color: rgba(0, 0, 0, 0.05);
-        line-height: 1;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
     }
-
+    
+    .testimonial-carousel-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    }
+    
+    .testimonial-quote-icon {
+        position: absolute;
+        top: 30px;
+        right: 40px;
+        font-size: 4rem;
+        color: var(--secondary-color);
+        opacity: 0.15;
+        transform: rotate(8deg);
+        transition: all 0.5s ease;
+        filter: drop-shadow(0 10px 15px rgba(0,0,0,0.05));
+    }
+    
+    .testimonial-carousel-card:hover .testimonial-quote-icon {
+        transform: rotate(0deg) scale(1.1);
+        opacity: 0.2;
+    }
+    
+    .testimonial-content {
+        position: relative;
+        z-index: 2;
+    }
+    
     .testimonial-rating {
-        margin-bottom: 15px;
+        margin-bottom: 20px;
+        display: inline-flex;
+        background: rgba(0, 51, 102, 0.05);
+        padding: 8px 15px;
+        border-radius: 30px;
+        transform: translateY(0);
+        transition: all 0.5s ease;
     }
-
+    
+    .testimonial-carousel-card:hover .testimonial-rating {
+        transform: translateY(-5px);
+        background: rgba(0, 51, 102, 0.08);
+    }
+    
     .testimonial-rating i {
-        color: #ffc107;
-        margin-right: 2px;
+        color: var(--secondary-color);
+        font-size: 1.2rem;
+        margin-right: 3px;
+        filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
+        transition: all 0.3s ease;
     }
-
+    
+    .testimonial-carousel-card:hover .testimonial-rating i {
+        transform: rotate(360deg);
+        transition-delay: calc(0.05s * var(--i));
+    }
+    
     .testimonial-text {
-        font-size: 1.1rem;
-        line-height: 1.6;
-        color: #555;
+        font-size: 1.2rem;
+        line-height: 1.8;
+        color: #444;
         margin-bottom: 20px;
         position: relative;
         z-index: 1;
+        font-style: italic;
+        opacity: 0.9;
+        transition: all 0.5s ease;
     }
-
+    
+    .testimonial-carousel-card:hover .testimonial-text {
+        color: #222;
+        opacity: 1;
+    }
+    
     .testimonial-author {
         display: flex;
         align-items: center;
+        margin-top: 30px;
+        position: relative;
+        padding: 15px 20px;
+        background: rgba(0, 51, 102, 0.03);
+        border-radius: 50px;
+        transform: translateX(0);
+        transition: all 0.5s ease;
     }
-
+    
+    .testimonial-carousel-card:hover .testimonial-author {
+        transform: translateX(10px);
+        background: rgba(0, 51, 102, 0.06);
+    }
+    
     .testimonial-avatar {
-        width: 50px;
-        height: 50px;
+        width: 60px;
+        height: 60px;
         border-radius: 50%;
         object-fit: cover;
         border: 3px solid var(--primary-color);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        transition: all 0.5s ease;
+        transform: translateX(0) rotate(0deg);
     }
-
+    
+    .testimonial-carousel-card:hover .testimonial-avatar {
+        transform: translateX(-5px) scale(1.1);
+        border-color: var(--secondary-color);
+    }
+    
+    .testimonial-indicators {
+        position: relative;
+        margin-top: 30px;
+        margin-bottom: 0;
+        justify-content: center;
+    }
+    
+    .testimonial-indicators button {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: rgba(0, 51, 102, 0.2);
+        border: none;
+        margin: 0 5px;
+        opacity: 1;
+        transition: all 0.3s ease;
+    }
+    
+    .testimonial-indicators button.active {
+        width: 30px;
+        border-radius: 10px;
+        background-color: var(--primary-color);
+    }
+    
+    .testimonial-control {
+        background: white;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        opacity: 1;
+        top: 50%;
+        transform: translateY(-50%);
+        transition: all 0.3s ease;
+    }
+    
+    .testimonial-control:hover {
+        background-color: var(--primary-color);
+        opacity: 1;
+        transform: translateY(-50%) scale(1.1);
+    }
+    
+    .carousel-control-prev {
+        left: -25px;
+    }
+    
+    .carousel-control-next {
+        right: -25px;
+    }
+    
+    .carousel-control-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        color: var(--primary-color);
+        font-size: 1.2rem;
+        transition: all 0.3s ease;
+    }
+    
+    .testimonial-control:hover .carousel-control-icon {
+        color: var(--secondary-color);
+    }
+    
+    /* Carousel Animation */
+    .animate-card {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeInUp 0.8s forwards;
+    }
+    
+    .animate-text {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeInUp 0.8s 0.2s forwards;
+    }
+    
+    .animate-author {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeInUp 0.8s 0.4s forwards;
+    }
+    
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Carousel Fade Effect */
+    .carousel-fade .carousel-item {
+        opacity: 0;
+        transition: opacity 0.6s ease-in-out;
+    }
+    
+    .carousel-fade .carousel-item.active {
+        opacity: 1;
+    }
+    
+    /* Testimonial Decorations */
+    .testimonial-decoration {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(40px);
+        z-index: 0;
+        opacity: 0.5;
+    }
+    
+    .testimonial-decoration-1 {
+        width: 250px;
+        height: 250px;
+        background: radial-gradient(circle, rgba(255, 215, 0, 0.3) 0%, rgba(255, 215, 0, 0) 70%);
+        bottom: -100px;
+        right: -100px;
+        animation: float 8s infinite alternate ease-in-out;
+    }
+    
+    .testimonial-decoration-2 {
+        width: 200px;
+        height: 200px;
+        background: radial-gradient(circle, rgba(0, 51, 102, 0.2) 0%, rgba(0, 51, 102, 0) 70%);
+        top: -80px;
+        left: -80px;
+        animation: float 6s infinite alternate-reverse ease-in-out;
+    }
+    
+    @keyframes float {
+        0% {
+            transform: translate(0, 0);
+        }
+        100% {
+            transform: translate(20px, -20px);
+        }
+    }
+    
+    /* Responsive Styles */
+    @media (max-width: 991.98px) {
+        .testimonial-carousel-card {
+            padding: 30px;
+            margin: 20px;
+        }
+        
+        .testimonial-control {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .carousel-control-prev {
+            left: -15px;
+        }
+        
+        .carousel-control-next {
+            right: -15px;
+        }
+    }
+    
+    @media (max-width: 767.98px) {
+        .testimonials-section {
+            padding: 60px 0;
+        }
+        
+        .testimonial-carousel-card {
+            padding: 25px;
+            margin: 15px;
+        }
+        
+        .testimonial-quote-icon {
+            top: 20px;
+            right: 20px;
+            font-size: 3rem;
+        }
+        
+        .testimonial-text {
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+        
+        .testimonial-author {
+            padding: 10px 15px;
+        }
+        
+        .testimonial-avatar {
+            width: 50px;
+            height: 50px;
+        }
+    }
+    
+    @media (max-width: 575.98px) {
+        .testimonial-carousel-card {
+            padding: 20px;
+            margin: 10px;
+        }
+        
+        .testimonial-control {
+            width: 35px;
+            height: 35px;
+        }
+    }
+    
     /* قسم كيف يعمل */
     .how-it-works-section {
         padding: 80px 0;
@@ -2221,6 +2611,710 @@
             gap: 10px;
         }
     }
+
+    /* How It Works Section Styles */
+    .how-it-works-section {
+        position: relative;
+        padding: 100px 0;
+        overflow: hidden;
+        background: linear-gradient(135deg, #f5f7fa 0%, #f8f9fa 100%);
+    }
+    
+    .how-it-works-wrapper {
+        padding: 30px 0;
+        z-index: 1;
+    }
+    
+    /* Decorative elements */
+    .hiw-decoration {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(40px);
+        z-index: 0;
+        opacity: 0.5;
+    }
+    
+    .hiw-decoration-1 {
+        width: 250px;
+        height: 250px;
+        background: radial-gradient(circle, rgba(255, 215, 0, 0.2) 0%, rgba(255, 215, 0, 0) 70%);
+        bottom: -100px;
+        right: 100px;
+        animation: float 8s infinite alternate ease-in-out;
+    }
+    
+    .hiw-decoration-2 {
+        width: 200px;
+        height: 200px;
+        background: radial-gradient(circle, rgba(0, 51, 102, 0.15) 0%, rgba(0, 51, 102, 0) 70%);
+        top: 50px;
+        left: 10%;
+        animation: float 6s infinite alternate-reverse ease-in-out;
+    }
+    
+    .hiw-decoration-3 {
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(0, 153, 204, 0.1) 0%, rgba(0, 153, 204, 0) 70%);
+        top: 30%;
+        right: 15%;
+        animation: float 10s infinite alternate ease-in-out;
+    }
+    
+    @keyframes float {
+        0% {
+            transform: translate(0, 0);
+        }
+        100% {
+            transform: translate(10px, -15px);
+        }
+    }
+    
+    /* Steps container and line */
+    .steps-container {
+        padding: 50px 0;
+        margin-bottom: 30px;
+    }
+    
+    .step-line {
+        position: absolute;
+        top: 100px;
+        left: 50px;
+        right: 50px;
+        height: 4px;
+        background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+        opacity: 0.4;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0, 51, 102, 0.1);
+        z-index: 1;
+    }
+    
+    /* Step items */
+    .step-item {
+        position: relative;
+        z-index: 2;
+        padding: 20px;
+        text-align: center;
+        transition: all 0.5s ease;
+    }
+    
+    .step-item:hover {
+        transform: translateY(-15px);
+    }
+    
+    .step-icon-wrapper {
+        position: relative;
+        margin: 0 auto 25px;
+        width: 95px;
+        height: 95px;
+    }
+    
+    .step-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-color), #1a4e7d);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        color: white;
+        font-size: 1.8rem;
+        position: relative;
+        z-index: 2;
+        box-shadow: 0 10px 30px rgba(0, 51, 102, 0.3);
+        transition: all 0.5s ease;
+    }
+    
+    .step-item:hover .step-icon {
+        transform: scale(1.1) rotate(10deg);
+        background: linear-gradient(135deg, #1a4e7d, var(--primary-color));
+        box-shadow: 0 15px 35px rgba(0, 51, 102, 0.4);
+    }
+    
+    .step-pulse {
+        position: absolute;
+        top: -7.5px;
+        left: 0;
+        right: 0;
+        margin: 0 auto;
+        width: 95px;
+        height: 95px;
+        border-radius: 50%;
+        background-color: rgba(0, 51, 102, 0.1);
+        z-index: 1;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% {
+            transform: scale(0.95);
+            opacity: 0.7;
+        }
+        50% {
+            transform: scale(1.05);
+            opacity: 0.3;
+        }
+        100% {
+            transform: scale(0.95);
+            opacity: 0.7;
+        }
+    }
+    
+    .step-number {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background-color: var(--secondary-color);
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        font-weight: 700;
+        box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+        border: 2px solid white;
+    }
+    
+    .step-content {
+        position: relative;
+        background-color: white;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        transition: all 0.5s ease;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        min-height: 160px;
+    }
+    
+    .step-item:hover .step-content {
+        background-color: #f8f9fa;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+        border-color: rgba(0, 51, 102, 0.1);
+    }
+    
+    .step-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: var(--primary-color);
+        position: relative;
+        display: inline-block;
+    }
+    
+    .step-title::after {
+        content: '';
+        position: absolute;
+        bottom: -5px;
+        left: 0;
+        right: 0;
+        margin: 0 auto;
+        width: 50px;
+        height: 3px;
+        background-color: var(--secondary-color);
+        opacity: 0.8;
+        border-radius: 10px;
+        transition: all 0.5s ease;
+    }
+    
+    .step-item:hover .step-title::after {
+        width: 70px;
+    }
+    
+    .step-description {
+        color: #555;
+        line-height: 1.6;
+        margin-bottom: 0;
+        transition: all 0.3s ease;
+    }
+    
+    .step-item:hover .step-description {
+        color: #333;
+    }
+    
+    .step-arrow {
+        position: absolute;
+        bottom: 20px;
+        right: -15px;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--primary-color);
+        color: var(--secondary-color);
+        border-radius: 50%;
+        font-size: 1.2rem;
+        box-shadow: 0 5px 15px rgba(0, 51, 102, 0.2);
+        z-index: 3;
+        opacity: 0;
+        transform: translateX(-20px);
+        transition: all 0.5s ease;
+    }
+    
+    .step-item:hover .step-arrow {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    
+    /* Content section */
+    .how-it-works-content {
+        padding: 30px;
+        position: relative;
+    }
+    
+    .content-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, var(--primary-color), #1a4e7d);
+        color: white;
+        padding: 6px 15px;
+        border-radius: 30px;
+        margin-bottom: 15px;
+        box-shadow: 0 5px 15px rgba(0, 51, 102, 0.2);
+        transform: translateY(0);
+        transition: all 0.5s ease;
+    }
+    
+    .how-it-works-content:hover .content-badge {
+        transform: translateY(-5px);
+    }
+    
+    .badge-text {
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .content-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 20px;
+        position: relative;
+    }
+    
+    .content-description {
+        color: #555;
+        line-height: 1.8;
+        font-size: 1.1rem;
+        margin-bottom: 30px;
+    }
+    
+    /* Animated check list */
+    .animated-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 30px;
+    }
+    
+    .check-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+        padding: 15px;
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        transition: all 0.5s ease;
+        transform: translateX(0);
+    }
+    
+    .check-item:hover {
+        transform: translateX(10px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .check-icon {
+        width: 40px;
+        height: 40px;
+        background-color: rgba(0, 51, 102, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        color: var(--primary-color);
+        font-size: 1.2rem;
+        transition: all 0.3s ease;
+    }
+    
+    .check-item:hover .check-icon {
+        background-color: var(--primary-color);
+        color: var(--secondary-color);
+    }
+    
+    /* Custom button */
+    .btn-get-started {
+        display: inline-flex;
+        align-items: center;
+        background: linear-gradient(135deg, var(--primary-color), #1a4e7d);
+        color: white;
+        padding: 14px 30px;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 600;
+        box-shadow: 0 8px 25px rgba(0, 51, 102, 0.3);
+        transition: all 0.5s ease;
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+    }
+    
+    .btn-get-started:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 0%;
+        height: 100%;
+        background: linear-gradient(135deg, #1a4e7d, var(--primary-color));
+        transition: all 0.5s ease;
+        z-index: -1;
+    }
+    
+    .btn-get-started:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0, 51, 102, 0.4);
+        color: var(--secondary-color);
+    }
+    
+    .btn-get-started:hover:before {
+        width: 100%;
+    }
+    
+    .btn-icon {
+        margin-right: 10px;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-get-started:hover .btn-icon {
+        transform: translateX(-5px);
+    }
+    
+    /* Image section */
+    .how-it-works-image-wrapper {
+        position: relative;
+        padding: 20px;
+    }
+    
+    .image-container {
+        position: relative;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+        transform: perspective(1000px) rotateY(-5deg);
+        transition: all 0.5s ease;
+        border: 5px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .image-container:hover {
+        transform: perspective(1000px) rotateY(0deg) scale(1.02);
+        border-color: rgba(255, 215, 0, 0.3);
+    }
+    
+    .main-image {
+        width: 100%;
+        transition: all 0.7s ease;
+        filter: contrast(1.1) brightness(1.05);
+        transform: scale(1.01);
+    }
+    
+    .image-container:hover .main-image {
+        transform: scale(1.08);
+        filter: contrast(1.15) brightness(1.1);
+    }
+    
+    .image-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(10, 46, 77, 0.3) 0%, rgba(0, 0, 0, 0.6) 100%);
+        z-index: 1;
+        opacity: 0.7;
+        transition: opacity 0.3s ease;
+    }
+    
+    .image-container:hover .image-overlay {
+        opacity: 0.4;
+    }
+    
+    .image-shape-1, .image-shape-2 {
+        position: absolute;
+        border-radius: 50%;
+        z-index: -1;
+        filter: blur(20px);
+    }
+    
+    .image-shape-1 {
+        width: 200px;
+        height: 200px;
+        background: radial-gradient(circle, rgba(255, 215, 0, 0.4) 0%, rgba(255, 215, 0, 0) 70%);
+        bottom: -40px;
+        right: -50px;
+        animation: pulse 6s infinite alternate ease-in-out;
+    }
+    
+    .image-shape-2 {
+        width: 180px;
+        height: 180px;
+        background: radial-gradient(circle, rgba(0, 180, 255, 0.3) 0%, rgba(0, 180, 255, 0) 70%);
+        top: -40px;
+        left: -50px;
+        animation: pulse 7s infinite alternate-reverse ease-in-out;
+    }
+    
+    /* Floating elements */
+    .floating-element {
+        position: absolute;
+        background: white;
+        border-radius: 15px;
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        z-index: 10;
+        animation: float 5s infinite alternate ease-in-out;
+    }
+    
+    .floating-element-1 {
+        bottom: 30px;
+        left: -20px;
+        animation-delay: 0.5s;
+    }
+    
+    .floating-element-2 {
+        top: 30px;
+        right: -20px;
+        animation-delay: 1s;
+    }
+    
+    .floating-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, var(--primary-color), #1a4e7d);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--secondary-color);
+        font-size: 1.2rem;
+        margin-right: 10px;
+    }
+    
+    .floating-text {
+        color: var(--primary-color);
+    }
+    
+    .floating-text .counter {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+    
+    /* Responsive styles */
+    @media (max-width: 991.98px) {
+        .how-it-works-section {
+            padding: 80px 0;
+        }
+        
+        .steps-container {
+            padding: 30px 0;
+        }
+        
+        .step-line {
+            top: 80px;
+            left: 30px;
+            right: 30px;
+        }
+        
+        .step-item {
+            margin-bottom: 30px;
+        }
+        
+        .content-title {
+            font-size: 1.8rem;
+        }
+        
+        .how-it-works-image-wrapper {
+            margin-top: 30px;
+        }
+    }
+    
+    @media (max-width: 767.98px) {
+        .how-it-works-section {
+            padding: 60px 0;
+        }
+        
+        .step-line {
+            display: none;
+        }
+        
+        .step-item {
+            margin-bottom: 40px;
+        }
+        
+        .content-title {
+            font-size: 1.6rem;
+        }
+        
+        .floating-element {
+            position: relative;
+            margin: 20px 0;
+            top: auto;
+            right: auto;
+            bottom: auto;
+            left: auto;
+        }
+        
+        .floating-element-1, .floating-element-2 {
+            display: inline-flex;
+            margin-right: 15px;
+        }
+    }
+    
+    /* Rest of existing styles */
+    
+    /* أنماط شبكة آراء الطلاب الجديدة */
+    .testimonials-grid-wrapper {
+        position: relative;
+        padding: 20px 0;
+    }
+    
+    .testimonial-grid-card {
+        background-color: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        position: relative;
+        z-index: 1;
+        transform: translateY(0);
+        transition: all 0.5s ease;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .testimonial-grid-card:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    }
+    
+    .testimonial-grid-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    }
+    
+    .testimonial-content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+    }
+    
+    .testimonial-text {
+        font-size: 1rem;
+        line-height: 1.7;
+        color: #444;
+        margin-bottom: 20px;
+        position: relative;
+        z-index: 1;
+        font-style: italic;
+        opacity: 0.9;
+        flex-grow: 1;
+    }
+    
+    .testimonial-author {
+        display: flex;
+        align-items: center;
+        margin-top: auto;
+        padding: 15px;
+        background: rgba(0, 51, 102, 0.03);
+        border-radius: 50px;
+    }
+    
+    .testimonial-avatar {
+        width: 55px;
+        height: 55px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--primary-color);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .testimonial-grid-card:hover .testimonial-avatar {
+        border-color: var(--secondary-color);
+    }
+    
+    /* الزخارف */
+    .testimonial-decoration {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(40px);
+        z-index: 0;
+        opacity: 0.5;
+    }
+    
+    .testimonial-decoration-1 {
+        width: 250px;
+        height: 250px;
+        background: radial-gradient(circle, rgba(255, 215, 0, 0.3) 0%, rgba(255, 215, 0, 0) 70%);
+        bottom: -100px;
+        right: -100px;
+        animation: float 8s infinite alternate ease-in-out;
+    }
+    
+    .testimonial-decoration-2 {
+        width: 200px;
+        height: 200px;
+        background: radial-gradient(circle, rgba(0, 51, 102, 0.2) 0%, rgba(0, 51, 102, 0) 70%);
+        top: -80px;
+        left: -80px;
+        animation: float 6s infinite alternate-reverse ease-in-out;
+    }
+    
+    @keyframes float {
+        0% {
+            transform: translate(0, 0);
+        }
+        100% {
+            transform: translate(20px, -20px);
+        }
+    }
+    
+    /* تنسيقات متجاوبة للشبكة */
+    @media (max-width: 1199.98px) {
+        .testimonial-grid-card {
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+    }
+    
+    @media (max-width: 767.98px) {
+        .testimonial-text {
+            font-size: 0.9rem;
+        }
+        
+        .testimonial-avatar {
+            width: 45px;
+            height: 45px;
+        }
+    }
+    
+    /* ... بقية الأنماط ... */
+    
 </style>
 @endsection
 
@@ -2230,130 +3324,9 @@
 <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize particles background
-        if (typeof particlesJS !== 'undefined') {
-            particlesJS("particles-js", {
-                "particles": {
-                    "number": {
-                        "value": 80,
-                        "density": { "enable": true, "value_area": 800 }
-                    },
-                    "color": { "value": "#ffffff" },
-                    "shape": {
-                        "type": "circle",
-                        "stroke": { "width": 0, "color": "#000000" },
-                        "polygon": { "nb_sides": 5 }
-                    },
-                    "opacity": {
-                        "value": 0.3,
-                        "random": true,
-                        "anim": { "enable": false }
-                    },
-                    "size": {
-                        "value": 3,
-                        "random": true,
-                        "anim": { "enable": false }
-                    },
-                    "line_linked": {
-                        "enable": true,
-                        "distance": 150,
-                        "color": "#ffffff",
-                        "opacity": 0.1,
-                        "width": 1
-                    },
-                    "move": {
-                        "enable": true,
-                        "speed": 2,
-                        "direction": "none",
-                        "random": true,
-                        "straight": false,
-                        "out_mode": "out",
-                        "bounce": false,
-                    }
-                },
-                "interactivity": {
-                    "detect_on": "canvas",
-                    "events": {
-                        "onhover": { "enable": true, "mode": "grab" },
-                        "onclick": { "enable": true, "mode": "push" },
-                        "resize": true
-                    },
-                    "modes": {
-                        "grab": { "distance": 140, "line_linked": { "opacity": 0.5 } },
-                        "push": { "particles_nb": 4 }
-                    }
-                },
-                "retina_detect": true
-            });
-        }
-
-        // Animate counters
-        const counterElements = document.querySelectorAll('.counter');
+        // قمنا بإزالة كود كاروسل الشهادات لأننا نستخدم شبكة ثابتة الآن
         
-        counterElements.forEach(counter => {
-            const target = parseInt(counter.getAttribute('data-count'));
-            const duration = 2000; // 2 seconds
-            const increment = target / (duration / 30); // Update every 30ms
-            let current = 0;
-            
-            const updateCounter = () => {
-                if (current < target) {
-                    current += increment;
-                    counter.textContent = Math.ceil(current);
-                    requestAnimationFrame(updateCounter);
-                } else {
-                    counter.textContent = target;
-                }
-            };
-            
-            // Start animation after 3 seconds
-            setTimeout(() => {
-                updateCounter();
-            }, 3000);
-        });
-        
-        // Add float delay to elements
-        const floatElements = document.querySelectorAll('.animate-float');
-        floatElements.forEach(el => {
-            const delay = el.getAttribute('data-float-delay') || 0;
-            el.style.setProperty('--float-delay', `${delay}ms`);
-        });
-        
-        // Add 3D hover effect to hero image
-        const heroImage = document.querySelector('.hero-image-wrapper');
-        heroImage.addEventListener('mousemove', (e) => {
-            const rect = heroImage.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-            
-            const moveX = (x - centerX) / 20;
-            const moveY = (y - centerY) / 20;
-            
-            heroImage.style.transform = `perspective(1000px) rotateY(${moveX}deg) rotateX(${-moveY}deg) scale(1.02)`;
-            
-            // Make light effect follow cursor
-            const lightRays = heroImage.querySelector('.light-rays');
-            if (lightRays) {
-                lightRays.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 60%)`;
-                lightRays.style.opacity = '0.8';
-            }
-        });
-        
-        heroImage.addEventListener('mouseleave', () => {
-            heroImage.style.transform = 'perspective(1000px) rotateY(-5deg) rotateX(0) scale(1)';
-            
-            const lightRays = heroImage.querySelector('.light-rays');
-            if (lightRays) {
-                lightRays.style.background = 'radial-gradient(ellipse at center, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 70%)';
-                lightRays.style.opacity = '0';
-            }
-        });
-        
-        // Rest of your existing JavaScript code
-        // ... existing code ...
+        // الكود الآخر المهم يمكن إضافته هنا
     });
 </script>
 @endsection

@@ -44,7 +44,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
-        'password_hash',
+        'password',
         'phone',
         'address',
         'bio',
@@ -63,7 +63,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $hidden = [
-        'password_hash',
+        'password',
         'remember_token',
     ];
 
@@ -84,7 +84,7 @@ class User extends Authenticatable
      */
     public function getAuthPassword()
     {
-        return $this->password_hash;
+        return $this->password;
     }
 
     /**
@@ -95,7 +95,7 @@ class User extends Authenticatable
      */
     public function setPasswordAttribute($value)
     {
-        $this->attributes['password_hash'] = $value;
+        $this->attributes['password'] = $value;
     }
 
     /**
@@ -177,7 +177,7 @@ class User extends Authenticatable
      */
     public function instructorVerification()
     {
-        return $this->hasOne(InstructorVerification::class, 'user_id', 'user_id');
+        return $this->hasOne(\App\Models\InstructorVerification::class, 'user_id');
     }
 
     /**
@@ -185,7 +185,7 @@ class User extends Authenticatable
      */
     public function supportTickets(): HasMany
     {
-        return $this->hasMany(SupportTicket::class, 'user_id');
+        return $this->hasMany(SupportTicket::class, 'user_id', 'user_id');
     }
 
     /**
@@ -193,7 +193,7 @@ class User extends Authenticatable
      */
     public function payments(): HasMany
     {
-        return $this->hasMany(Payment::class, 'user_id');
+        return $this->hasMany(Payment::class, 'user_id', 'user_id');
     }
 
     /**
@@ -201,7 +201,7 @@ class User extends Authenticatable
      */
     public function withdrawals(): HasMany
     {
-        return $this->hasMany(Withdrawal::class, 'instructor_id');
+        return $this->hasMany(Withdrawal::class, 'instructor_id', 'user_id');
     }
 
     /**
@@ -209,7 +209,7 @@ class User extends Authenticatable
      */
     public function paymentAccounts(): HasMany
     {
-        return $this->hasMany(InstructorPaymentAccount::class, 'instructor_id');
+        return $this->hasMany(InstructorPaymentAccount::class, 'instructor_id', 'user_id');
     }
 
     /**
@@ -217,7 +217,7 @@ class User extends Authenticatable
      */
     public function earnings(): HasMany
     {
-        return $this->hasMany(InstructorEarning::class, 'instructor_id');
+        return $this->hasMany(InstructorEarning::class, 'instructor_id', 'user_id');
     }
 
     /**
@@ -253,17 +253,19 @@ class User extends Authenticatable
     }
 
     /**
+     * Get instructor's total earnings.
+     */
+    public function getTotalEarningsAttribute()
+    {
+        return $this->earnings()->sum('amount');
+    }
+
+    /**
      * Get user's ratings given to courses.
      */
     public function ratings(): HasMany
     {
-        // Check if ratings table has student_id column
-        if (\Illuminate\Support\Facades\Schema::hasColumn('ratings', 'student_id')) {
-            return $this->hasMany(Rating::class, 'student_id');
-        }
-
-        // Fallback to user_id if student_id doesn't exist
-        return $this->hasMany(Rating::class, 'user_id');
+        return $this->hasMany(Rating::class, 'user_id', 'user_id');
     }
 
     /**
@@ -271,7 +273,7 @@ class User extends Authenticatable
      */
     public function progress(): HasMany
     {
-        return $this->hasMany(StudentProgress::class, 'student_id');
+        return $this->hasMany(StudentProgress::class, 'student_id', 'user_id');
     }
 
     /**
@@ -279,16 +281,15 @@ class User extends Authenticatable
      */
     public function chatParticipations(): BelongsToMany
     {
-        return $this->belongsToMany(Chat::class, 'chat_participants', 'user_id', 'chat_id')
-            ->withPivot(['is_admin', 'last_read_at']);
+        return $this->belongsToMany(Chat::class, 'chat_participants', 'user_id', 'chat_id');
     }
 
     /**
-     * Get user's sent messages.
+     * Get user's messages.
      */
     public function messages(): HasMany
     {
-        return $this->hasMany(Message::class, 'sender_id');
+        return $this->hasMany(Message::class, 'user_id', 'user_id');
     }
 
     /**
@@ -296,7 +297,7 @@ class User extends Authenticatable
      */
     public function notifications(): HasMany
     {
-        return $this->hasMany(Notification::class, 'user_id');
+        return $this->hasMany(Notification::class, 'user_id', 'user_id');
     }
 
     /**
@@ -304,9 +305,9 @@ class User extends Authenticatable
      */
     public function students(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'parent_student', 'parent_id', 'student_id')
-            ->withPivot(['is_approved', 'relation'])
-            ->withTimestamps();
+        return $this->belongsToMany(User::class, 'parent_student_relations', 'parent_id', 'student_id')
+                    ->withPivot('relationship', 'status', 'created_at')
+                    ->withTimestamps();
     }
 
     /**
@@ -314,9 +315,29 @@ class User extends Authenticatable
      */
     public function parents(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'parent_student', 'student_id', 'parent_id')
-            ->withPivot(['is_approved', 'relation'])
-            ->withTimestamps();
+        return $this->belongsToMany(User::class, 'parent_student_relations', 'student_id', 'parent_id')
+                    ->withPivot('relationship', 'status', 'created_at')
+                    ->withTimestamps();
+    }
+
+    /**
+     * Get all verified parents of this student.
+     */
+    public function verifiedParents()
+    {
+        return $this->belongsToMany(User::class, 'parent_student_relations', 'student_id', 'parent_id')
+                    ->wherePivot('status', 'approved')
+                    ->withTimestamps();
+    }
+
+    /**
+     * Get all verified students of this parent.
+     */
+    public function verifiedStudents()
+    {
+        return $this->belongsToMany(User::class, 'parent_student_relations', 'parent_id', 'student_id')
+                    ->wherePivot('status', 'approved')
+                    ->withTimestamps();
     }
 
     /**
@@ -324,7 +345,7 @@ class User extends Authenticatable
      */
     public function examAttempts(): HasMany
     {
-        return $this->hasMany(ExamAttempt::class, 'student_id');
+        return $this->hasMany(ExamAttempt::class, 'user_id', 'user_id');
     }
 
     /**
@@ -344,20 +365,52 @@ class User extends Authenticatable
     }
 
     /**
-     * Get all verified parents of this student.
+     * Get the books that the user has created as instructor.
      */
-    public function verifiedParents()
+    public function books()
     {
-        return $this->belongsToMany(User::class, 'parent_student_relations', 'student_id', 'parent_id', 'user_id')
-                    ->wherePivot('verification_status', 'approved');
+        return $this->hasMany(Book::class, 'user_id', 'user_id');
     }
 
     /**
-     * Get all verified students of this parent.
+     * Get the badges earned by the user.
      */
-    public function verifiedStudents()
+    public function badges(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'parent_student_relations', 'parent_id', 'student_id', 'user_id')
-                    ->wherePivot('verification_status', 'approved');
+        return $this->belongsToMany(Badge::class, 'student_badges', 'user_id', 'badge_id')
+                    ->withPivot('earned_at')
+                    ->withTimestamps();
+    }
+
+    /**
+     * Get the achievements earned by the user.
+     */
+    public function achievements(): BelongsToMany
+    {
+        return $this->belongsToMany(Achievement::class, 'student_achievements', 'user_id', 'achievement_id')
+                    ->withPivot('earned_at')
+                    ->withTimestamps();
+    }
+
+    /**
+     * Get the quiz attempts made by the user.
+     */
+    public function quizAttempts(): HasMany
+    {
+        return $this->hasMany(QuizAttempt::class, 'user_id', 'user_id');
+    }
+
+    /**
+     * The "booted" method of the model.
+     */
+    protected static function booted()
+    {
+        static::created(function ($user) {
+            // إذا لم يكن هناك قيمة لـ user_id، قم بتعيينها من id
+            if (empty($user->user_id) && !empty($user->id)) {
+                $user->user_id = $user->id;
+                $user->save();
+            }
+        });
     }
 }

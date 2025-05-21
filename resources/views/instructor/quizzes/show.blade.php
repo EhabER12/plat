@@ -70,7 +70,7 @@
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h4 class="m-0">تفاصيل الامتحان</h4>
                     <div>
-                        <a href="{{ route('instructor.quizzes.edit', $quiz->quiz_id) }}" class="btn btn-sm btn-light me-2">
+                        <a href="{{ route('instructor.quizzes.edit', $quiz->id) }}" class="btn btn-sm btn-light me-2">
                             <i class="fas fa-edit"></i> تعديل الامتحان
                         </a>
                         <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteQuizModal">
@@ -85,7 +85,7 @@
                             @if($quiz->description)
                                 <p class="card-text">{{ $quiz->description }}</p>
                             @endif
-                            
+
                             <div class="row mt-4">
                                 <div class="col-md-4 mb-3">
                                     <span class="fw-bold">الدورة: </span>
@@ -183,7 +183,7 @@
             <div class="card">
                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">أسئلة الامتحان</h5>
-                    <a href="{{ route('instructor.quizzes.edit', $quiz->quiz_id) }}#questions" class="btn btn-sm btn-primary">
+                    <a href="{{ route('instructor.quizzes.edit', $quiz->id) }}#questions" class="btn btn-sm btn-primary">
                         <i class="fas fa-edit"></i> تعديل الأسئلة
                     </a>
                 </div>
@@ -212,16 +212,16 @@
                                     <div>
                                         <h5 class="mb-0">السؤال {{ $index + 1 }}</h5>
                                         <small class="text-muted">
-                                            {{ $question['type'] == 'multiple_choice' ? 'اختيار من متعدد' : 
-                                               ($question['type'] == 'true_false' ? 'صح/خطأ' : 
-                                               'إجابة قصيرة') }} 
+                                            {{ $question['type'] == 'multiple_choice' ? 'اختيار من متعدد' :
+                                               ($question['type'] == 'true_false' ? 'صح/خطأ' :
+                                               'إجابة قصيرة') }}
                                             ({{ $question['points'] }} نقطة)
                                         </small>
                                     </div>
                                 </div>
                                 <div class="question-body">
                                     <p class="fw-bold">{{ $question['text'] }}</p>
-                                    
+
                                     @if($question['type'] == 'multiple_choice')
                                         @foreach($question['options'] as $option)
                                             <div class="option-row {{ isset($option['is_correct']) && $option['is_correct'] ? 'correct-option' : '' }}">
@@ -366,7 +366,7 @@
             <div class="modal-body">
                 <p>هل أنت متأكد من رغبتك في حذف هذا الامتحان وجميع بياناته؟</p>
                 <p class="text-danger"><strong>تحذير:</strong> لا يمكن التراجع عن هذا الإجراء.</p>
-                
+
                 @if($quiz->attempts->count() > 0)
                     <div class="alert alert-warning">
                         <i class="fas fa-exclamation-triangle"></i> هذا الامتحان لديه {{ $quiz->attempts->count() }} محاولة. حذف الامتحان سيؤدي إلى حذف جميع المحاولات.
@@ -375,7 +375,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                <form action="{{ route('instructor.quizzes.destroy', $quiz->quiz_id) }}" method="POST">
+                <form action="{{ route('instructor.quizzes.destroy', $quiz->id) }}" method="POST">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="btn btn-danger">حذف الامتحان</button>
@@ -384,4 +384,4 @@
         </div>
     </div>
 </div>
-@endsection 
+@endsection
