@@ -112,31 +112,31 @@
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <p><strong>Method:</strong> {{ ucfirst($withdrawal->payment_method) }}</p>
-                                            
-                                            @if($withdrawal->payment_details)
-                                                @php $details = json_decode($withdrawal->payment_details, true); @endphp
-                                                <p><strong>Account Name:</strong> {{ $details['account_name'] ?? 'N/A' }}</p>
-                                                
-                                                @if(isset($details['account_details']))
-                                                    @php $accountDetails = $details['account_details']; @endphp
-                                                    <p><strong>Email:</strong> {{ $accountDetails['email'] ?? 'N/A' }}</p>
-                                                    <p><strong>Phone:</strong> {{ $accountDetails['phone'] ?? 'N/A' }}</p>
+                                            <p><strong>Method:</strong> 
+                                                @if($withdrawal->payment_provider == 'vodafone_cash')
+                                                    فودافون كاش
+                                                @elseif($withdrawal->payment_provider == 'instapay')
+                                                    إنستا باي
+                                                @else
+                                                    {{ ucfirst($withdrawal->payment_provider) }}
                                                 @endif
-                                            @endif
+                                            </p>
+                                            <p><strong>Account/Phone:</strong> {{ $withdrawal->provider_account_id ?? 'N/A' }}</p>
                                         </div>
                                         <div class="col-md-6">
-                                            @if($withdrawal->payment_details)
-                                                @php $details = json_decode($withdrawal->payment_details, true); @endphp
-                                                @if(isset($details['account_details']))
-                                                    @php $accountDetails = $details['account_details']; @endphp
-                                                    @if(isset($accountDetails['bank_name']))
-                                                        <p><strong>Bank Name:</strong> {{ $accountDetails['bank_name'] }}</p>
-                                                    @endif
-                                                    @if(isset($accountDetails['account_number']))
-                                                        <p><strong>Account Number:</strong> {{ $accountDetails['account_number'] }}</p>
-                                                    @endif
-                                                @endif
+                                            @if($withdrawal->transfer_receipt)
+                                                <p><strong>إثبات التحويل:</strong></p>
+                                                <div class="receipt-preview">
+                                                    <a href="{{ asset($withdrawal->transfer_receipt) }}" target="_blank" class="receipt-link">
+                                                        <img src="{{ asset($withdrawal->transfer_receipt) }}" alt="إثبات التحويل" class="img-thumbnail receipt-image">
+                                                        <div class="receipt-overlay">
+                                                            <i class="fas fa-search-plus"></i>
+                                                            <span>انقر للمعاينة</span>
+                                                        </div>
+                                                    </a>
+                                                </div>
+                                            @else
+                                                <p class="text-muted">لا يوجد إثبات تحويل بعد.</p>
                                             @endif
                                         </div>
                                     </div>
@@ -313,31 +313,130 @@
 
     <!-- Approve Modal -->
     <div class="modal fade" id="approveModal" tabindex="-1" role="dialog" aria-labelledby="approveModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
+        <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
-                <form action="{{ route('admin.instructor-earnings.process-withdrawal', $withdrawal->withdrawal_id) }}" method="POST">
+                <form action="{{ route('admin.instructor-earnings.process-withdrawal', $withdrawal->withdrawal_id) }}" method="POST" enctype="multipart/form-data" id="approveForm">
                     @csrf
                     <input type="hidden" name="action" value="approve">
                     
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="approveModalLabel">Approve Withdrawal</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title" id="approveModalLabel">
+                            <i class="fas fa-check-circle mr-2"></i> الموافقة على طلب سحب الأرباح
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
                     <div class="modal-body">
-                        <p>Are you sure you want to approve this withdrawal request?</p>
-                        <p><strong>Amount:</strong> ${{ number_format($withdrawal->amount, 2) }}</p>
-                        <p><strong>Instructor:</strong> {{ $withdrawal->instructor->name }}</p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0"><i class="fas fa-info-circle mr-2"></i> تفاصيل الطلب</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group row">
+                                            <label class="col-sm-4 col-form-label font-weight-bold">اسم المدرس:</label>
+                                            <div class="col-sm-8">
+                                                <p class="form-control-plaintext">{{ $withdrawal->instructor->name }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label class="col-sm-4 col-form-label font-weight-bold">المبلغ المطلوب:</label>
+                                            <div class="col-sm-8">
+                                                <p class="form-control-plaintext text-success font-weight-bold">${{ number_format($withdrawal->amount, 2) }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label class="col-sm-4 col-form-label font-weight-bold">تاريخ الطلب:</label>
+                                            <div class="col-sm-8">
+                                                <p class="form-control-plaintext">{{ $withdrawal->requested_at->format('d M Y, h:i A') }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label class="col-sm-4 col-form-label font-weight-bold">طريقة الدفع:</label>
+                                            <div class="col-sm-8">
+                                                <p class="form-control-plaintext">
+                                                    @if($withdrawal->payment_provider == 'vodafone_cash')
+                                                        <span class="badge badge-pill badge-danger"><i class="fas fa-mobile-alt mr-1"></i> فودافون كاش</span>
+                                                    @elseif($withdrawal->payment_provider == 'instapay')
+                                                        <span class="badge badge-pill badge-info"><i class="fas fa-credit-card mr-1"></i> إنستا باي</span>
+                                                    @else
+                                                        <span class="badge badge-pill badge-secondary">{{ ucfirst($withdrawal->payment_provider) }}</span>
+                                                    @endif
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label class="col-sm-4 col-form-label font-weight-bold">رقم الحساب:</label>
+                                            <div class="col-sm-8">
+                                                <p class="form-control-plaintext">{{ $withdrawal->provider_account_id }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="alert alert-warning">
+                                    <div class="d-flex">
+                                        <div class="mr-3">
+                                            <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="alert-heading">تنبيه هام!</h5>
+                                            <p>يجب التأكد من إتمام عملية التحويل بنجاح قبل الموافقة على هذا الطلب. بعد الموافقة، سيتم إشعار المدرس تلقائيًا.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="transfer_receipt">
+                                        <i class="fas fa-file-image text-primary mr-1"></i>
+                                        صورة إثبات التحويل <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="custom-file">
+                                        <input type="file" class="custom-file-input" id="transfer_receipt" name="transfer_receipt" accept="image/*" required>
+                                        <label class="custom-file-label" for="transfer_receipt">اختر صورة...</label>
+                                    </div>
+                                    <small class="form-text text-muted">يرجى رفع صورة لإثبات التحويل (لقطة شاشة من تطبيق البنك أو إيصال التحويل)</small>
+                                </div>
+                            </div>
+                        </div>
                         
-                        <div class="form-group">
-                            <label for="notes">Notes (Optional)</label>
-                            <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                        <div class="form-group mt-3">
+                            <label for="notes">
+                                <i class="fas fa-comment-alt text-primary mr-1"></i>
+                                ملاحظات (اختياري)
+                            </label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="أي ملاحظات إضافية حول عملية التحويل..."></textarea>
+                        </div>
+
+                        <div class="alert alert-success mt-3">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="approvalConfirm" required>
+                                <label class="custom-control-label" for="approvalConfirm">
+                                    أؤكد أنني قمت بتحويل مبلغ <strong>${{ number_format($withdrawal->amount, 2) }}</strong> 
+                                    إلى حساب المدرس <strong>{{ $withdrawal->instructor->name }}</strong> 
+                                    عبر <strong>
+                                        @if($withdrawal->payment_provider == 'vodafone_cash')
+                                            فودافون كاش
+                                        @elseif($withdrawal->payment_provider == 'instapay')
+                                            إنستا باي
+                                        @else
+                                            {{ ucfirst($withdrawal->payment_provider) }}
+                                        @endif
+                                    </strong>
+                                </label>
+                            </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-success">Approve Withdrawal</button>
+                    <div class="modal-footer justify-content-between">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            <i class="fas fa-times mr-1"></i> إلغاء
+                        </button>
+                        <button type="submit" class="btn btn-success" id="approveBtn" disabled>
+                            <i class="fas fa-check mr-1"></i> تأكيد الموافقة وإتمام العملية
+                        </button>
                     </div>
                 </form>
             </div>
@@ -348,29 +447,67 @@
     <div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="rejectModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
-                <form action="{{ route('admin.instructor-earnings.process-withdrawal', $withdrawal->withdrawal_id) }}" method="POST">
+                <form action="{{ route('admin.instructor-earnings.process-withdrawal', $withdrawal->withdrawal_id) }}" method="POST" id="rejectForm">
                     @csrf
                     <input type="hidden" name="action" value="reject">
                     
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="rejectModalLabel">Reject Withdrawal</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title" id="rejectModalLabel">
+                            <i class="fas fa-times-circle mr-2"></i> رفض طلب سحب الأرباح
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
                     <div class="modal-body">
-                        <p>Are you sure you want to reject this withdrawal request?</p>
-                        <p><strong>Amount:</strong> ${{ number_format($withdrawal->amount, 2) }}</p>
-                        <p><strong>Instructor:</strong> {{ $withdrawal->instructor->name }}</p>
+                        <div class="alert alert-warning">
+                            <div class="d-flex">
+                                <div class="mr-3">
+                                    <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+                                </div>
+                                <div>
+                                    <h5 class="alert-heading">تنبيه!</h5>
+                                    <p>عند رفض الطلب، سيتم إعادة المبلغ إلى رصيد المدرس المتاح وسيتم إشعار المدرس بسبب الرفض.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-info-circle mr-2"></i> تفاصيل الطلب</h6>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>المدرس:</strong> {{ $withdrawal->instructor->name }}</p>
+                                <p><strong>المبلغ:</strong> <span class="text-danger">${{ number_format($withdrawal->amount, 2) }}</span></p>
+                                <p><strong>تاريخ الطلب:</strong> {{ $withdrawal->requested_at->format('d M Y, h:i A') }}</p>
+                            </div>
+                        </div>
                         
                         <div class="form-group">
-                            <label for="notes">Reason for Rejection (Required)</label>
-                            <textarea class="form-control" id="notes" name="notes" rows="3" required></textarea>
+                            <label for="notes">
+                                <i class="fas fa-exclamation-circle text-danger mr-1"></i>
+                                سبب الرفض <span class="text-danger">*</span>
+                            </label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="يرجى توضيح سبب رفض طلب السحب..." required></textarea>
+                            <small class="form-text text-muted">سيتم إرسال هذا السبب للمدرس في إشعار الرفض</small>
+                        </div>
+
+                        <div class="alert alert-danger mt-3">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="rejectConfirm" required>
+                                <label class="custom-control-label" for="rejectConfirm">
+                                    أؤكد أنني أريد رفض طلب سحب الأرباح هذا وإعادة المبلغ لرصيد المدرس المتاح
+                                </label>
+                            </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger">Reject Withdrawal</button>
+                    <div class="modal-footer justify-content-between">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            <i class="fas fa-arrow-left mr-1"></i> عودة
+                        </button>
+                        <button type="submit" class="btn btn-danger" id="rejectBtn" disabled>
+                            <i class="fas fa-times mr-1"></i> تأكيد رفض الطلب
+                        </button>
                     </div>
                 </form>
             </div>
@@ -414,5 +551,159 @@
         height: 100%;
         background-color: #e3e6f0;
     }
+    .receipt-preview {
+        position: relative;
+        display: inline-block;
+    }
+    .receipt-link {
+        display: block;
+        position: relative;
+        overflow: hidden;
+        border-radius: 4px;
+    }
+    .receipt-image {
+        max-width: 200px;
+        transition: transform 0.3s ease;
+    }
+    .receipt-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .receipt-link:hover .receipt-overlay {
+        opacity: 1;
+    }
+    .receipt-link:hover .receipt-image {
+        transform: scale(1.05);
+    }
+    .receipt-overlay i {
+        font-size: 24px;
+        margin-bottom: 8px;
+    }
+    .receipt-overlay span {
+        font-size: 14px;
+    }
 </style>
+
+@section('scripts')
+@parent
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add form submission console logging
+        const approveForm = document.querySelector('#approveForm');
+        const rejectForm = document.querySelector('#rejectForm');
+        
+        if (approveForm) {
+            console.log('Approve form action:', approveForm.getAttribute('action'));
+            approveForm.addEventListener('submit', function(e) {
+                e.preventDefault(); // Prevent default submission
+                console.log('Approve form submitted');
+                
+                // Create a loading indicator
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
+                submitBtn.disabled = true;
+                
+                // Submit the form using fetch API
+                fetch(this.action, {
+                    method: 'POST',
+                    body: new FormData(this),
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                        return;
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.error) {
+                        alert('Error: ' + data.error);
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                    } else if (data && data.success) {
+                        window.location.href = data.redirect || '{{ route("admin.instructor-earnings.withdrawals") }}';
+                    } else {
+                        this.submit(); // Fall back to normal form submission if response format is unexpected
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    this.submit(); // Fall back to normal form submission on error
+                });
+            });
+        }
+        
+        if (rejectForm) {
+            console.log('Reject form action:', rejectForm.getAttribute('action'));
+            rejectForm.addEventListener('submit', function(e) {
+                e.preventDefault(); // Prevent default submission
+                console.log('Reject form submitted');
+                
+                // Create a loading indicator
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
+                submitBtn.disabled = true;
+                
+                // Submit the form using fetch API
+                fetch(this.action, {
+                    method: 'POST',
+                    body: new FormData(this),
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                        return;
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.error) {
+                        alert('Error: ' + data.error);
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                    } else if (data && data.success) {
+                        window.location.href = data.redirect || '{{ route("admin.instructor-earnings.withdrawals") }}';
+                    } else {
+                        this.submit(); // Fall back to normal form submission if response format is unexpected
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    this.submit(); // Fall back to normal form submission on error
+                });
+            });
+        }
+        
+        // Handle file input visual display
+        $('.custom-file-input').on('change', function() {
+            var fileName = $(this).val().split('\\').pop();
+            $(this).next('.custom-file-label').html(fileName || 'اختر صورة...');
+        });
+        
+        // Handle approval confirmation
+        $('#approvalConfirm').on('change', function() {
+            $('#approveBtn').prop('disabled', !this.checked);
+        });
+        
+        // Handle reject confirmation
+        $('#rejectConfirm').on('change', function() {
+            $('#rejectBtn').prop('disabled', !this.checked);
+        });
+    });
+</script>
 @endsection

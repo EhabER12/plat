@@ -73,13 +73,13 @@
                                         </td>
                                         <td>
                                             <div class="d-flex">
-                                                <a href="{{ route('instructor.quizzes.show', $quiz->quiz_id) }}" class="btn btn-info btn-sm me-2">
+                                                <a href="{{ route('instructor.quizzes.show', $quiz->id) }}" class="btn btn-info btn-sm me-2">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <a href="{{ route('instructor.quizzes.edit', $quiz->quiz_id) }}" class="btn btn-warning btn-sm me-2">
+                                                <a href="{{ route('instructor.quizzes.edit', $quiz->id) }}" class="btn btn-warning btn-sm me-2">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <form action="{{ route('instructor.quizzes.destroy', $quiz->quiz_id) }}" method="POST" class="d-inline">
+                                                <form action="{{ route('instructor.quizzes.destroy', $quiz->id) }}" method="POST" class="d-inline">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('هل أنت متأكد من حذف هذا الامتحان؟')">
@@ -102,4 +102,4 @@
         </div>
     </div>
 </div>
-@endsection 
+@endsection

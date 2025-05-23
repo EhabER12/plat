@@ -118,6 +118,69 @@
             </div>
         </div>
 
+        @if($reportType == 'revenue')
+        <!-- Payment Methods Distribution -->
+        <div class="row">
+            <div class="col-xl-5">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="fas fa-chart-pie me-1"></i>
+                        Payment Methods Distribution
+                    </div>
+                    <div class="card-body">
+                        @if(isset($data['method_data']) && count($data['method_data']) > 0)
+                            <canvas id="paymentMethodsChart" width="100%" height="50"></canvas>
+                        @else
+                            <div class="alert alert-info">No payment method data available.</div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-7">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="fas fa-money-bill-wave me-1"></i>
+                        Payment Method Details
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Payment Method</th>
+                                        <th>Transactions</th>
+                                        <th>Total Amount</th>
+                                        <th>Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if(isset($data['payment_methods']) && count($data['payment_methods']) > 0)
+                                        @foreach($data['payment_methods'] as $method)
+                                            <tr>
+                                                <td>
+                                                    <span class="badge rounded-pill" style="background-color: {{ $data['method_colors'][$loop->index] ?? '#6c757d' }}">
+                                                        {{ ucfirst($method->payment_method) }}
+                                                    </span>
+                                                </td>
+                                                <td>{{ $method->count }}</td>
+                                                <td>${{ number_format($method->total_amount, 2) }}</td>
+                                                <td>{{ number_format(($method->total_amount / $data['total_revenue']) * 100, 1) }}%</td>
+                                            </tr>
+                                        @endforeach
+                                    @else
+                                        <tr>
+                                            <td colspan="4" class="text-center">No payment methods data available</td>
+                                        </tr>
+                                    @endif
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
         <!-- Recent Activity Section -->
         @if($reportType == 'enrollment' || $reportType == 'revenue')
         <div class="card mb-4">
@@ -158,7 +221,7 @@
                                         </td>
                                         <td>${{ number_format($payment->amount, 2) }}</td>
                                         <td>{{ ucfirst($payment->payment_method) }}</td>
-                                        <td>{{ is_string($payment->payment_date) ? $payment->payment_date : $payment->payment_date->format('M d, Y H:i') }}</td>
+                                        <td>{{ isset($payment->payment_date) ? (is_string($payment->payment_date) ? $payment->payment_date : $payment->payment_date->format('M d, Y H:i')) : 'N/A' }}</td>
                                         <td>
                                             <a href="#" class="btn btn-sm btn-primary">
                                                 <i class="fas fa-eye"></i> View
@@ -180,7 +243,7 @@
                                                 {{ $enrollment->course->title }}
                                             </a>
                                         </td>
-                                        <td>{{ is_string($enrollment->enrollment_date) ? $enrollment->enrollment_date : $enrollment->enrollment_date->format('M d, Y H:i') }}</td>
+                                        <td>{{ isset($enrollment->enrollment_date) ? (is_string($enrollment->enrollment_date) ? $enrollment->enrollment_date : $enrollment->enrollment_date->format('M d, Y H:i')) : 'N/A' }}</td>
                                         <td>
                                             <a href="#" class="btn btn-sm btn-primary">
                                                 <i class="fas fa-eye"></i> View
@@ -206,60 +269,104 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const ctx = document.getElementById('reportChart');
+        // Configure and build the main report chart
+        const reportChartCtx = document.getElementById('reportChart');
 
-        // Extract data from PHP
-        const labels = {!! json_encode($data['labels']) !!};
-        const chartData = {!! json_encode($data['data']) !!};
-
+        if(reportChartCtx) {
         const chartType = '{{ $reportType }}';
-        const timeframe = '{{ $timeframe }}';
-
-        // Determine chart color based on report type
-        let backgroundColor, borderColor;
-        switch(chartType) {
-            case 'revenue':
-                backgroundColor = 'rgba(40, 167, 69, 0.2)';
-                borderColor = 'rgba(40, 167, 69, 1)';
-                break;
-            case 'users':
-                backgroundColor = 'rgba(0, 123, 255, 0.2)';
-                borderColor = 'rgba(0, 123, 255, 1)';
-                break;
-            default: // enrollments
-                backgroundColor = 'rgba(255, 193, 7, 0.2)';
-                borderColor = 'rgba(255, 193, 7, 1)';
-        }
-
-        // Create chart
-        new Chart(ctx, {
+            const chartLabels = @json($data['labels']);
+            const chartData = @json($data['data']);
+            
+            const reportChart = new Chart(reportChartCtx, {
             type: 'bar',
             data: {
-                labels: labels,
+                    labels: chartLabels,
                 datasets: [{
-                    label: chartType == 'revenue' ? 'Revenue ($)' : (chartType == 'users' ? 'New Users' : 'Enrollments'),
+                        label: chartType === 'revenue' ? 'Revenue ($)' : 'Enrollments',
                     data: chartData,
-                    backgroundColor: backgroundColor,
-                    borderColor: borderColor,
+                        backgroundColor: chartType === 'revenue' ? '#3498db' : '#2ecc71',
+                        borderColor: chartType === 'revenue' ? '#2980b9' : '#27ae60',
                     borderWidth: 1
                 }]
             },
             options: {
+                    responsive: true,
                 scales: {
                     y: {
-                        beginAtZero: true
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    if (chartType === 'revenue') {
+                                        return '$' + value;
+                                    }
+                                    return value;
+                                }
+                            }
                     }
                 },
                 plugins: {
-                    title: {
+                        legend: {
                         display: true,
-                        text: chartType.charAt(0).toUpperCase() + chartType.slice(1) + ' by ' + timeframe.charAt(0).toUpperCase() + timeframe.slice(1)
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    if (chartType === 'revenue') {
+                                        return 'Revenue: $' + context.raw.toFixed(2);
+                                    }
+                                    return 'Count: ' + context.raw;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Configure and build the payment methods pie chart
+        const paymentMethodsChartCtx = document.getElementById('paymentMethodsChart');
+        
+        if(paymentMethodsChartCtx) {
+            const methodLabels = @json($data['method_labels'] ?? []);
+            const methodData = @json($data['method_data'] ?? []);
+            const methodColors = @json($data['method_colors'] ?? []);
+            
+            if(methodLabels.length > 0) {
+                const paymentMethodsChart = new Chart(paymentMethodsChartCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: methodLabels,
+                        datasets: [{
+                            data: methodData,
+                            backgroundColor: methodColors,
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'right'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const value = context.raw;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        return `${context.label}: $${value.toFixed(2)} (${percentage}%)`;
+                                    }
+                                }
                     }
                 }
             }
         });
+            }
+        }
     });
 
+    // Print report function
     function printReport() {
         window.print();
     }

@@ -1,0 +1,40 @@
+# تعديلات لتحسين أداء التطبيق
+
+## 1. تعديلات ملف .env:
+قم بتغيير الإعدادات التالية في ملف .env:
+
+```
+APP_ENV=production
+APP_DEBUG=false
+LOG_LEVEL=warning
+CACHE_DRIVER=file
+```
+
+## 2. تفعيل الكاش وتجميع الملفات:
+قم بتنفيذ الأوامر التالية:
+
+```
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+## 3. تحسين الاستعلامات في ملف PageController.php:
+قم بتعديل الكود لتحميل الإعدادات مرة واحدة وتخزينها في الكاش.
+
+## 4. تفعيل OPcache في PHP:
+تأكد من تفعيل OPcache في php.ini:
+
+```
+opcache.enable=1
+opcache.memory_consumption=128
+opcache.interned_strings_buffer=8
+opcache.max_accelerated_files=4000
+opcache.revalidate_freq=60
+opcache.fast_shutdown=1
+```
+
+## 5. تحسين استعلامات قاعدة البيانات:
+- إضافة فهارس (indexes) للجداول المستخدمة بكثرة
+- تقليل الاستعلامات المتكررة
+- استخدام eager loading للعلاقات 

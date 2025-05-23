@@ -116,7 +116,7 @@ class VideoController extends Controller
                 'duration_seconds' => 'nullable|integer|min:0',
                 'is_free_preview' => 'nullable|boolean',
                 'thumbnail' => 'nullable|image|max:5120', // 5MB max
-                'section_id' => 'required|exists:course_sections,section_id'
+                'section_id' => 'nullable|exists:course_sections,section_id'
             ];
 
             // Add conditional validation rules based on video type
@@ -130,17 +130,24 @@ class VideoController extends Controller
 
             $validated = $request->validate($rules);
 
-            // Calculate maximum position for the section
-            $maxPosition = CourseVideo::where('section_id', $validated['section_id'])->max('position') ?? 0;
-
             // Create video record
             $video = new CourseVideo();
             $video->course_id = $courseId;
-            $video->section_id = $validated['section_id'];
+            
+            // Handle section_id if provided, otherwise set to null
+            if (isset($validated['section_id'])) {
+                $video->section_id = $validated['section_id'];
+                // Calculate maximum position for the section
+                $maxPosition = CourseVideo::where('section_id', $validated['section_id'])->max('position') ?? 0;
+                $video->position = $maxPosition + 1;
+            } else {
+                $video->section_id = null;
+                $video->position = CourseVideo::where('course_id', $courseId)->max('position') + 1;
+            }
+            
             $video->title = $validated['title'];
             $video->description = $validated['description'] ?? null;
             $video->duration_seconds = $validated['duration_seconds'] ?? 0;
-            $video->position = $maxPosition + 1;
             $video->sequence_order = CourseVideo::where('course_id', $courseId)->max('sequence_order') + 1; // For backward compatibility
             $video->is_free_preview = $request->has('is_free_preview');
             $video->is_encrypted = false; // Default value
@@ -480,7 +487,7 @@ class VideoController extends Controller
             'duration_seconds' => 'required|integer|min:1',
             'is_free_preview' => 'nullable|boolean',
                 'thumbnail' => 'nullable|image|max:5120', // 5MB max
-                'section_id' => 'required|exists:course_sections,section_id'
+                'section_id' => 'nullable|exists:course_sections,section_id'
             ];
 
             // Video URL is optional during update
@@ -490,20 +497,33 @@ class VideoController extends Controller
 
             $validated = $request->validate($rules);
 
-            // Check if section changed
-            $sectionChanged = $video->section_id != $validated['section_id'];
+            // Check if section changed 
+            $oldSectionId = $video->section_id;
+            $newSectionId = $validated['section_id'] ?? null;
+            $sectionChanged = $oldSectionId != $newSectionId;
             
             // Update video record
-        $video->title = $validated['title'];
+            $video->title = $validated['title'];
             $video->description = $validated['description'] ?? $video->description;
-        $video->duration_seconds = $validated['duration_seconds'];
-        $video->is_free_preview = $request->has('is_free_preview');
+            $video->duration_seconds = $validated['duration_seconds'];
+            $video->is_free_preview = $request->has('is_free_preview');
 
             // If section changed, update position
             if ($sectionChanged) {
-                $maxPosition = CourseVideo::where('section_id', $validated['section_id'])->max('position') ?? 0;
-                $video->section_id = $validated['section_id'];
-                $video->position = $maxPosition + 1;
+                if ($newSectionId) {
+                    // If new section is provided, set it and calculate new position
+                    $maxPosition = CourseVideo::where('section_id', $newSectionId)->max('position') ?? 0;
+                    $video->section_id = $newSectionId;
+                    $video->position = $maxPosition + 1;
+                } else {
+                    // If new section is null, just set section_id to null
+                    $video->section_id = null;
+                    // Set the position based on other videos in the course without sections
+                    $maxPosition = CourseVideo::whereNull('section_id')
+                                           ->where('course_id', $courseId)
+                                           ->max('position') ?? 0;
+                    $video->position = $maxPosition + 1;
+                }
             }
 
             // Update video URL if provided

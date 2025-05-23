@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\Discount;
 
 class Course extends Model
 {
@@ -48,7 +49,10 @@ class Course extends Model
         'category_id',
         'approval_status',
         'thumbnail',
-        'certificate_available'
+        'certificate_available',
+        'certificate_type',
+        'custom_certificate_path',
+        'certificate_text'
     ];
 
     /**
@@ -137,7 +141,8 @@ class Course extends Model
      */
     public function videos(): HasMany
     {
-        return $this->hasMany(CourseVideo::class, 'course_id', 'course_id');
+        return $this->hasMany(CourseVideo::class, 'course_id', 'course_id')
+            ->orderBy('position', 'asc');
     }
 
     /**
@@ -369,5 +374,83 @@ class Course extends Model
                 Log::error('Error creating default courses: ' . $e->getMessage());
             }
         }
+    }
+
+    /**
+     * Get active discounts for this course.
+     */
+    public function getActiveDiscounts()
+    {
+        $now = now();
+        
+        return Discount::where(function($query) {
+                $query->where('applies_to_all_courses', true)
+                      ->orWhereJsonContains('courses', $this->course_id);
+            })
+            ->where('is_active', true)
+            ->where(function($query) use ($now) {
+                $query->whereNull('start_date')
+                      ->orWhere('start_date', '<=', $now);
+            })
+            ->where(function($query) use ($now) {
+                $query->whereNull('end_date')
+                      ->orWhere('end_date', '>=', $now);
+            })
+            ->get();
+    }
+    
+    /**
+     * Get the final discounted price for this course.
+     */
+    public function getDiscountedPrice()
+    {
+        $discounts = $this->getActiveDiscounts();
+        
+        if ($discounts->isEmpty()) {
+            return $this->price;
+        }
+        
+        $lowestPrice = $this->price;
+        
+        foreach ($discounts as $discount) {
+            $discountedPrice = $discount->calculateDiscountedPrice($this->price);
+            $lowestPrice = min($lowestPrice, $discountedPrice);
+        }
+        
+        return $lowestPrice;
+    }
+    
+    /**
+     * Check if a coupon is applicable to this course.
+     */
+    public function isCouponApplicable($coupon)
+    {
+        if (!$coupon->isValid()) {
+            return false;
+        }
+        
+        $coursesApplicable = $coupon->courses_applicable ?? [];
+        
+        return empty($coursesApplicable) || in_array($this->course_id, $coursesApplicable);
+    }
+    
+    /**
+     * Get the final price after applying a coupon.
+     */
+    public function getPriceWithCoupon($coupon)
+    {
+        if (!$this->isCouponApplicable($coupon)) {
+            return $this->getDiscountedPrice();
+        }
+        
+        $discountedPrice = $this->getDiscountedPrice();
+        
+        // If the coupon is fixed type
+        if ($coupon->type === 'fixed') {
+            return max(0, $discountedPrice - $coupon->value);
+        }
+        
+        // If the coupon is percentage type
+        return $discountedPrice * (1 - ($coupon->value / 100));
     }
 }

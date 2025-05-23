@@ -49,18 +49,24 @@
                         </div>
                         
                         <div class="form-group">
-                            <label for="payment_account_id">Payment Account</label>
-                            <select class="form-control @error('payment_account_id') is-invalid @enderror" id="payment_account_id" name="payment_account_id">
-                                @foreach($paymentAccounts as $account)
-                                    <option value="{{ $account->account_id }}" {{ $account->is_default ? 'selected' : '' }}>
-                                        {{ $account->account_name }} ({{ ucfirst($account->payment_provider) }})
-                                        {{ $account->is_default ? '- Default' : '' }}
-                                    </option>
-                                @endforeach
+                            <label for="payment_provider">طريقة الدفع</label>
+                            <select class="form-control @error('payment_provider') is-invalid @enderror" id="payment_provider" name="payment_provider" required>
+                                <option value="">اختر طريقة الدفع</option>
+                                <option value="vodafone_cash" {{ old('payment_provider') == 'vodafone_cash' ? 'selected' : '' }}>فودافون كاش</option>
+                                <option value="instapay" {{ old('payment_provider') == 'instapay' ? 'selected' : '' }}>إنستا باي</option>
                             </select>
-                            @error('payment_account_id')
+                            @error('payment_provider')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label for="provider_account_id">رقم الحساب/الهاتف</label>
+                            <input type="text" class="form-control @error('provider_account_id') is-invalid @enderror" id="provider_account_id" name="provider_account_id" value="{{ old('provider_account_id') }}" required>
+                            @error('provider_account_id')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="form-text text-muted">أدخل رقم فودافون كاش أو رقم إنستا باي حسب اختيارك.</small>
                         </div>
                         
                         <div class="form-group">

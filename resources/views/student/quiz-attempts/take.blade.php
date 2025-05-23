@@ -14,42 +14,49 @@
         margin-bottom: 20px;
         z-index: 100;
     }
-    
+
     .timer-display {
-        font-size: 2rem;
+        font-size: 1.5rem;
         font-weight: bold;
         text-align: center;
-        color: #dc3545;
+        color: #28a745;
+        padding: 10px;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        direction: ltr;
     }
-    
+
     .timer-warning {
         animation: pulse 1s infinite;
+        color: #dc3545;
+        background-color: #fff5f5;
     }
-    
+
     @keyframes pulse {
         0% { opacity: 1; }
-        50% { opacity: 0.5; }
+        50% { opacity: 0.7; }
         100% { opacity: 1; }
     }
-    
+
     .question-card {
         border: 1px solid #ddd;
         border-radius: 8px;
         margin-bottom: 30px;
         background-color: #fff;
     }
-    
+
     .question-header {
         background-color: #f8f9fa;
         padding: 15px;
         border-radius: 8px 8px 0 0;
         border-bottom: 1px solid #ddd;
     }
-    
+
     .question-body {
         padding: 20px;
     }
-    
+
     .question-number {
         display: inline-block;
         width: 30px;
@@ -61,7 +68,7 @@
         border-radius: 50%;
         margin-left: 10px;
     }
-    
+
     .option-row {
         padding: 15px;
         border: 1px solid #eee;
@@ -70,16 +77,16 @@
         cursor: pointer;
         transition: all 0.2s ease;
     }
-    
+
     .option-row:hover {
         background-color: #f8f9fa;
     }
-    
+
     .option-row.selected {
         background-color: #e3f2fd;
         border-color: #90caf9;
     }
-    
+
     .nav-box {
         position: sticky;
         top: 100px;
@@ -88,13 +95,13 @@
         border-radius: 8px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
-    
+
     .question-nav {
         display: grid;
         grid-template-columns: repeat(5, 1fr);
         gap: 10px;
     }
-    
+
     .question-nav-item {
         width: 35px;
         height: 35px;
@@ -107,19 +114,19 @@
         font-weight: bold;
         cursor: pointer;
     }
-    
+
     .question-nav-item.active {
         background-color: #007bff;
         color: #fff;
         border-color: #007bff;
     }
-    
+
     .question-nav-item.answered {
         background-color: #28a745;
         color: #fff;
         border-color: #28a745;
     }
-    
+
     .form-actions {
         position: sticky;
         bottom: 20px;
@@ -137,7 +144,7 @@
 <div class="container py-4">
     <form id="quiz-form" action="{{ route('student.quiz-attempts.submit', $attempt->attempt_id) }}" method="POST">
         @csrf
-        
+
         <div class="row">
             <div class="col-md-9">
                 <!-- Timer -->
@@ -147,39 +154,39 @@
                         --:--:--
                     </div>
                 </div>
-                
+
                 <!-- Quiz Header -->
                 <div class="alert alert-info mb-4">
                     <h4>{{ $quiz->title }}</h4>
                     <p class="mb-0">عدد الأسئلة: {{ count($quiz->questions_json) }} | الدرجة الكلية: {{ $quiz->total_possible_score }} | مدة الامتحان: {{ $quiz->duration_minutes }} دقيقة</p>
                 </div>
-                
+
                 <!-- Questions -->
                 @foreach($quiz->questions_json as $index => $question)
                     <div id="question-container-{{ $index }}" class="question-card">
                         <div class="question-header d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">
                                 <span class="question-number">{{ $index + 1 }}</span>
-                                {{ $question['type'] == 'multiple_choice' ? 'اختيار من متعدد' : 
-                                   ($question['type'] == 'true_false' ? 'صح/خطأ' : 'إجابة قصيرة') }} 
+                                {{ $question['type'] == 'multiple_choice' ? 'اختيار من متعدد' :
+                                   ($question['type'] == 'true_false' ? 'صح/خطأ' : 'إجابة قصيرة') }}
                                 <span class="text-muted">({{ $question['points'] }} نقطة)</span>
                             </h5>
                         </div>
                         <div class="question-body">
                             <p class="fw-bold mb-4">{{ $question['text'] }}</p>
-                            
+
                             @php
                                 $questionId = $question['id'] ?? $index;
                                 $userAnswer = isset($attempt->answers_json[$questionId]) ? $attempt->answers_json[$questionId] : null;
                             @endphp
-                            
+
                             @if($question['type'] == 'multiple_choice')
                                 @foreach($question['options'] as $optionIndex => $option)
                                     <div class="option-row {{ isset($userAnswer) && (is_array($userAnswer) ? in_array($option['text'], $userAnswer) : $userAnswer == $option['text']) ? 'selected' : '' }}"
                                         onclick="selectOption(this, '{{ $questionId }}', '{{ $option['text'] }}', 'multiple_choice')">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" 
-                                                   name="answers[{{ $questionId }}][]" 
+                                            <input class="form-check-input" type="checkbox"
+                                                   name="answers[{{ $questionId }}][]"
                                                    value="{{ $option['text'] }}"
                                                    id="option-{{ $questionId }}-{{ $optionIndex }}"
                                                    {{ isset($userAnswer) && (is_array($userAnswer) ? in_array($option['text'], $userAnswer) : $userAnswer == $option['text']) ? 'checked' : '' }}>
@@ -193,8 +200,8 @@
                                 <div class="option-row {{ $userAnswer == 'true' ? 'selected' : '' }}"
                                      onclick="selectOption(this, '{{ $questionId }}', 'true', 'true_false')">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" 
-                                               name="answers[{{ $questionId }}]" 
+                                        <input class="form-check-input" type="radio"
+                                               name="answers[{{ $questionId }}]"
                                                value="true"
                                                id="true-{{ $questionId }}"
                                                {{ $userAnswer == 'true' ? 'checked' : '' }}>
@@ -206,8 +213,8 @@
                                 <div class="option-row {{ $userAnswer == 'false' ? 'selected' : '' }}"
                                      onclick="selectOption(this, '{{ $questionId }}', 'false', 'true_false')">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" 
-                                               name="answers[{{ $questionId }}]" 
+                                        <input class="form-check-input" type="radio"
+                                               name="answers[{{ $questionId }}]"
                                                value="false"
                                                id="false-{{ $questionId }}"
                                                {{ $userAnswer == 'false' ? 'checked' : '' }}>
@@ -218,9 +225,9 @@
                                 </div>
                             @elseif($question['type'] == 'short_answer')
                                 <div class="mb-3">
-                                    <textarea class="form-control" 
-                                              name="answers[{{ $questionId }}]" 
-                                              id="answer-{{ $questionId }}" 
+                                    <textarea class="form-control"
+                                              name="answers[{{ $questionId }}]"
+                                              id="answer-{{ $questionId }}"
                                               rows="3"
                                               placeholder="اكتب إجابتك هنا"
                                               onkeyup="updateAnswerStatus('{{ $questionId }}', this.value)">{{ $userAnswer }}</textarea>
@@ -229,7 +236,7 @@
                         </div>
                     </div>
                 @endforeach
-                
+
                 <!-- Form Actions -->
                 <div class="form-actions">
                     <input type="hidden" name="auto_submit" id="auto_submit" value="0">
@@ -241,7 +248,7 @@
                     </button>
                 </div>
             </div>
-            
+
             <div class="col-md-3">
                 <div class="nav-box">
                     <h5 class="mb-3">تنقل بين الأسئلة</h5>
@@ -256,7 +263,7 @@
                             </div>
                         @endforeach
                     </div>
-                    
+
                     <div class="mt-4">
                         <div class="d-flex align-items-center mb-2">
                             <div class="question-nav-item" style="background-color: #f8f9fa;"></div>
@@ -267,9 +274,9 @@
                             <span class="ms-2">تمت الإجابة</span>
                         </div>
                     </div>
-                    
+
                     <hr>
-                    
+
                     <div class="alert alert-warning">
                         <i class="fas fa-exclamation-triangle"></i>
                         <strong>تنبيه:</strong> لا تنسى حفظ إجاباتك بشكل دوري.
@@ -323,66 +330,79 @@
         // Timer Initialization
         updateTimer();
         setInterval(updateTimer, 1000);
-        
+
         // Auto save answers every 60 seconds
         setInterval(saveProgress, 60000);
     });
-    
+
     // Update Timer
     function updateTimer() {
         const timerElement = document.getElementById('timer');
         const endTime = parseInt(timerElement.dataset.endTime);
         const currentTime = Math.floor(Date.now() / 1000);
         const remainingSeconds = endTime - currentTime;
-        
+
         if (remainingSeconds <= 0) {
             // Time's up, auto-submit the quiz
             document.getElementById('auto_submit').value = '1';
             document.getElementById('quiz-form').submit();
             return;
         }
-        
+
         const hours = Math.floor(remainingSeconds / 3600);
         const minutes = Math.floor((remainingSeconds % 3600) / 60);
         const seconds = remainingSeconds % 60;
-        
-        timerElement.textContent = `${padZero(hours)}:${padZero(minutes)}:${padZero(seconds)}`;
-        
+
+        // تحسين طريقة عرض الوقت المتبقي
+        let timeDisplay = '';
+
+        if (hours > 0) {
+            timeDisplay += `${hours} ${hours === 1 ? 'ساعة' : 'ساعات'} `;
+        }
+
+        if (minutes > 0 || hours > 0) {
+            timeDisplay += `${padZero(minutes)} ${minutes === 1 ? 'دقيقة' : 'دقائق'} `;
+        }
+
+        timeDisplay += `${padZero(seconds)} ${seconds === 1 ? 'ثانية' : 'ثواني'}`;
+
+        timerElement.textContent = timeDisplay;
+
         // Add warning class if less than 5 minutes
         if (remainingSeconds < 300) {
             timerElement.classList.add('timer-warning');
         }
     }
-    
+
     function padZero(num) {
         return num.toString().padStart(2, '0');
     }
-    
+
     // Handle option selection
     function selectOption(element, questionId, value, type) {
         if (type === 'multiple_choice') {
             const checkbox = element.querySelector('input[type="checkbox"]');
             checkbox.checked = !checkbox.checked;
-            
+
             // Update nav item
             updateAnswerStatus(questionId);
         } else if (type === 'true_false') {
             const radio = element.querySelector('input[type="radio"]');
             radio.checked = true;
-            
+
             // Remove selected class from other options
             document.querySelectorAll(`[name="answers[${questionId}]"]`).forEach(input => {
                 input.closest('.option-row').classList.remove('selected');
             });
-            
+
             // Add selected class to current option
             element.classList.add('selected');
-            
+
             // Update nav item
             updateAnswerStatus(questionId, value);
         }
     }
-    
+
     // Update answer status in navigation
     function updateAnswerStatus(questionId, value = null) {
         // Find the question index
@@ -392,13 +412,13 @@
                 index = {{ $i }};
             }
         @endforeach
-        
+
         if (index >= 0) {
             const navItem = document.getElementById(`nav-${index}`);
-            
+
             // Check if answered
             let isAnswered = false;
-            
+
             if (value !== null && value !== '') {
                 isAnswered = true;
             } else {
@@ -411,7 +431,7 @@
                     }
                 });
             }
-            
+
             if (isAnswered) {
                 navItem.classList.add('answered');
             } else {
@@ -419,7 +439,7 @@
             }
         }
     }
-    
+
     // Scroll to question
     function scrollToQuestion(index) {
         const questionContainer = document.getElementById(`question-container-${index}`);
@@ -428,14 +448,14 @@
             behavior: 'smooth'
         });
     }
-    
+
     // Save progress
     function saveProgress() {
         // Get form data
         const formData = new FormData(document.getElementById('quiz-form'));
         formData.append('_method', 'PUT');
         formData.append('save_progress', '1');
-        
+
         // Send AJAX request
         fetch('{{ route('student.quiz-attempts.save-progress', $attempt->attempt_id) }}', {
             method: 'POST',
@@ -455,29 +475,29 @@
             console.error('Error saving progress:', error);
         });
     }
-    
+
     // Confirm submission
     function confirmSubmit() {
         // Check if all questions are answered
         const unansweredCount = document.querySelectorAll('.question-nav-item:not(.answered)').length;
         const unansweredWarning = document.getElementById('unanswered-warning');
         const unansweredCountElement = document.getElementById('unanswered-count');
-        
+
         if (unansweredCount > 0) {
             unansweredWarning.classList.remove('d-none');
             unansweredCountElement.textContent = unansweredCount;
         } else {
             unansweredWarning.classList.add('d-none');
         }
-        
+
         // Show confirmation modal
         const modal = new bootstrap.Modal(document.getElementById('submitConfirmModal'));
         modal.show();
     }
-    
+
     // Submit quiz
     function submitQuiz() {
         document.getElementById('quiz-form').submit();
     }
 </script>
-@endsection 
+@endsection

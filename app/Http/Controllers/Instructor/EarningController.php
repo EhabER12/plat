@@ -86,7 +86,14 @@ class EarningController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(20);
         
-        return view('instructor.earnings.withdrawals', compact('withdrawals'));
+        // Get the available earnings of the user
+        $availableEarnings = $user->available_earnings;
+        
+        // Get minimum withdrawal amount from settings
+        $minWithdrawalAmount = Setting::where('key', 'minimum_withdrawal_amount')
+            ->first()->value ?? 100;
+        
+        return view('instructor.earnings.withdrawals', compact('withdrawals', 'availableEarnings', 'minWithdrawalAmount'));
     }
 
     /**
@@ -144,7 +151,8 @@ class EarningController extends Controller
         
         $validator = Validator::make($request->all(), [
             'amount' => "required|numeric|min:$minWithdrawalAmount|max:$availableEarnings",
-            'payment_account_id' => 'required|exists:instructor_payment_accounts,account_id,instructor_id,' . $user->user_id . ',is_active,1',
+            'payment_provider' => 'required|in:vodafone_cash,instapay',
+            'provider_account_id' => 'required|string|max:50',
             'notes' => 'nullable|string|max:500'
         ]);
 
@@ -157,21 +165,13 @@ class EarningController extends Controller
         try {
             DB::beginTransaction();
             
-            // Get the payment account
-            $paymentAccount = InstructorPaymentAccount::findOrFail($request->payment_account_id);
-            
             // Create the withdrawal request
             $withdrawal = Withdrawal::create([
                 'instructor_id' => $user->user_id,
                 'amount' => $request->amount,
                 'status' => 'pending',
-                'payment_method' => $paymentAccount->payment_provider,
-                'payment_details' => json_encode([
-                    'account_id' => $paymentAccount->account_id,
-                    'provider_account_id' => $paymentAccount->provider_account_id,
-                    'account_name' => $paymentAccount->account_name,
-                    'account_details' => $paymentAccount->account_details
-                ]),
+                'payment_provider' => $request->payment_provider,
+                'provider_account_id' => $request->provider_account_id,
                 'requested_at' => now(),
                 'notes' => $request->notes
             ]);
@@ -187,10 +187,8 @@ class EarningController extends Controller
                 if ($remainingAmount <= 0) {
                     break;
                 }
-                
                 // Mark the earning as withdrawn
                 $earning->markAsWithdrawn($withdrawal->withdrawal_id);
-                
                 $remainingAmount -= $earning->amount;
             }
             
@@ -234,23 +232,27 @@ class EarningController extends Controller
      * Cancel the specified withdrawal request.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
     public function cancelWithdrawal($id)
     {
+        // Get the current authenticated user
         $user = Auth::user();
-        $withdrawal = Withdrawal::where('instructor_id', $user->user_id)
-            ->where('withdrawal_id', $id)
-            ->where('status', 'pending')
-            ->firstOrFail();
-
+        
         try {
+            // First check if withdrawal exists and can be cancelled
+            $withdrawal = Withdrawal::where('instructor_id', $user->user_id)
+                ->where('withdrawal_id', $id)
+                ->where('status', 'pending')
+                ->firstOrFail();
+            
             DB::beginTransaction();
             
-            // Update the withdrawal status
+            // Update the withdrawal status - we can now use 'cancelled' after the migration
             $withdrawal->update([
-                'status' => 'cancelled',
-                'notes' => ($withdrawal->notes ? $withdrawal->notes . "\n" : '') . 'Cancelled by instructor at ' . now()
+                'status' => 'cancelled', // Now we can use 'cancelled' since we've added it to the enum
+                'notes' => ($withdrawal->notes ? $withdrawal->notes . "\n" : '') . 'Cancelled by instructor at ' . now(),
+                'processed_at' => now()
             ]);
             
             // Get the earnings included in this withdrawal
@@ -266,12 +268,37 @@ class EarningController extends Controller
             
             DB::commit();
             
+            // Log the successful cancellation
+            Log::info('Withdrawal request cancelled successfully', [
+                'withdrawal_id' => $id,
+                'instructor_id' => $user->user_id
+            ]);
+            
+            // Check if the request is AJAX
+            if (request()->ajax()) {
+                return response()->json(['success' => true, 'message' => 'Withdrawal cancelled successfully']);
+            }
+            
             return redirect()->route('instructor.earnings.withdrawals')
                 ->with('success', 'Withdrawal request cancelled successfully.');
                 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to cancel withdrawal request: ' . $e->getMessage());
+            
+            // Log the error with more details
+            Log::error('Failed to cancel withdrawal request', [
+                'error' => $e->getMessage(),
+                'withdrawal_id' => $id,
+                'instructor_id' => $user->user_id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // Return appropriate response based on request type
+            if (request()->ajax()) {
+                return response()->json([
+                    'error' => 'Failed to cancel withdrawal request: ' . $e->getMessage()
+                ], 500);
+            }
             
             return redirect()->back()
                 ->with('error', 'Failed to cancel withdrawal request. Please try again.');

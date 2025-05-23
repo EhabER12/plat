@@ -38,6 +38,26 @@
                                     </div>
 
                                     @php
+                                        // Get average rating
+                                        $reviews = $enrollment->reviews ?? collect([]);
+                                        $avgRating = $reviews->avg('rating') ?? 0;
+                                        $avgRating = number_format($avgRating, 1);
+                                    @endphp
+                                    
+                                    <div class="course-rating mb-3">
+                                        @for($i = 1; $i <= 5; $i++)
+                                            @if($i <= floor($avgRating))
+                                                <i class="fas fa-star text-warning"></i>
+                                            @elseif($i - 0.5 <= $avgRating)
+                                                <i class="fas fa-star-half-alt text-warning"></i>
+                                            @else
+                                                <i class="far fa-star text-warning"></i>
+                                            @endif
+                                        @endfor
+                                        <span class="ms-2">{{ $avgRating }} ({{ $reviews->count() }})</span>
+                                    </div>
+
+                                    @php
                                         $progress = 0; // This should be calculated based on completed lessons
                                     @endphp
 

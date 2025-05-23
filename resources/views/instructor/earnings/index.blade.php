@@ -40,6 +40,75 @@
         </div>
     @endif
 
+    <!-- Withdrawal Notifications -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-info mb-3">
+                <div class="card-header bg-info text-white d-flex align-items-center justify-content-between">
+                    <span><i class="fas fa-bell me-2"></i> إشعارات السحب الأخيرة</span>
+                    <a href="{{ route('instructor.earnings.withdrawals') }}" class="btn btn-sm btn-light">عرض كل السحوبات</a>
+                </div>
+                <div class="card-body p-2">
+                    @php
+                        $withdrawalNotifications = Auth::user()->withdrawals()->orderBy('requested_at', 'desc')->take(5)->get();
+                    @endphp
+                    @if($withdrawalNotifications->isEmpty())
+                        <div class="text-muted">لا توجد طلبات سحب حديثة.</div>
+                    @else
+                        <ul class="list-group list-group-flush">
+                            @foreach($withdrawalNotifications as $w)
+                                <li class="list-group-item d-flex align-items-center justify-content-between {{ $w->status == 'pending' ? 'bg-warning bg-opacity-10' : '' }}">
+                                    <div>
+                                        <i class="fas {{ $w->status == 'completed' ? 'fa-check-circle text-success' : ($w->status == 'pending' ? 'fa-clock text-warning' : 'fa-times-circle text-danger') }} me-2"></i>
+                                        <span>طلب سحب بقيمة</span>
+                                        <strong>${{ number_format($w->amount,2) }}</strong>
+                                        <span class="badge ms-2 {{
+                                            $w->status == 'completed' ? 'badge-success' :
+                                            ($w->status == 'pending' ? 'badge-warning' : 'badge-danger')
+                                        }}">
+                                            {{ $w->status == 'completed' ? 'تم التحويل' : ($w->status == 'pending' ? 'قيد المراجعة' : 'مرفوض') }}
+                                        </span>
+                                    </div>
+                                    <a href="{{ route('instructor.earnings.show-withdrawal', $w->withdrawal_id) }}" class="btn btn-sm btn-outline-info">تفاصيل</a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Withdrawal Quick Action -->
+    <div class="row mb-3">
+        <div class="col-md-6 mb-2">
+            <div class="card border-primary shadow-sm">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="fw-bold text-primary mb-1">الرصيد المتاح للسحب</div>
+                        <div class="h4 mb-0">${{ number_format($availableEarnings, 2) }}</div>
+                        <small class="text-muted">الحد الأدنى للسحب: ${{ number_format($minWithdrawalAmount, 2) }}</small>
+                    </div>
+                    <form action="{{ route('instructor.earnings.create-withdrawal') }}" method="get">
+                        <button type="submit" class="btn btn-lg btn-success ms-2" 
+                            @if($availableEarnings < $minWithdrawalAmount || !$hasPaymentAccount) disabled @endif>
+                            <i class="fas fa-money-bill-wave"></i> طلب سحب
+                        </button>
+                    </form>
+                </div>
+                @if($availableEarnings < $minWithdrawalAmount)
+                    <div class="alert alert-warning mb-0 mt-2 py-2 px-3">
+                        <i class="fas fa-info-circle"></i> يجب أن يكون رصيدك المتاح أكبر من أو يساوي الحد الأدنى للسحب.
+                    </div>
+                @elseif(!$hasPaymentAccount)
+                    <div class="alert alert-warning mb-0 mt-2 py-2 px-3">
+                        <i class="fas fa-info-circle"></i> يجب إضافة حساب دفع قبل طلب السحب.
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
     <!-- Earnings Overview -->
     <div class="row">
         <div class="col-xl-3 col-md-6 mb-4">

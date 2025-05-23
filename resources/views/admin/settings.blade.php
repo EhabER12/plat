@@ -95,6 +95,26 @@
                                     <input class="form-check-input" type="checkbox" id="payment_method_bank_transfer" name="payment_methods[]" value="bank_transfer" {{ in_array('bank_transfer', explode(',', $settings['payment_methods']['value'] ?? 'credit_card')) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="payment_method_bank_transfer">Bank Transfer</label>
                                 </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="payment_method_paymob" name="payment_methods[]" value="paymob" {{ in_array('paymob', explode(',', $settings['payment_methods']['value'] ?? '')) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="payment_method_paymob">Paymob</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="payment_method_vodafone_cash" name="payment_methods[]" value="vodafone_cash" {{ in_array('vodafone_cash', explode(',', $settings['payment_methods']['value'] ?? '')) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="payment_method_vodafone_cash">Vodafone Cash</label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="default_payment_method" class="form-label">Default Payment Method</label>
+                                <select class="form-select" id="default_payment_method" name="default_payment_method">
+                                    <option value="credit_card" {{ ($settings['default_payment_method']['value'] ?? 'credit_card') == 'credit_card' ? 'selected' : '' }}>Credit Card</option>
+                                    <option value="paypal" {{ ($settings['default_payment_method']['value'] ?? '') == 'paypal' ? 'selected' : '' }}>PayPal</option>
+                                    <option value="bank_transfer" {{ ($settings['default_payment_method']['value'] ?? '') == 'bank_transfer' ? 'selected' : '' }}>Bank Transfer</option>
+                                    <option value="paymob" {{ ($settings['default_payment_method']['value'] ?? '') == 'paymob' ? 'selected' : '' }}>Paymob</option>
+                                    <option value="vodafone_cash" {{ ($settings['default_payment_method']['value'] ?? '') == 'vodafone_cash' ? 'selected' : '' }}>Vodafone Cash</option>
+                                </select>
+                                <div class="form-text">This payment method will be selected by default on the checkout page.</div>
                             </div>
                         </div>
                     </div>

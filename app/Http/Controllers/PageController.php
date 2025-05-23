@@ -10,73 +10,66 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use App\Models\WebsiteAppearance;
 
 class PageController extends Controller
 {
     public function home()
     {
         try {
-            // Check if tables exist before querying
-            $coursesTableExists = Schema::hasTable('courses');
-            $usersTableExists = Schema::hasTable('users');
-            $categoriesTableExists = Schema::hasTable('categories');
-
-            Log::info('Tables exist check: courses=' . ($coursesTableExists ? 'yes' : 'no') .
-                      ', users=' . ($usersTableExists ? 'yes' : 'no') .
-                      ', categories=' . ($categoriesTableExists ? 'yes' : 'no'));
-
-            // If any required table doesn't exist, return empty results
-            if (!$coursesTableExists) {
-                Log::error('Courses table does not exist');
-                return view('pages.home', [
-                    'courses' => collect([]),
-                    'categories' => collect([]),
-                    'error' => 'Database tables not set up properly. Please run migrations.'
-                ]);
-            }
-
-            // Get all courses (for displaying on the home page)
-            $courses = Course::query();
+            // تخزين نتائج الصفحة الرئيسية في الكاش لمدة 60 دقيقة
+            $cacheKey = 'home_page_data';
             
-            if ($usersTableExists) {
-                $courses->with('instructor');
+            // استخدام الكاش إذا كان موجودًا وفي بيئة غير التطوير
+            // الغاء تنشيط الكاش مؤقتًا لحل مشكلة عدم تحديث صور واعدادات الموقع
+            if (false && \Illuminate\Support\Facades\Cache::has($cacheKey) && !config('app.debug')) {
+                $data = \Illuminate\Support\Facades\Cache::get($cacheKey);
+                return view('pages.home', $data);
             }
             
-            if ($categoriesTableExists) {
-                $courses->with('category');
-            }
+            // الحصول على الكورسات مع البيانات الضرورية فقط
+            $courses = Course::select(['course_id', 'title', 'description', 'thumbnail', 'price', 'instructor_id', 'category_id', 'created_at'])
+                ->with(['instructor:user_id,name', 'category:category_id,name'])
+                ->where('approval_status', 'approved')
+                ->orderBy('created_at', 'desc')
+                ->take(6)
+                ->get();
             
-            // Order courses by created date
-            $courses->orderBy('created_at', 'desc');
+            // الحصول على الفئات مع عدد الكورسات
+            $categories = \Illuminate\Support\Facades\Cache::remember('categories_with_courses', 15*60, function () {
+                return Category::withCount('courses')->take(8)->get();
+            });
             
-            // Get the courses
-            $courses = $courses->get();
-            Log::info('Total courses count: ' . $courses->count());
+            // الحصول على إعدادات الموقع - تقليل مدة التخزين المؤقت الى 5 دقائق فقط
+            // يتم استخدام fresh lookup بدلاً من cache:remember لضمان تحديث البيانات
+            $settings = [
+                    'heroSettings' => WebsiteAppearance::getSection(WebsiteAppearance::SECTION_HERO),
+                    'featuresSettings' => WebsiteAppearance::getSection(WebsiteAppearance::SECTION_FEATURES),
+                    'statsSettings' => WebsiteAppearance::getSection('stats'),
+                    'aboutSettings' => WebsiteAppearance::getSection('about'),
+                    'videoSettings' => WebsiteAppearance::getSection('video'),
+                    'navbarBannerSettings' => WebsiteAppearance::getSection(WebsiteAppearance::SECTION_NAVBAR_BANNER),
+                    'partnersSettings' => WebsiteAppearance::getSection(WebsiteAppearance::SECTION_PARTNERS)
+                ];
             
-            // Get all categories with course count
-            if ($categoriesTableExists) {
-                $categories = Category::query();
-                
-                // Check if withCount can be used
-                if ($coursesTableExists && method_exists(Category::class, 'courses')) {
-                    $categories->withCount('courses');
-                }
-                
-                $categories = $categories->get();
-            } else {
-                $categories = collect([]);
-            }
-
-            // Debug information
-            Log::info('Total categories count: ' . $categories->count());
-            
-            return view('pages.home', [
+            $data = [
                 'courses' => $courses,
                 'categories' => $categories,
-            ]);
+                'heroSettings' => $settings['heroSettings'],
+                'featuresSettings' => $settings['featuresSettings'],
+                'statsSettings' => $settings['statsSettings'],
+                'aboutSettings' => $settings['aboutSettings'],
+                'videoSettings' => $settings['videoSettings'],
+                'navbarBannerSettings' => $settings['navbarBannerSettings'],
+                'partnersSettings' => $settings['partnersSettings']
+            ];
+            
+            // تخزين النتائج في ذاكرة التخزين المؤقت - تقليل المدة الى 15 دقيقة
+            \Illuminate\Support\Facades\Cache::put($cacheKey, $data, 15*60);
+            
+            return view('pages.home', $data);
         } catch (\Exception $e) {
             Log::error('Error loading home page: ' . $e->getMessage());
-            Log::error($e->getTraceAsString());
 
             return view('pages.home', [
                 'courses' => collect([]),
@@ -95,140 +88,73 @@ class PageController extends Controller
     public function courses(Request $request)
     {
         try {
-            // Enable query log for debugging
-            \DB::enableQueryLog();
+            // تخزين نتائج الاستعلام في الكاش لمدة 30 دقيقة
+            $cacheKey = 'courses_' . md5(json_encode($request->all()));
 
-            // Log query parameters
-            \Log::info('Courses page accessed with parameters: ' . json_encode($request->all()));
-
-            // Check if tables exist before querying
-            $coursesTableExists = \Schema::hasTable('courses');
-            $usersTableExists = \Schema::hasTable('users');
-            $categoriesTableExists = \Schema::hasTable('categories');
-
-            \Log::info('Tables exist check: courses=' . ($coursesTableExists ? 'yes' : 'no') .
-                      ', users=' . ($usersTableExists ? 'yes' : 'no') .
-                      ', categories=' . ($categoriesTableExists ? 'yes' : 'no'));
-
-            // If any required table doesn't exist, return empty results
-            if (!$coursesTableExists || !$usersTableExists || !$categoriesTableExists) {
-                \Log::error('Required tables do not exist');
-                return view('pages.courses', [
-                    'courses' => collect([]),
-                    'categories' => collect([]),
-                    'error' => 'Database tables not set up properly. Please run migrations.'
-                ]);
+            // استخدام الكاش إذا كان موجوداً
+            if (\Illuminate\Support\Facades\Cache::has($cacheKey) && !config('app.debug')) {
+                $data = \Illuminate\Support\Facades\Cache::get($cacheKey);
+                return view('pages.courses', $data);
             }
 
-            // Get column information to ensure we're querying existing columns
-            $courseColumns = \Schema::getColumnListing('courses');
-            $userColumns = \Schema::getColumnListing('users');
-            $categoryColumns = \Schema::getColumnListing('categories');
+            // الاستعلام مع استخدام eager loading وإضافة where فقط عند الحاجة
+            $query = Course::select(['course_id', 'title', 'description', 'price', 'thumbnail', 'instructor_id', 'category_id', 'created_at', 'approval_status'])
+                ->with(['instructor:user_id,name', 'category:category_id,name'])
+                ->where('approval_status', 'approved');
 
-            \Log::info('Course columns: ' . json_encode($courseColumns));
-            \Log::info('User columns: ' . json_encode($userColumns));
-            \Log::info('Category columns: ' . json_encode($categoryColumns));
-
-            // Check if required columns exist
-            $hasInstructorIdColumn = in_array('instructor_id', $courseColumns);
-            $hasCategoryIdColumn = in_array('category_id', $courseColumns);
-            $hasUserIdColumn = in_array('user_id', $userColumns);
-            $hasCategoryIdPK = in_array('id', $categoryColumns);
-
-            // Build the query based on available columns
-            $query = \DB::table('courses');
-
-            // Only join if the foreign key columns exist
-            if ($hasInstructorIdColumn && $hasUserIdColumn && $usersTableExists) {
-                $query->leftJoin('users', 'courses.instructor_id', '=', 'users.user_id');
-                $query->addSelect('users.name as instructor_name');
-            } else {
-                $query->addSelect(\DB::raw("'Unknown' as instructor_name"));
-            }
-
-            if ($hasCategoryIdColumn && $hasCategoryIdPK && $categoriesTableExists) {
-                $query->leftJoin('categories', 'courses.category_id', '=', 'categories.id');
-                $query->addSelect('categories.name as category_name');
-            } else {
-                $query->addSelect(\DB::raw("'Uncategorized' as category_name"));
-            }
-
-            // Add course columns
-            $query->addSelect('courses.*');
-
-            // Apply filters if provided
-            if ($request->has('category') && $request->input('category') != 'all' && $hasCategoryIdColumn) {
-                $query->where('courses.category_id', $request->input('category'));
+            // تطبيق الفلترة
+            if ($request->has('category') && $request->input('category') != 'all') {
+                $query->where('category_id', $request->input('category'));
             }
 
             if ($request->has('search') && !empty($request->input('search'))) {
                 $searchTerm = '%' . $request->input('search') . '%';
                 $query->where(function($q) use ($searchTerm) {
-                    $q->where('courses.title', 'like', $searchTerm)
-                      ->orWhere('courses.description', 'like', $searchTerm);
+                    $q->where('title', 'like', $searchTerm)
+                      ->orWhere('description', 'like', $searchTerm);
                 });
             }
 
-            // Apply sorting
+            // تطبيق الترتيب
             $sort = $request->input('sort', 'newest');
             switch ($sort) {
                 case 'price_low':
-                    $query->orderBy('courses.price', 'asc');
+                    $query->orderBy('price', 'asc');
                     break;
                 case 'price_high':
-                    $query->orderBy('courses.price', 'desc');
+                    $query->orderBy('price', 'desc');
                     break;
                 case 'oldest':
-                    $query->orderBy('courses.created_at', 'asc');
+                    $query->orderBy('created_at', 'asc');
                     break;
                 case 'newest':
                 default:
-                    $query->orderBy('courses.created_at', 'desc');
+                    $query->orderBy('created_at', 'desc');
                     break;
             }
 
-            // Execute the query
-            $courses = $query->get();
+            // تقسيم الصفحات
+            $courses = $query->paginate(9)->withQueryString();
 
-            // Log query for debugging
-            \Log::info('Raw SQL query: ' . \DB::getQueryLog()[count(\DB::getQueryLog())-1]['query']);
-            \Log::info('SQL bindings: ' . json_encode(\DB::getQueryLog()[count(\DB::getQueryLog())-1]['bindings']));
-
-            // Log course count and data
-            \Log::info('Total courses found: ' . $courses->count());
-            if ($courses->count() > 0) {
-                \Log::info('First course: ' . json_encode($courses->first()));
-            }
-
-            // Get categories for the filter dropdown
-            $categories = $categoriesTableExists ? \DB::table('categories')->get() : collect([]);
-
-            // Convert the raw DB results to a paginator
-            $perPage = 9;
-            $page = $request->input('page', 1);
-            $offset = ($page - 1) * $perPage;
-
-            $coursesCollection = collect($courses);
-            $paginatedItems = $coursesCollection->slice($offset, $perPage)->all();
-
-            $paginatedCourses = new \Illuminate\Pagination\LengthAwarePaginator(
-                $paginatedItems,
-                $coursesCollection->count(),
-                $perPage,
-                $page,
-                ['path' => $request->url(), 'query' => $request->query()]
-            );
-
-            return view('pages.courses', [
-                'courses' => $paginatedCourses,
+            // حفظ الفئات في ذاكرة التخزين المؤقت لمدة 60 دقيقة
+            $categories = \Illuminate\Support\Facades\Cache::remember('all_categories', 60*60, function () {
+                return Category::select(['category_id', 'name'])->get();
+            });
+            
+            $data = [
+                'courses' => $courses,
                 'categories' => $categories,
                 'currentCategory' => $request->input('category'),
                 'currentSearch' => $request->input('search'),
                 'currentSort' => $request->input('sort', 'newest')
-            ]);
+            ];
+            
+            // تخزين النتائج في ذاكرة التخزين المؤقت
+            \Illuminate\Support\Facades\Cache::put($cacheKey, $data, 30*60);
+
+            return view('pages.courses', $data);
         } catch (\Exception $e) {
-            \Log::error('Error in courses page: ' . $e->getMessage());
-            \Log::error($e->getTraceAsString());
+            Log::error('Error in courses page: ' . $e->getMessage());
 
             return view('pages.courses', [
                 'courses' => collect([]),
@@ -273,226 +199,172 @@ class PageController extends Controller
     public function courseDetail($courseId)
     {
         try {
-            // Check if tables exist before querying
-            $coursesTableExists = \Schema::hasTable('courses');
-            $usersTableExists = \Schema::hasTable('users');
-            $categoriesTableExists = \Schema::hasTable('categories');
-            $videosTableExists = \Schema::hasTable('course_videos');
-            $materialsTableExists = \Schema::hasTable('course_materials');
-
-            \Log::info('Tables exist check for course detail: courses=' . ($coursesTableExists ? 'yes' : 'no') .
-                      ', users=' . ($usersTableExists ? 'yes' : 'no') .
-                      ', categories=' . ($categoriesTableExists ? 'yes' : 'no') .
-                      ', videos=' . ($videosTableExists ? 'yes' : 'no') .
-                      ', materials=' . ($materialsTableExists ? 'yes' : 'no'));
-
-            // If courses table doesn't exist, redirect with error
-            if (!$coursesTableExists) {
-                \Log::error('Courses table does not exist');
-                return redirect('/courses')->with('error', 'Database tables not set up properly. Please run migrations.');
+            // تسجيلات تصحيح مفصلة
+            Log::info('Course detail request for ID: ' . $courseId);
+            
+            // التحقق من وجود الكورس مباشرة (بدون العلاقات) للتأكد مما إذا كان موجودًا على الإطلاق
+            $courseExists = Course::where('course_id', $courseId)->exists();
+            
+            if (!$courseExists) {
+                Log::error('Course ID ' . $courseId . ' does not exist in database');
+                return redirect('/courses')->with('error', 'Course not found or unavailable.');
             }
-
-            // Get column information to ensure we're querying existing columns
-            $courseColumns = \Schema::getColumnListing('courses');
-            \Log::info('Course columns: ' . json_encode($courseColumns));
-
-            // Check if required columns exist
-            $hasApprovalStatusColumn = in_array('approval_status', $courseColumns);
-            $hasCategoryIdColumn = in_array('category_id', $courseColumns);
-
-            // Build the query based on available columns
-            $query = Course::where('course_id', $courseId);
-
-            // Only filter by approval_status if the column exists
-            if ($hasApprovalStatusColumn) {
-                $query->where('approval_status', 'approved');
+            
+            Log::info('Course ID ' . $courseId . ' exists in database, continuing...');
+            
+            // تحقق من وجود الجداول المطلوبة
+            $courseReviewsTableExists = Schema::hasTable('course_reviews');
+            $ratingsTableExists = Schema::hasTable('ratings');
+            
+            Log::info('Tables check: course_reviews=' . ($courseReviewsTableExists ? 'yes' : 'no') . ', ratings=' . ($ratingsTableExists ? 'yes' : 'no'));
+            
+            // تخزين نتائج صفحة تفاصيل الكورس في الكاش
+            $cacheKey = 'course_detail_' . $courseId;
+            
+            // مسح التخزين المؤقت للكورس الحالي (لتجنب مشاكل الكاش)
+            if (\Illuminate\Support\Facades\Cache::has($cacheKey)) {
+                \Illuminate\Support\Facades\Cache::forget($cacheKey);
+                Log::info('Cleared cache for course ID: ' . $courseId);
             }
-
-            // Add relationships if tables exist
-            $relationships = [];
-
-            if ($usersTableExists) {
-                $relationships[] = 'instructor';
-            }
-
-            if ($categoriesTableExists) {
-                $relationships[] = 'category';
-            }
-
-            if ($videosTableExists) {
-                $relationships[] = 'videos';
-            }
-
-            if ($materialsTableExists) {
-                $relationships[] = 'materials';
-            }
-
-            if (!empty($relationships)) {
-                $query->with($relationships);
-            }
-
-            // Execute the query
-            $course = $query->first();
-
+            
+            Log::info('Fetching course data for ID: ' . $courseId);
+            
+            // الحصول على الكورس مع العلاقات اللازمة
+            $course = Course::where('course_id', $courseId)
+                ->with([
+                    'instructor:user_id,name,bio,profile_image',
+                    'category:category_id,name',
+                    'videos',
+                    'materials'
+                ])
+                ->first();
+            
             if (!$course) {
-                return redirect('/courses')->with('error', 'Course not found or not available.');
+                Log::error('Course not found in database with relations: ' . $courseId);
+                throw new \Exception('Course not found with relations: ' . $courseId);
             }
-
-            // Get related courses in the same category if the category_id column exists
-            $relatedCourses = collect([]);
-
-            if ($hasCategoryIdColumn && isset($course->category_id)) {
-                $relatedQuery = Course::where('category_id', $course->category_id)
-                    ->where('course_id', '!=', $course->course_id);
-
-                if ($hasApprovalStatusColumn) {
-                    $relatedQuery->where('approval_status', 'approved');
-                }
-
-                if ($usersTableExists) {
-                    $relatedQuery->with('instructor');
-                }
-
-                $relatedCourses = $relatedQuery->take(4)->get();
-            }
-
-            // Check if ratings/reviews tables exist
-            $courseReviewsTableExists = \Schema::hasTable('course_reviews');
-            $ratingsTableExists = \Schema::hasTable('ratings');
-
-            // Initialize rating variables
+            
+            Log::info('Course found: ' . $course->title . ', approval status: ' . $course->approval_status);
+                
+            // الكورسات ذات الصلة (في نفس الفئة)
+            $relatedCourses = Course::where('category_id', $course->category_id)
+                ->where('course_id', '!=', $course->course_id)
+                ->with('instructor:user_id,name')
+                ->select(['course_id', 'title', 'thumbnail', 'price', 'instructor_id'])
+                ->take(4)
+                ->get();
+                
+            // تحسين الحصول على التقييمات
+            $reviews = collect([]);
             $averageRating = 0;
             $totalRatings = 0;
             $ratingCounts = [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0];
-            $reviews = collect([]);
-
-            // Get ratings data based on available tables
+            
+            // جلب المراجعات فقط إذا كان جدول course_reviews موجودًا
             if ($courseReviewsTableExists) {
-                // Use course_reviews table
+                try {
                 $reviews = \App\Models\CourseReview::where('course_id', $courseId)
                     ->where('is_approved', true)
-                    ->with('user')
+                        ->with('user:user_id,name,profile_image')
                     ->orderBy('created_at', 'desc')
                     ->take(5)
                     ->get();
 
+            // حساب متوسط التقييم
                 $averageRating = \App\Models\CourseReview::where('course_id', $courseId)
                     ->where('is_approved', true)
                     ->avg('rating') ?? 0;
 
+            // حساب عدد التقييمات
                 $totalRatings = \App\Models\CourseReview::where('course_id', $courseId)
                     ->where('is_approved', true)
                     ->count();
 
-                // Count ratings by value
+            // حساب توزيع التقييمات
                 $ratingDistribution = \App\Models\CourseReview::where('course_id', $courseId)
                     ->where('is_approved', true)
-                    ->select('rating', \DB::raw('count(*) as count'))
+                    ->select('rating', DB::raw('count(*) as count'))
                     ->groupBy('rating')
                     ->get()
                     ->pluck('count', 'rating')
                     ->toArray();
 
-                // Fill in the rating counts array
+            // ملء مصفوفة توزيع التقييمات
                 foreach ($ratingDistribution as $rating => $count) {
                     if (isset($ratingCounts[$rating])) {
                         $ratingCounts[$rating] = $count;
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Error fetching course reviews: ' . $e->getMessage());
+                }
+            } 
+            // فحص جدول ratings إذا لم يكن جدول course_reviews موجودًا
+            elseif ($ratingsTableExists) {
+                try {
+                    $reviews = \App\Models\Rating::where('course_id', $courseId)
+                        ->where('is_approved', true)
+                        ->with('user:user_id,name,profile_image')
+                        ->orderBy('created_at', 'desc')
+                        ->take(5)
+                        ->get();
+    
+                    // حساب متوسط التقييم
+                    $averageRating = \App\Models\Rating::where('course_id', $courseId)
+                        ->where('is_approved', true)
+                        ->avg('rating') ?? 0;
+    
+                    // حساب عدد التقييمات
+                    $totalRatings = \App\Models\Rating::where('course_id', $courseId)
+                        ->where('is_approved', true)
+                        ->count();
+    
+                    // حساب توزيع التقييمات
+                    $ratingDistribution = \App\Models\Rating::where('course_id', $courseId)
+                        ->where('is_approved', true)
+                        ->select('rating', DB::raw('count(*) as count'))
+                        ->groupBy('rating')
+                        ->get()
+                        ->pluck('count', 'rating')
+                        ->toArray();
+    
+                    // ملء مصفوفة توزيع التقييمات
+                    foreach ($ratingDistribution as $rating => $count) {
+                        if (isset($ratingCounts[$rating])) {
+                            $ratingCounts[$rating] = $count;
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Error fetching ratings: ' . $e->getMessage());
                     }
                 }
-            } elseif ($ratingsTableExists) {
-                // Use ratings table
-                $ratingField = \Schema::hasColumn('ratings', 'rating') ? 'rating' : 'rating_value';
-                $reviewField = \Schema::hasColumn('ratings', 'review') ? 'review' :
-                              (\Schema::hasColumn('ratings', 'review_text') ? 'review_text' :
-                              (\Schema::hasColumn('ratings', 'comment') ? 'comment' : null));
-
-                $reviewsQuery = \App\Models\Rating::where('course_id', $courseId);
-
-                // Add conditions based on available columns
-                if (\Schema::hasColumn('ratings', 'is_published')) {
-                    $reviewsQuery->where('is_published', true);
-                }
-
-                if (\Schema::hasColumn('ratings', 'admin_review_status')) {
-                    $reviewsQuery->orWhere('admin_review_status', 'approved');
-                }
-
-                // Get reviews
-                $reviews = $reviewsQuery->with('user')
-                    ->orderBy('created_at', 'desc')
-                    ->take(5)
-                    ->get();
-
-                // Calculate average rating
-                $averageRating = \App\Models\Rating::where('course_id', $courseId);
-
-                if (\Schema::hasColumn('ratings', 'is_published')) {
-                    $averageRating->where('is_published', true);
-                }
-
-                if (\Schema::hasColumn('ratings', 'admin_review_status')) {
-                    $averageRating->orWhere('admin_review_status', 'approved');
-                }
-
-                $averageRating = $averageRating->avg($ratingField) ?? 0;
-
-                // Count total ratings
-                $totalRatingsQuery = \App\Models\Rating::where('course_id', $courseId);
-
-                if (\Schema::hasColumn('ratings', 'is_published')) {
-                    $totalRatingsQuery->where('is_published', true);
-                }
-
-                if (\Schema::hasColumn('ratings', 'admin_review_status')) {
-                    $totalRatingsQuery->orWhere('admin_review_status', 'approved');
-                }
-
-                $totalRatings = $totalRatingsQuery->count();
-
-                // Count ratings by value
-                $ratingDistributionQuery = \App\Models\Rating::where('course_id', $courseId);
-
-                if (\Schema::hasColumn('ratings', 'is_published')) {
-                    $ratingDistributionQuery->where('is_published', true);
-                }
-
-                if (\Schema::hasColumn('ratings', 'admin_review_status')) {
-                    $ratingDistributionQuery->orWhere('admin_review_status', 'approved');
-                }
-
-                $ratingDistribution = $ratingDistributionQuery
-                    ->select($ratingField, \DB::raw('count(*) as count'))
-                    ->groupBy($ratingField)
-                    ->get()
-                    ->pluck('count', $ratingField)
-                    ->toArray();
-
-                // Fill in the rating counts array
-                foreach ($ratingDistribution as $rating => $count) {
-                    $rating = min(5, max(1, round($rating))); // Ensure it's between 1-5
-                    if (isset($ratingCounts[$rating])) {
-                        $ratingCounts[$rating] = $count;
-                    }
-                }
-            }
-
-            // Format the average rating
+                
+            // تنسيق متوسط التقييم
             $averageRating = number_format($averageRating, 1);
 
-            return view('pages.course-detail', [
+            $data = [
                 'course' => $course,
                 'relatedCourses' => $relatedCourses,
                 'averageRating' => $averageRating,
                 'totalRatings' => $totalRatings,
                 'ratingCounts' => $ratingCounts,
                 'reviews' => $reviews,
-            ]);
+                'courseReviewsTableExists' => $courseReviewsTableExists,
+                'ratingsTableExists' => $ratingsTableExists
+            ];
+            
+            Log::info('Completed gathering course data for ID: ' . $courseId);
+            
+            // نحن لا نريد تخزين النتائج في ذاكرة التخزين المؤقت في الوقت الحالي أثناء التصحيح
+            // \Illuminate\Support\Facades\Cache::put($cacheKey, $data, 60*60);
+            
+            return view('pages.course-detail', $data);
         } catch (\Exception $e) {
-            // Log the error
-            \Log::error('Error in course detail page: ' . $e->getMessage());
-            \Log::error($e->getTraceAsString());
+            // تسجيل الخطأ
+            Log::error('Error in course detail page: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
 
-            // If there's an error or course not found, redirect to courses page
+            // إعادة التوجيه إلى صفحة الكورسات في حالة حدوث خطأ
             return redirect('/courses')->with('error', 'Course not found or unavailable: ' . $e->getMessage());
         }
     }

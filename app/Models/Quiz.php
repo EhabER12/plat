@@ -16,7 +16,7 @@ class Quiz extends Model
      *
      * @var string
      */
-    protected $primaryKey = 'quiz_id';
+    protected $primaryKey = 'id';
 
     /**
      * The attributes that are mass assignable.
@@ -77,7 +77,7 @@ class Quiz extends Model
      */
     public function attempts(): HasMany
     {
-        return $this->hasMany(QuizAttempt::class, 'quiz_id', 'quiz_id');
+        return $this->hasMany(QuizAttempt::class, 'quiz_id', 'id');
     }
 
     /**
@@ -183,32 +183,74 @@ class Quiz extends Model
     public function getTimeStatus()
     {
         if ($this->hasNotStarted()) {
-            $diffInDays = now()->diffInDays($this->start_date, false);
-            if ($diffInDays > 0) {
-                return "يبدأ بعد $diffInDays " . ($diffInDays == 1 ? "يوم" : "أيام");
-            } else {
-                $diffInHours = now()->diffInHours($this->start_date, false);
-                if ($diffInHours > 0) {
-                    return "يبدأ بعد $diffInHours " . ($diffInHours == 1 ? "ساعة" : "ساعات");
-                } else {
-                    $diffInMinutes = now()->diffInMinutes($this->start_date, false);
-                    return "يبدأ بعد $diffInMinutes " . ($diffInMinutes == 1 ? "دقيقة" : "دقائق");
+            $now = now();
+            $diff = $now->diff($this->start_date);
+
+            if ($diff->days > 0) {
+                $hours = $diff->h;
+                $minutes = $diff->i;
+
+                $result = "يبدأ بعد " . $diff->days . " " . ($diff->days == 1 ? "يوم" : "أيام");
+
+                if ($hours > 0 || $minutes > 0) {
+                    $result .= " و " . $hours . " " . ($hours == 1 ? "ساعة" : "ساعات");
+
+                    if ($minutes > 0) {
+                        $result .= " و " . $minutes . " " . ($minutes == 1 ? "دقيقة" : "دقائق");
+                    }
                 }
+
+                return $result;
+            } else if ($diff->h > 0) {
+                $hours = $diff->h;
+                $minutes = $diff->i;
+
+                $result = "يبدأ بعد " . $hours . " " . ($hours == 1 ? "ساعة" : "ساعات");
+
+                if ($minutes > 0) {
+                    $result .= " و " . $minutes . " " . ($minutes == 1 ? "دقيقة" : "دقائق");
+                }
+
+                return $result;
+            } else {
+                $minutes = $diff->i;
+                return "يبدأ بعد " . $minutes . " " . ($minutes == 1 ? "دقيقة" : "دقائق");
             }
         } elseif ($this->hasEnded()) {
             return "انتهى";
         } elseif ($this->end_date !== null) {
-            $diffInDays = now()->diffInDays($this->end_date, false);
-            if ($diffInDays > 0) {
-                return "ينتهي بعد $diffInDays " . ($diffInDays == 1 ? "يوم" : "أيام");
-            } else {
-                $diffInHours = now()->diffInHours($this->end_date, false);
-                if ($diffInHours > 0) {
-                    return "ينتهي بعد $diffInHours " . ($diffInHours == 1 ? "ساعة" : "ساعات");
-                } else {
-                    $diffInMinutes = now()->diffInMinutes($this->end_date, false);
-                    return "ينتهي بعد $diffInMinutes " . ($diffInMinutes == 1 ? "دقيقة" : "دقائق");
+            $now = now();
+            $diff = $now->diff($this->end_date);
+
+            if ($diff->days > 0) {
+                $hours = $diff->h;
+                $minutes = $diff->i;
+
+                $result = "ينتهي بعد " . $diff->days . " " . ($diff->days == 1 ? "يوم" : "أيام");
+
+                if ($hours > 0 || $minutes > 0) {
+                    $result .= " و " . $hours . " " . ($hours == 1 ? "ساعة" : "ساعات");
+
+                    if ($minutes > 0) {
+                        $result .= " و " . $minutes . " " . ($minutes == 1 ? "دقيقة" : "دقائق");
+                    }
                 }
+
+                return $result;
+            } else if ($diff->h > 0) {
+                $hours = $diff->h;
+                $minutes = $diff->i;
+
+                $result = "ينتهي بعد " . $hours . " " . ($hours == 1 ? "ساعة" : "ساعات");
+
+                if ($minutes > 0) {
+                    $result .= " و " . $minutes . " " . ($minutes == 1 ? "دقيقة" : "دقائق");
+                }
+
+                return $result;
+            } else {
+                $minutes = $diff->i;
+                return "ينتهي بعد " . $minutes . " " . ($minutes == 1 ? "دقيقة" : "دقائق");
             }
         } else {
             return "غير محدد";

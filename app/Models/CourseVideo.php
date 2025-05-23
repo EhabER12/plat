@@ -44,7 +44,12 @@ class CourseVideo extends Model
         'is_free_preview',
         'storage_disk',
         'is_encrypted',
-        'position'
+        'position',
+        'hls_path',
+        'hls_url',
+        'is_hls_enabled',
+        'encryption_key',
+        'hls_segments_path'
     ];
 
     /**
@@ -58,6 +63,7 @@ class CourseVideo extends Model
         'position' => 'integer',
         'is_free_preview' => 'boolean',
         'is_encrypted' => 'boolean',
+        'is_hls_enabled' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
@@ -103,22 +109,48 @@ class CourseVideo extends Model
      */
     public function getVideoFullUrlAttribute()
     {
+        // إعطاء الأولوية لـ HLS إذا كان متاحًا
+        if ($this->is_hls_enabled && $this->hls_url) {
+            return $this->hls_url;
+        }
+        
         if ($this->video_url) {
-            return $this->video_url; // رابط خارجي
+            // إذا كان لدينا رابط خارجي، استخدمه مباشرة
+            return $this->video_url;
         }
 
-        if ($this->video_path) {
-            if ($this->storage_disk === 's3') {
-                // استخدام رابط S3 - تجنب استخدام url() مباشرة
-                $s3Bucket = config('filesystems.disks.s3.bucket');
-                $s3Region = config('filesystems.disks.s3.region', 'us-east-1');
-                return "https://{$s3Bucket}.s3.{$s3Region}.amazonaws.com/{$this->video_path}";
-            } else {
-                // استخدام المسار المحلي
-                return asset($this->video_path);
-            }
+        // نحتاج للتأكد من أن لدينا معرف للفيديو والكورس
+        if (!$this->video_id || !$this->course_id) {
+            return null;
         }
 
+        // دائمًا استخدم نظام التدفق الداخلي بدلاً من محاولة الوصول المباشر للملفات
+        return route('video.token', ['courseId' => $this->course_id, 'videoId' => $this->video_id]);
+    }
+
+    /**
+     * التحقق مما إذا كان الفيديو يستخدم HLS
+     */
+    public function getIsHlsAttribute()
+    {
+        return $this->is_hls_enabled && !empty($this->hls_path);
+    }
+
+    /**
+     * الحصول على رابط HLS للفيديو
+     */
+    public function getHlsUrlAttribute()
+    {
+        // إذا كان لدينا رابط مخزن، استخدمه
+        if (!empty($this->attributes['hls_url'])) {
+            return $this->attributes['hls_url'];
+        }
+        
+        // إذا كان لدينا مسار ملف
+        if (!empty($this->attributes['hls_path'])) {
+            return asset('storage/' . $this->attributes['hls_path']);
+        }
+        
         return null;
     }
 
@@ -136,6 +168,11 @@ class CourseVideo extends Model
         }
 
         if ($this->storage_disk === 's3') {
+            // تحقق ما إذا كان يجب استخدام تخزين S3 أو محلي
+            if (config('filesystems.default') === 'local' || empty(env('AWS_ACCESS_KEY_ID'))) {
+                // استخدام مسار الصورة المصغرة المحلي
+                return asset('storage/' . $this->thumbnail_url);
+            }
             // استخدام رابط S3 - تجنب استخدام url() مباشرة
             $s3Bucket = config('filesystems.disks.s3.bucket');
             $s3Region = config('filesystems.disks.s3.region', 'us-east-1');

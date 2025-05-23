@@ -144,7 +144,7 @@ class ExamController extends Controller
         // Check if there's an ongoing attempt
         $ongoingAttempt = ExamAttempt::where('student_id', $student->user_id)
             ->where('exam_id', $examId)
-            ->whereNull('completed_at')
+            ->where('status', 'in_progress')
             ->first();
 
         if ($ongoingAttempt) {
@@ -156,6 +156,7 @@ class ExamController extends Controller
         $attempt->student_id = $student->user_id;
         $attempt->exam_id = $examId;
         $attempt->started_at = $now;
+        $attempt->status = 'in_progress';
         $attempt->save();
 
         return redirect()->route('student.exams.take', $attempt->attempt_id);
@@ -177,7 +178,7 @@ class ExamController extends Controller
             ->findOrFail($attemptId);
 
         // Check if the attempt is already completed
-        if ($attempt->completed_at) {
+        if ($attempt->status === 'completed') {
             return redirect()->route('student.exams.result', $attemptId)
                 ->with('info', 'This exam attempt has already been completed.');
         }
@@ -214,7 +215,7 @@ class ExamController extends Controller
             ->findOrFail($attemptId);
 
         // Check if the attempt is already completed
-        if ($attempt->completed_at) {
+        if ($attempt->status === 'completed') {
             return redirect()->route('student.exams.result', $attemptId)
                 ->with('info', 'This exam attempt has already been completed.');
         }
@@ -274,11 +275,17 @@ class ExamController extends Controller
         // Check if the student passed
         $passed = $score >= $attempt->exam->passing_score;
 
+        // Calculate time spent
+        $timeSpent = Carbon::now()->diffInSeconds(Carbon::parse($attempt->started_at));
+
         // Update the attempt
         $attempt->completed_at = Carbon::now();
         $attempt->score = $score;
         $attempt->passed = $passed;
         $attempt->answers = $answers;
+        $attempt->status = 'completed';
+        $attempt->time_spent_seconds = $timeSpent;
+        $attempt->is_passed = $passed;
         $attempt->save();
 
         return redirect()->route('student.exams.result', $attemptId)
@@ -301,7 +308,7 @@ class ExamController extends Controller
             ->findOrFail($attemptId);
 
         // Check if the attempt is completed
-        if (!$attempt->completed_at) {
+        if ($attempt->status !== 'completed') {
             return redirect()->route('student.exams.take', $attemptId)
                 ->with('info', 'This exam attempt is not yet completed.');
         }

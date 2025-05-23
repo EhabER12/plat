@@ -21,6 +21,7 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
+        \App\Http\Middleware\CheckStorageLink::class,
     ];
 
     /**
@@ -36,6 +37,7 @@ class Kernel extends HttpKernel
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\SetLocale::class,
         ],
 
         'api' => [
@@ -61,13 +63,16 @@ class Kernel extends HttpKernel
         'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
         'precognitive' => \Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests::class,
-        'signed' => \App\Http\Middleware\ValidateSignature::class,
+        'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        'verified.parent' => \App\Http\Middleware\VerifiedParentMiddleware::class,
+        'set.locale' => \App\Http\Middleware\SetLocale::class,
         'admin' => \App\Http\Middleware\AdminMiddleware::class,
         'instructor' => \App\Http\Middleware\InstructorMiddleware::class,
         'student' => \App\Http\Middleware\StudentMiddleware::class,
         'video.access' => \App\Http\Middleware\VideoAccessMiddleware::class,
         'prevent.download' => \App\Http\Middleware\PreventVideoDownload::class,
+        'role' => \App\Http\Middleware\RoleMiddleware::class,
     ];
 }

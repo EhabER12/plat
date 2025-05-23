@@ -64,7 +64,7 @@ class QuizQuestion extends Model
      */
     public function quiz(): BelongsTo
     {
-        return $this->belongsTo(Quiz::class, 'quiz_id', 'quiz_id');
+        return $this->belongsTo(Quiz::class, 'quiz_id', 'id');
     }
 
     /**
@@ -85,40 +85,40 @@ class QuizQuestion extends Model
                 if (!is_array($answer)) {
                     return false;
                 }
-                
+
                 sort($answer);
                 $correctAnswer = $this->correct_answer;
                 sort($correctAnswer);
-                
+
                 return $answer == $correctAnswer;
-                
+
             case self::TYPE_SINGLE_CHOICE:
             case self::TYPE_TRUE_FALSE:
                 return $answer == $this->correct_answer;
-                
+
             case self::TYPE_SHORT_ANSWER:
                 // For short answers, check if the answer contains the correct answer
                 // This is a simple implementation and might need to be more sophisticated
                 return stripos($answer, $this->correct_answer) !== false;
-                
+
             case self::TYPE_ESSAY:
                 // Essay questions need manual grading
                 return null;
-                
+
             case self::TYPE_MATCHING:
                 if (!is_array($answer) || !is_array($this->correct_answer)) {
                     return false;
                 }
-                
+
                 // Check if all pairs match
                 foreach ($this->correct_answer as $key => $value) {
                     if (!isset($answer[$key]) || $answer[$key] != $value) {
                         return false;
                     }
                 }
-                
+
                 return true;
-                
+
             default:
                 return false;
         }
@@ -155,10 +155,10 @@ class QuizQuestion extends Model
         if (!$this->options || !is_array($this->options)) {
             return [];
         }
-        
+
         $options = $this->options;
         shuffle($options);
-        
+
         return $options;
     }
 }

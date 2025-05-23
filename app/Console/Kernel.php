@@ -20,6 +20,9 @@ class Kernel extends ConsoleKernel
         Commands\ResetDatabase::class,
         Commands\ProcessInstructorEarnings::class,
         \App\Console\Commands\CleanVideoStorage::class,
+        \App\Console\Commands\CreateTestCourseCommand::class,
+        \App\Console\Commands\SeedBannedWords::class,
+        \App\Console\Commands\CheckStorageLink::class,
     ];
 
     /**
@@ -41,7 +44,7 @@ class Kernel extends ConsoleKernel
      *
      * @return void
      */
-    protected function commands()
+    protected function commands(): void
     {
         $this->load(__DIR__.'/Commands');
         require base_path('routes/console.php');

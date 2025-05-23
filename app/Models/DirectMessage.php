@@ -5,6 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\App;
+use App\Services\ContentFilterService;
 
 class DirectMessage extends Model
 {
@@ -30,12 +33,31 @@ class DirectMessage extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'user_id',
         'sender_id',
         'receiver_id',
         'content',
         'is_read',
         'read_at',
-        'course_id'
+        'course_id',
+        'chat_id',
+        'contains_flagged_content',
+        'flagged_severity',
+        'is_filtered',
+        'original_content'
+    ];
+
+    /**
+     * The model's default values for attributes.
+     *
+     * @var array
+     */
+    protected $attributes = [
+        'chat_id' => 0,
+        'is_read' => false,
+        'contains_flagged_content' => false,
+        'flagged_severity' => 0,
+        'is_filtered' => false
     ];
 
     /**
@@ -47,7 +69,10 @@ class DirectMessage extends Model
         'is_read' => 'boolean',
         'read_at' => 'datetime',
         'created_at' => 'datetime',
-        'updated_at' => 'datetime'
+        'updated_at' => 'datetime',
+        'contains_flagged_content' => 'boolean',
+        'flagged_severity' => 'integer',
+        'is_filtered' => 'boolean'
     ];
 
     /**
@@ -79,13 +104,20 @@ class DirectMessage extends Model
      */
     public function markAsRead()
     {
-        if (!$this->is_read) {
-            $this->update([
-                'is_read' => true,
-                'read_at' => now()
+        try {
+            if (!$this->is_read) {
+                $this->is_read = true;
+                $this->read_at = now();
+                $this->save();
+            }
+            return $this;
+        } catch (\Exception $e) {
+            Log::error('خطأ في تحديث حالة القراءة للرسالة', [
+                'error' => $e->getMessage(),
+                'message_id' => $this->message_id
             ]);
+            return $this;
         }
-        return $this;
     }
 
     /**
@@ -119,5 +151,96 @@ class DirectMessage extends Model
             $q->where('sender_id', $userId2)
               ->where('receiver_id', $userId1);
         });
+    }
+
+    /**
+     * The "booted" method of the model.
+     *
+     * @return void
+     */
+    protected static function booted()
+    {
+        try {
+            static::creating(function ($message) {
+                try {
+                    if (!empty($message->content)) {
+                        $message->filterContent();
+                    }
+                } catch (\Exception $e) {
+                    // Log error but allow message to be created
+                    Log::error('Error in DirectMessage creating event', [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
+                    ]);
+                }
+            });
+
+            static::updating(function ($message) {
+                try {
+                    if ($message->isDirty('content')) {
+                        $message->filterContent();
+                    }
+                } catch (\Exception $e) {
+                    // Log error but allow message to be updated
+                    Log::error('Error in DirectMessage updating event', [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                        'message_id' => $message->message_id
+                    ]);
+                }
+            });
+        } catch (\Exception $e) {
+            // Log error in booted method
+            Log::error('Error in DirectMessage booted method', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
+    }
+
+    /**
+     * Filter the message content for banned words.
+     *
+     * @return void
+     */
+    protected function filterContent()
+    {
+        try {
+            $filterService = app(ContentFilterService::class);
+            $result = $filterService->filterContent($this->content);
+
+            if ($result['has_banned_content'] ?? false) {
+                // Save original content before filtering
+                $this->original_content = $this->content;
+
+                // Update with filtered content
+                $this->contains_flagged_content = true;
+                $this->flagged_severity = $result['highest_severity'] ?? 1;
+                $this->content = $result['filtered_content'] ?? $this->content;
+                $this->is_filtered = true;
+
+                // Log the filtering
+                Log::warning('Message content filtered', [
+                    'message_id' => $this->message_id ?? 'new',
+                    'sender_id' => $this->sender_id,
+                    'receiver_id' => $this->receiver_id,
+                    'found_words' => $result['found_words'] ?? [],
+                    'severity' => $result['highest_severity'] ?? 1
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Log error but don't prevent message from being saved
+            Log::error('Error filtering message content in DirectMessage model', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'message_id' => $this->message_id ?? 'new',
+                'sender_id' => $this->sender_id ?? 'unknown'
+            ]);
+
+            // Ensure message can still be saved
+            $this->contains_flagged_content = false;
+            $this->flagged_severity = 0;
+            $this->is_filtered = false;
+        }
     }
 }

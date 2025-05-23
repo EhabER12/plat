@@ -145,102 +145,63 @@
                                         </div>
                                     </td>
                                     <td>${{ number_format($withdrawal->amount, 2) }}</td>
-                                    <td>{{ ucfirst($withdrawal->payment_method) }}</td>
+                                    <td>
+                                        @if($withdrawal->payment_provider == 'vodafone_cash')
+                                            <span class="badge badge-info">
+                                                <i class="fas fa-mobile-alt"></i> فودافون كاش
+                                            </span>
+                                        @elseif($withdrawal->payment_provider == 'instapay')
+                                            <span class="badge badge-info">
+                                                <i class="fas fa-credit-card"></i> إنستا باي
+                                            </span>
+                                        @endif
+                                        <br>
+                                        <small class="text-muted">{{ $withdrawal->provider_account_id }}</small>
+                                    </td>
                                     <td>{{ $withdrawal->requested_at->format('M d, Y') }}</td>
                                     <td>
                                         @if($withdrawal->status == 'pending')
-                                            <span class="badge badge-warning">Pending</span>
+                                            <span class="badge badge-warning">
+                                                <i class="fas fa-clock"></i> Pending
+                                            </span>
                                         @elseif($withdrawal->status == 'completed')
-                                            <span class="badge badge-success">Completed</span>
+                                            <span class="badge badge-success">
+                                                <i class="fas fa-check-circle"></i> Completed
+                                            </span>
                                         @elseif($withdrawal->status == 'rejected')
-                                            <span class="badge badge-danger">Rejected</span>
+                                            <span class="badge badge-danger">
+                                                <i class="fas fa-times-circle"></i> Rejected
+                                            </span>
                                         @elseif($withdrawal->status == 'cancelled')
-                                            <span class="badge badge-secondary">Cancelled</span>
-                                        @else
-                                            <span class="badge badge-info">{{ ucfirst($withdrawal->status) }}</span>
+                                            <span class="badge badge-secondary">
+                                                <i class="fas fa-ban"></i> Cancelled
+                                            </span>
                                         @endif
                                     </td>
                                     <td>
-                                        <a href="{{ route('admin.instructor-earnings.show-withdrawal', $withdrawal->withdrawal_id) }}" class="btn btn-sm btn-info">
-                                            <i class="fas fa-eye"></i> View
-                                        </a>
-                                        
-                                        @if($withdrawal->status == 'pending')
-                                            <div class="btn-group">
-                                                <button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approveModal{{ $withdrawal->withdrawal_id }}">
-                                                    <i class="fas fa-check"></i> Approve
+                                        <div class="btn-group">
+                                            <a href="{{ route('admin.instructor-earnings.show-withdrawal', $withdrawal->withdrawal_id) }}" 
+                                               class="btn btn-sm btn-primary" 
+                                               title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            @if($withdrawal->status == 'pending')
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-success" 
+                                                        data-toggle="modal" 
+                                                        data-target="#approveModal{{ $withdrawal->withdrawal_id }}"
+                                                        title="Approve">
+                                                    <i class="fas fa-check"></i>
                                                 </button>
-                                                <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#rejectModal{{ $withdrawal->withdrawal_id }}">
-                                                    <i class="fas fa-times"></i> Reject
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-danger" 
+                                                        data-toggle="modal" 
+                                                        data-target="#rejectModal{{ $withdrawal->withdrawal_id }}"
+                                                        title="Reject">
+                                                    <i class="fas fa-times"></i>
                                                 </button>
-                                            </div>
-                                            
-                                            <!-- Approve Modal -->
-                                            <div class="modal fade" id="approveModal{{ $withdrawal->withdrawal_id }}" tabindex="-1" role="dialog" aria-labelledby="approveModalLabel" aria-hidden="true">
-                                                <div class="modal-dialog" role="document">
-                                                    <div class="modal-content">
-                                                        <form action="{{ route('admin.instructor-earnings.process-withdrawal', $withdrawal->withdrawal_id) }}" method="POST">
-                                                            @csrf
-                                                            <input type="hidden" name="action" value="approve">
-                                                            
-                                                            <div class="modal-header">
-                                                                <h5 class="modal-title" id="approveModalLabel">Approve Withdrawal</h5>
-                                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                                    <span aria-hidden="true">&times;</span>
-                                                                </button>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                <p>Are you sure you want to approve this withdrawal request?</p>
-                                                                <p><strong>Amount:</strong> ${{ number_format($withdrawal->amount, 2) }}</p>
-                                                                <p><strong>Instructor:</strong> {{ $withdrawal->instructor->name }}</p>
-                                                                
-                                                                <div class="form-group">
-                                                                    <label for="notes">Notes (Optional)</label>
-                                                                    <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
-                                                                </div>
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                                                                <button type="submit" class="btn btn-success">Approve Withdrawal</button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- Reject Modal -->
-                                            <div class="modal fade" id="rejectModal{{ $withdrawal->withdrawal_id }}" tabindex="-1" role="dialog" aria-labelledby="rejectModalLabel" aria-hidden="true">
-                                                <div class="modal-dialog" role="document">
-                                                    <div class="modal-content">
-                                                        <form action="{{ route('admin.instructor-earnings.process-withdrawal', $withdrawal->withdrawal_id) }}" method="POST">
-                                                            @csrf
-                                                            <input type="hidden" name="action" value="reject">
-                                                            
-                                                            <div class="modal-header">
-                                                                <h5 class="modal-title" id="rejectModalLabel">Reject Withdrawal</h5>
-                                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                                    <span aria-hidden="true">&times;</span>
-                                                                </button>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                <p>Are you sure you want to reject this withdrawal request?</p>
-                                                                <p><strong>Amount:</strong> ${{ number_format($withdrawal->amount, 2) }}</p>
-                                                                <p><strong>Instructor:</strong> {{ $withdrawal->instructor->name }}</p>
-                                                                
-                                                                <div class="form-group">
-                                                                    <label for="notes">Reason for Rejection (Required)</label>
-                                                                    <textarea class="form-control" id="notes" name="notes" rows="3" required></textarea>
-                                                                </div>
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                                                                <button type="submit" class="btn btn-danger">Reject Withdrawal</button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @endif
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach

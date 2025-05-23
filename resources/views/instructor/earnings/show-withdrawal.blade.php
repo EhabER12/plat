@@ -69,13 +69,28 @@
                             <table class="table table-borderless">
                                 <tr>
                                     <th>Method:</th>
-                                    <td>{{ ucfirst($withdrawal->payment_method) }}</td>
+                                    <td>
+                                        @if($withdrawal->payment_provider == 'vodafone_cash')
+                                            فودافون كاش
+                                        @elseif($withdrawal->payment_provider == 'instapay')
+                                            إنستا باي
+                                        @else
+                                            {{ ucfirst($withdrawal->payment_provider) }}
+                                        @endif
+                                    </td>
                                 </tr>
-                                @if($withdrawal->payment_details)
-                                    @php $details = json_decode($withdrawal->payment_details, true); @endphp
+                                <tr>
+                                    <th>Account/Phone:</th>
+                                    <td>{{ $withdrawal->provider_account_id ?? 'N/A' }}</td>
+                                </tr>
+                                @if($withdrawal->transfer_receipt)
                                     <tr>
-                                        <th>Account:</th>
-                                        <td>{{ $details['account_name'] ?? 'N/A' }}</td>
+                                    <th>Transfer Receipt:</th>
+                                    <td>
+                                        <a href="{{ asset($withdrawal->transfer_receipt) }}" target="_blank">
+                                            <img src="{{ asset($withdrawal->transfer_receipt) }}" alt="إثبات التحويل" class="img-thumbnail" style="max-width: 180px;">
+                                        </a>
+                                    </td>
                                     </tr>
                                 @endif
                             </table>
@@ -95,12 +110,9 @@
                         <div class="alert alert-warning">
                             <h5><i class="fas fa-clock"></i> Pending Withdrawal</h5>
                             <p>Your withdrawal request is being processed. This typically takes 3 business days.</p>
-                            <form action="{{ route('instructor.earnings.cancel-withdrawal', $withdrawal->withdrawal_id) }}" method="POST" class="d-inline">
-                                @csrf
-                                <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to cancel this withdrawal request?')">
-                                    <i class="fas fa-times"></i> Cancel Withdrawal
-                                </button>
-                            </form>
+                            <button type="button" class="btn btn-danger" id="cancelBtn" onclick="cancelWithdrawal()">
+                                <i class="fas fa-times"></i> Cancel Withdrawal
+                            </button>
                         </div>
                     @elseif($withdrawal->status == 'completed')
                         <div class="alert alert-success">
@@ -266,4 +278,49 @@
         background-color: #e3e6f0;
     }
 </style>
+@endsection
+
+@section('scripts')
+<script>
+    function cancelWithdrawal() {
+        if (!confirm('Are you sure you want to cancel this withdrawal request?')) {
+            return;
+        }
+        
+        // Show loading state
+        const cancelBtn = document.getElementById('cancelBtn');
+        const originalBtnText = cancelBtn.innerHTML;
+        cancelBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelling...';
+        cancelBtn.disabled = true;
+        
+        // Create form data with CSRF token
+        const formData = new FormData();
+        formData.append('_token', '{{ csrf_token() }}');
+        
+        // Define the URL for the cancellation
+        const url = '{{ route('instructor.earnings.cancel-withdrawal', $withdrawal->withdrawal_id) }}';
+        console.log('Sending cancellation request to:', url);
+        
+        // Send request using simple form post to avoid AJAX complications
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = url;
+        form.style.display = 'none';
+        
+        // Add CSRF token
+        const csrfField = document.createElement('input');
+        csrfField.type = 'hidden';
+        csrfField.name = '_token';
+        csrfField.value = '{{ csrf_token() }}';
+        form.appendChild(csrfField);
+        
+        // Add it to the page and submit
+        document.body.appendChild(form);
+        
+        // Show the loading state for a moment to provide feedback
+        setTimeout(function() {
+            form.submit();
+        }, 800);
+    }
+</script>
 @endsection

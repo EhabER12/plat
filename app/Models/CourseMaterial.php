@@ -28,6 +28,7 @@ class CourseMaterial extends Model
         'title',
         'description',
         'file_url',
+        'file_path',
         'file_type',
         'file_size',
         'sequence_order',

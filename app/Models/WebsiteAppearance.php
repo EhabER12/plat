@@ -33,6 +33,8 @@ class WebsiteAppearance extends Model
     const SECTION_ABOUT = 'about';
     const SECTION_FOOTER = 'footer';
     const SECTION_NAVBAR_BANNER = 'navbar_banner';
+    const SECTION_VIDEO = 'video';
+    const SECTION_PARTNERS = 'partners';
     
     /**
      * Value types
@@ -136,6 +138,25 @@ class WebsiteAppearance extends Model
      */
     public static function clearCache()
     {
-        Cache::forget('website_appearance:*');
+        $sections = [
+            self::SECTION_HERO,
+            self::SECTION_FEATURES,
+            self::SECTION_ABOUT,
+            self::SECTION_FOOTER,
+            self::SECTION_NAVBAR_BANNER,
+            self::SECTION_VIDEO,
+            self::SECTION_PARTNERS,
+            'stats'
+        ];
+        
+        foreach ($sections as $section) {
+            Cache::forget("website_appearance:section:{$section}");
+            
+            // Clear individual settings in each section
+            $settings = self::where('section', $section)->get();
+            foreach ($settings as $setting) {
+                Cache::forget("website_appearance:{$section}:{$setting->key}");
+            }
+        }
     }
 } 

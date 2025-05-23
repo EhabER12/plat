@@ -52,7 +52,7 @@
     .add-option-btn {
         margin-top: 10px;
     }
-    
+
     .correct-answer-toggle .form-check-input:checked {
         background-color: #198754;
         border-color: #198754;
@@ -96,7 +96,7 @@
                     <div class="tab-content" id="quizTabsContent">
                         <!-- معلومات الامتحان -->
                         <div class="tab-pane fade show active" id="info-content" role="tabpanel" aria-labelledby="info-tab">
-                            <form id="update-quiz-form" action="{{ route('instructor.quizzes.update', $quiz->quiz_id) }}" method="POST">
+                            <form id="update-quiz-form" action="{{ route('instructor.quizzes.update', $quiz->id) }}" method="POST">
                                 @csrf
                                 @method('PUT')
 
@@ -115,7 +115,7 @@
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
-                                    
+
                                     <div class="col-md-6">
                                         <label class="form-label">عنوان الامتحان <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control @error('title') is-invalid @enderror" name="title" value="{{ old('title', $quiz->title) }}" required>
@@ -141,7 +141,7 @@
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
-                                    
+
                                     <div class="col-md-4">
                                         <label class="form-label">نسبة النجاح (%) <span class="text-danger">*</span></label>
                                         <input type="number" class="form-control @error('passing_percentage') is-invalid @enderror" name="passing_percentage" value="{{ old('passing_percentage', $quiz->passing_percentage) }}" min="1" max="100" required>
@@ -149,7 +149,7 @@
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
-                                    
+
                                     <div class="col-md-4">
                                         <label class="form-label">الحد الأقصى للمحاولات</label>
                                         <input type="number" class="form-control @error('max_attempts') is-invalid @enderror" name="max_attempts" value="{{ old('max_attempts', $quiz->max_attempts) }}" min="1">
@@ -167,7 +167,7 @@
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
-                                    
+
                                     <div class="col-md-6">
                                         <label class="form-label">تاريخ الانتهاء</label>
                                         <input type="datetime-local" class="form-control @error('end_date') is-invalid @enderror" name="end_date" value="{{ old('end_date', $quiz->end_date ? $quiz->end_date->format('Y-m-d\TH:i') : '') }}">
@@ -183,7 +183,7 @@
                                 </div>
 
                                 <div class="d-flex justify-content-between mt-4">
-                                    <a href="{{ route('instructor.quizzes.show', $quiz->quiz_id) }}" class="btn btn-secondary">إلغاء</a>
+                                    <a href="{{ route('instructor.quizzes.show', $quiz->id) }}" class="btn btn-secondary">إلغاء</a>
                                     <button type="submit" class="btn btn-primary">حفظ التغييرات</button>
                                 </div>
                             </form>
@@ -191,7 +191,7 @@
 
                         <!-- الأسئلة -->
                         <div class="tab-pane fade" id="questions-content" role="tabpanel" aria-labelledby="questions-tab">
-                            <form id="update-questions-form" action="{{ route('instructor.quizzes.update-questions', $quiz->quiz_id) }}" method="POST">
+                            <form id="update-questions-form" action="{{ route('instructor.quizzes.update-questions', $quiz->id) }}" method="POST">
                                 @csrf
                                 @method('PUT')
 
@@ -201,11 +201,11 @@
                                             <div class="question-card mb-4" id="question-{{ $index }}">
                                                 <div class="question-header d-flex justify-content-between align-items-center">
                                                     <h5 class="mb-0">
-                                                        {{ $question['type'] == 'multiple_choice' ? 'سؤال اختيار من متعدد' : 
+                                                        {{ $question['type'] == 'multiple_choice' ? 'سؤال اختيار من متعدد' :
                                                             ($question['type'] == 'true_false' ? 'سؤال صح/خطأ' : 'سؤال إجابة قصيرة') }}
                                                     </h5>
                                                     <div>
-                                                        <button type="button" class="btn btn-sm btn-danger remove-question" 
+                                                        <button type="button" class="btn btn-sm btn-danger remove-question"
                                                                 onclick="removeQuestion({{ $index }})">
                                                             <i class="fas fa-times"></i> حذف
                                                         </button>
@@ -214,16 +214,16 @@
                                                 <div class="question-body">
                                                     <input type="hidden" name="questions[{{ $index }}][id]" value="{{ $question['id'] ?? '' }}">
                                                     <input type="hidden" name="questions[{{ $index }}][type]" value="{{ $question['type'] }}">
-                                                    
+
                                                     <div class="mb-3">
                                                         <label class="form-label">نص السؤال <span class="text-danger">*</span></label>
                                                         <textarea class="form-control" name="questions[{{ $index }}][text]" rows="2" required>{{ $question['text'] }}</textarea>
                                                     </div>
-                                                    
+
                                                     <div class="mb-3 row">
                                                         <div class="col-md-6">
                                                             <label class="form-label">النقاط</label>
-                                                            <input type="number" class="form-control" name="questions[{{ $index }}][points]" 
+                                                            <input type="number" class="form-control" name="questions[{{ $index }}][points]"
                                                                     value="{{ $question['points'] }}" min="1" required>
                                                         </div>
                                                     </div>
@@ -236,14 +236,14 @@
                                                                     <div class="option-row" id="option-{{ $index }}-{{ $optionIndex }}">
                                                                         <div class="d-flex w-100 align-items-center">
                                                                             <div class="flex-grow-1 me-3">
-                                                                                <input type="text" class="form-control" 
-                                                                                    name="questions[{{ $index }}][options][{{ $optionIndex }}][text]" 
+                                                                                <input type="text" class="form-control"
+                                                                                    name="questions[{{ $index }}][options][{{ $optionIndex }}][text]"
                                                                                     placeholder="نص الخيار" value="{{ $option['text'] }}" required>
                                                                             </div>
                                                                             <div class="correct-answer-toggle me-3">
                                                                                 <div class="form-check">
-                                                                                    <input class="form-check-input" type="checkbox" 
-                                                                                        name="questions[{{ $index }}][options][{{ $optionIndex }}][is_correct]" 
+                                                                                    <input class="form-check-input" type="checkbox"
+                                                                                        name="questions[{{ $index }}][options][{{ $optionIndex }}][is_correct]"
                                                                                         id="correct-{{ $index }}-{{ $optionIndex }}" value="1"
                                                                                         {{ isset($option['is_correct']) && $option['is_correct'] ? 'checked' : '' }}>
                                                                                     <label class="form-check-label" for="correct-{{ $index }}-{{ $optionIndex }}">
@@ -251,7 +251,7 @@
                                                                                     </label>
                                                                                 </div>
                                                                             </div>
-                                                                            <button type="button" class="btn btn-sm btn-danger" 
+                                                                            <button type="button" class="btn btn-sm btn-danger"
                                                                                     onclick="removeOption({{ $index }}, {{ $optionIndex }})">
                                                                                 <i class="fas fa-times"></i>
                                                                             </button>
@@ -259,7 +259,7 @@
                                                                     </div>
                                                                 @endforeach
                                                             </div>
-                                                            <button type="button" class="btn btn-outline-secondary add-option-btn" 
+                                                            <button type="button" class="btn btn-outline-secondary add-option-btn"
                                                                     onclick="addOption({{ $index }})">
                                                                 <i class="fas fa-plus"></i> إضافة خيار
                                                             </button>
@@ -269,12 +269,12 @@
                                                             <label class="form-label">الإجابة الصحيحة</label>
                                                             <div class="d-flex">
                                                                 <div class="form-check me-4">
-                                                                    <input class="form-check-input" type="radio" name="questions[{{ $index }}][correct_answer]" 
+                                                                    <input class="form-check-input" type="radio" name="questions[{{ $index }}][correct_answer]"
                                                                         id="true-{{ $index }}" value="true" {{ $question['correct_answer'] == 'true' ? 'checked' : '' }}>
                                                                     <label class="form-check-label" for="true-{{ $index }}">صح</label>
                                                                 </div>
                                                                 <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="questions[{{ $index }}][correct_answer]" 
+                                                                    <input class="form-check-input" type="radio" name="questions[{{ $index }}][correct_answer]"
                                                                         id="false-{{ $index }}" value="false" {{ $question['correct_answer'] == 'false' ? 'checked' : '' }}>
                                                                     <label class="form-check-label" for="false-{{ $index }}">خطأ</label>
                                                                 </div>
@@ -306,7 +306,7 @@
                                 </div>
 
                                 <div class="d-flex justify-content-between mt-4">
-                                    <a href="{{ route('instructor.quizzes.show', $quiz->quiz_id) }}" class="btn btn-secondary">إلغاء</a>
+                                    <a href="{{ route('instructor.quizzes.show', $quiz->id) }}" class="btn btn-secondary">إلغاء</a>
                                     <button type="submit" class="btn btn-primary">حفظ الأسئلة</button>
                                 </div>
                             </form>
@@ -333,60 +333,60 @@
 
         // تحديد أعلى قيمة للأسئلة الموجودة
         let questionCounter = {{ count($quiz->questions_json) }};
-        
+
         // إضافة سؤال اختيار من متعدد
         document.getElementById('add-mcq-btn').addEventListener('click', function() {
             addQuestion('multiple_choice');
         });
-        
+
         // إضافة سؤال صح/خطأ
         document.getElementById('add-tf-btn').addEventListener('click', function() {
             addQuestion('true_false');
         });
-        
+
         // إضافة سؤال إجابة قصيرة
         document.getElementById('add-text-btn').addEventListener('click', function() {
             addQuestion('short_answer');
         });
-        
+
         // دالة إضافة سؤال جديد
         window.addQuestion = function(type) {
             const questionId = questionCounter++;
             const questionCard = document.createElement('div');
             questionCard.className = 'question-card mb-4';
             questionCard.id = `question-${questionId}`;
-            
+
             let questionHeader = `
                 <div class="question-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">${type === 'multiple_choice' ? 'سؤال اختيار من متعدد' : 
+                    <h5 class="mb-0">${type === 'multiple_choice' ? 'سؤال اختيار من متعدد' :
                                       (type === 'true_false' ? 'سؤال صح/خطأ' : 'سؤال إجابة قصيرة')}</h5>
                     <div>
-                        <button type="button" class="btn btn-sm btn-danger remove-question" 
+                        <button type="button" class="btn btn-sm btn-danger remove-question"
                                 onclick="removeQuestion(${questionId})">
                             <i class="fas fa-times"></i> حذف
                         </button>
                     </div>
                 </div>
             `;
-            
+
             let questionBody = `
                 <div class="question-body">
                     <input type="hidden" name="questions[${questionId}][type]" value="${type}">
-                    
+
                     <div class="mb-3">
                         <label class="form-label">نص السؤال <span class="text-danger">*</span></label>
                         <textarea class="form-control" name="questions[${questionId}][text]" rows="2" required></textarea>
                     </div>
-                    
+
                     <div class="mb-3 row">
                         <div class="col-md-6">
                             <label class="form-label">النقاط</label>
-                            <input type="number" class="form-control" name="questions[${questionId}][points]" 
+                            <input type="number" class="form-control" name="questions[${questionId}][points]"
                                    value="1" min="1" required>
                         </div>
                     </div>
             `;
-            
+
             // إضافة الخيارات حسب نوع السؤال
             if (type === 'multiple_choice') {
                 questionBody += `
@@ -395,7 +395,7 @@
                         <div id="options-container-${questionId}">
                             <!-- الخيارات ستضاف هنا ديناميكياً -->
                         </div>
-                        <button type="button" class="btn btn-outline-secondary add-option-btn" 
+                        <button type="button" class="btn btn-outline-secondary add-option-btn"
                                 onclick="addOption(${questionId})">
                             <i class="fas fa-plus"></i> إضافة خيار
                         </button>
@@ -407,12 +407,12 @@
                         <label class="form-label">الإجابة الصحيحة</label>
                         <div class="d-flex">
                             <div class="form-check me-4">
-                                <input class="form-check-input" type="radio" name="questions[${questionId}][correct_answer]" 
+                                <input class="form-check-input" type="radio" name="questions[${questionId}][correct_answer]"
                                        id="true-${questionId}" value="true" checked>
                                 <label class="form-check-label" for="true-${questionId}">صح</label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="questions[${questionId}][correct_answer]" 
+                                <input class="form-check-input" type="radio" name="questions[${questionId}][correct_answer]"
                                        id="false-${questionId}" value="false">
                                 <label class="form-check-label" for="false-${questionId}">خطأ</label>
                             </div>
@@ -428,55 +428,55 @@
                     </div>
                 `;
             }
-            
+
             questionBody += `</div>`;
-            
+
             questionCard.innerHTML = questionHeader + questionBody;
             document.getElementById('questions-container').appendChild(questionCard);
-            
+
             // إضافة خيارين افتراضيين لسؤال الاختيار من متعدد
             if (type === 'multiple_choice') {
                 addOption(questionId);
                 addOption(questionId);
             }
         };
-        
+
         // إضافة خيار جديد لسؤال الاختيار من متعدد
         window.addOption = function(questionId) {
             const optionsContainer = document.getElementById(`options-container-${questionId}`);
             const optionIndex = optionsContainer.children.length;
-            
+
             const optionRow = document.createElement('div');
             optionRow.className = 'option-row';
             optionRow.id = `option-${questionId}-${optionIndex}`;
-            
+
             optionRow.innerHTML = `
                 <div class="d-flex w-100 align-items-center">
                     <div class="flex-grow-1 me-3">
-                        <input type="text" class="form-control" 
-                               name="questions[${questionId}][options][${optionIndex}][text]" 
+                        <input type="text" class="form-control"
+                               name="questions[${questionId}][options][${optionIndex}][text]"
                                placeholder="نص الخيار" required>
                     </div>
                     <div class="correct-answer-toggle me-3">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" 
-                                   name="questions[${questionId}][options][${optionIndex}][is_correct]" 
+                            <input class="form-check-input" type="checkbox"
+                                   name="questions[${questionId}][options][${optionIndex}][is_correct]"
                                    id="correct-${questionId}-${optionIndex}" value="1">
                             <label class="form-check-label" for="correct-${questionId}-${optionIndex}">
                                 إجابة صحيحة
                             </label>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-sm btn-danger" 
+                    <button type="button" class="btn btn-sm btn-danger"
                             onclick="removeOption(${questionId}, ${optionIndex})">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
             `;
-            
+
             optionsContainer.appendChild(optionRow);
         };
-        
+
         // حذف خيار
         window.removeOption = function(questionId, optionIndex) {
             const option = document.getElementById(`option-${questionId}-${optionIndex}`);
@@ -484,7 +484,7 @@
                 option.remove();
             }
         };
-        
+
         // حذف سؤال
         window.removeQuestion = function(questionId) {
             const question = document.getElementById(`question-${questionId}`);
@@ -492,7 +492,7 @@
                 question.remove();
             }
         };
-        
+
         // التحقق من صحة نموذج الأسئلة قبل الإرسال
         document.getElementById('update-questions-form').addEventListener('submit', function(event) {
             const questionsContainer = document.getElementById('questions-container');
@@ -503,4 +503,4 @@
         });
     });
 </script>
-@endsection 
+@endsection

@@ -77,7 +77,7 @@
             <div class="card">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h4 class="m-0">تفاصيل محاولة الامتحان</h4>
-                    <a href="{{ route('instructor.quizzes.show', $attempt->quiz->quiz_id) }}" class="btn btn-sm btn-light">
+                    <a href="{{ route('instructor.quizzes.show', $attempt->quiz->id) }}" class="btn btn-sm btn-light">
                         <i class="fas fa-arrow-left"></i> العودة إلى الامتحان
                     </a>
                 </div>
@@ -85,7 +85,7 @@
                     <div class="row">
                         <div class="col-md-8">
                             <h5 class="card-title">{{ $attempt->quiz->title }}</h5>
-                            
+
                             <div class="row mt-4">
                                 <div class="col-md-6 mb-3">
                                     <span class="fw-bold">الطالب: </span>
@@ -170,7 +170,7 @@
                     <h5 class="mb-0">أسئلة الامتحان وإجابات الطالب</h5>
                 </div>
                 <div class="card-body">
-                    @php 
+                    @php
                         $questions = $attempt->quiz->questions_json;
                         $answers = $attempt->answers_json ?? [];
                     @endphp
@@ -181,9 +181,9 @@
                                 <div>
                                     <h5 class="mb-0">السؤال {{ $index + 1 }}</h5>
                                     <small class="text-muted">
-                                        {{ $question['type'] == 'multiple_choice' ? 'اختيار من متعدد' : 
-                                           ($question['type'] == 'true_false' ? 'صح/خطأ' : 
-                                           'إجابة قصيرة') }} 
+                                        {{ $question['type'] == 'multiple_choice' ? 'اختيار من متعدد' :
+                                           ($question['type'] == 'true_false' ? 'صح/خطأ' :
+                                           'إجابة قصيرة') }}
                                         ({{ $question['points'] }} نقطة)
                                     </small>
                                 </div>
@@ -220,7 +220,7 @@
                             </div>
                             <div class="question-body">
                                 <p class="fw-bold">{{ $question['text'] }}</p>
-                                
+
                                 @if($question['type'] == 'multiple_choice')
                                     @php
                                         $userAnswers = isset($answers[$questionId]) ? (is_array($answers[$questionId]) ? $answers[$questionId] : [$answers[$questionId]]) : [];
@@ -262,7 +262,7 @@
                                                     $isTrueCorrect = $question['correct_answer'] == 'true';
                                                     $userSelectedTrue = $userAnswer == 'true';
                                                 @endphp
-                                                <input class="form-check-input" type="radio" disabled 
+                                                <input class="form-check-input" type="radio" disabled
                                                       {{ $userSelectedTrue ? 'checked' : '' }}>
                                                 <label class="form-check-label {{ $attempt->status == 'completed' && $userSelectedTrue ? ($isTrueCorrect ? 'text-success fw-bold' : 'text-danger') : '' }}">
                                                     صح
@@ -278,7 +278,7 @@
                                                     $isFalseCorrect = $question['correct_answer'] == 'false';
                                                     $userSelectedFalse = $userAnswer == 'false';
                                                 @endphp
-                                                <input class="form-check-input" type="radio" disabled 
+                                                <input class="form-check-input" type="radio" disabled
                                                       {{ $userSelectedFalse ? 'checked' : '' }}>
                                                 <label class="form-check-label {{ $attempt->status == 'completed' && $userSelectedFalse ? ($isFalseCorrect ? 'text-success fw-bold' : 'text-danger') : '' }}">
                                                     خطأ
@@ -300,7 +300,7 @@
                                                 {{ $userAnswer ?: 'لم يتم تقديم إجابة' }}
                                             </div>
                                         </div>
-                                        
+
                                         @if($attempt->status == 'completed')
                                             <div class="mt-2">
                                                 <div class="fw-bold">الإجابة النموذجية:</div>
@@ -345,4 +345,4 @@
         </div>
     </div>
 </div>
-@endsection 
+@endsection

@@ -166,7 +166,7 @@
                                         <div class="text-xs text-gray-500">
                                             @if($participant->is_admin)
                                                 Admin
-                                            @elseif($chat->course->instructor_id == $participant->user->user_id)
+                                            @elseif($chat->course->instructor_id == $participant->user->id)
                                                 Instructor
                                             @else
                                                 Student

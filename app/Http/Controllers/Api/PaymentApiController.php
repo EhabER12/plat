@@ -270,6 +270,7 @@ class PaymentApiController extends Controller
                         'course_id' => $payment->course_id,
                     ],
                     [
+                        'user_id' => $payment->student_id,
                         'enrolled_at' => now(),
                         'status' => 'active',
                     ]

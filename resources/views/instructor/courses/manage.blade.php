@@ -501,17 +501,14 @@
                     
                     <!-- Section Selection -->
                     <div class="mb-3">
-                        <label for="sectionId" class="form-label">Section <span class="text-danger">*</span></label>
-                        <select class="form-select" id="sectionId" name="section_id" required>
+                        <label for="sectionId" class="form-label">Section</label>
+                        <select class="form-select" id="sectionId" name="section_id">
+                            <option value="">-- No Section --</option>
                             @foreach($course->sections as $section)
                                 <option value="{{ $section->section_id }}">{{ $section->title }}</option>
                             @endforeach
                         </select>
-                        @if(count($course->sections) === 0)
-                            <div class="alert alert-warning mt-2">
-                                <i class="fas fa-exclamation-triangle me-2"></i> You need to create a section first before adding videos.
-                            </div>
-                        @endif
+                        <small class="text-muted">Optional: Choose a section to organize your videos. You can also create sections first from the Sections tab.</small>
                     </div>
                     
                     <div id="upload-progress-container" class="mb-3 d-none">

@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\PaymentApiController;
 use App\Http\Controllers\Api\ExamApiController;
 use App\Http\Controllers\Api\CategoryApiController;
 use App\Http\Controllers\Api\CourseController;
+use App\Http\Controllers\VideoStreamController;
 
 /*
 |--------------------------------------------------------------------------
@@ -90,6 +91,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Legacy routes
     Route::get('/courses/{courseId}/participants', [CourseController::class, 'getParticipants']);
     Route::post('/courses/{courseId}/ratings', [CourseController::class, 'submitCourseReview']);
+
+    // Video API Routes
+    Route::get('/videos/{videoId}/check-access', [VideoStreamController::class, 'checkAccess']);
+    Route::post('/videos/{videoId}/view', [VideoStreamController::class, 'recordView']);
 });
 
 // Paymob webhook

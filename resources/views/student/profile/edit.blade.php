@@ -252,6 +252,14 @@
                 </a>
                 <a href="{{ route('student.messages.index') }}" class="sidebar-icon {{ request()->routeIs('student.messages.index') ? 'active' : '' }}">
                     <i class="fas fa-envelope"></i>
+                    @php
+                        $unreadMessages = App\Models\DirectMessage::where('receiver_id', Auth::id())
+                            ->where('is_read', false)
+                            ->count();
+                    @endphp
+                    @if($unreadMessages > 0)
+                        <span class="badge bg-danger rounded-pill position-absolute" style="font-size: 0.7rem; top: 5px; right: 5px;">{{ $unreadMessages }}</span>
+                    @endif
                     <div class="sidebar-tooltip">{{ app()->getLocale() == 'ar' ? 'الرسائل' : 'Messages' }}</div>
                 </a>
                 <a href="{{ route('student.profile.edit') }}" class="sidebar-icon {{ request()->routeIs('student.profile.edit') ? 'active' : '' }}">

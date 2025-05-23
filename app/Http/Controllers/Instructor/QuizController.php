@@ -27,7 +27,7 @@ class QuizController extends Controller
             ->with('course')
             ->latest()
             ->get();
-        
+
         return view('instructor.quizzes.index', compact('quizzes'));
     }
 
@@ -41,18 +41,18 @@ class QuizController extends Controller
     {
         $courses = Course::where('instructor_id', Auth::id())->get();
         $selectedCourse = null;
-        
+
         if ($courseId) {
             $selectedCourse = Course::where('instructor_id', Auth::id())
                 ->where('course_id', $courseId)
                 ->first();
-                
+
             if (!$selectedCourse) {
                 return redirect()->route('instructor.quizzes.create')
                     ->with('error', 'لا تملك صلاحية إنشاء اختبار لهذه الدورة.');
             }
         }
-        
+
         return view('instructor.quizzes.create', compact('courses', 'selectedCourse'));
     }
 
@@ -77,24 +77,24 @@ class QuizController extends Controller
             'max_attempts' => 'nullable|integer|min:1',
             'questions' => 'required|array|min:1',
         ]);
-        
+
         if ($validator->fails()) {
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
         }
-        
+
         // Check if the course belongs to the authenticated instructor
         $course = Course::where('instructor_id', Auth::id())
             ->where('course_id', $request->course_id)
             ->first();
-            
+
         if (!$course) {
             return redirect()->back()
                 ->with('error', 'لا تملك صلاحية إنشاء اختبار لهذه الدورة.')
                 ->withInput();
         }
-        
+
         // Format questions with unique IDs
         $questions = [];
         foreach ($request->questions as $question) {
@@ -108,7 +108,7 @@ class QuizController extends Controller
                 'correct_answer' => $question['correct_answer'] ?? '',
             ];
         }
-        
+
         // Create the quiz
         $quiz = new Quiz();
         $quiz->course_id = $request->course_id;
@@ -124,8 +124,8 @@ class QuizController extends Controller
         $quiz->questions_json = $questions;
         $quiz->max_attempts = $request->max_attempts;
         $quiz->save();
-        
-        return redirect()->route('instructor.quizzes.show', $quiz->quiz_id)
+
+        return redirect()->route('instructor.quizzes.show', $quiz->id)
             ->with('success', 'تم إنشاء الاختبار بنجاح.');
     }
 
@@ -142,7 +142,7 @@ class QuizController extends Controller
                 $query->where('instructor_id', Auth::id());
             })
             ->findOrFail($id);
-        
+
         return view('instructor.quizzes.show', compact('quiz'));
     }
 
@@ -158,9 +158,9 @@ class QuizController extends Controller
                 $query->where('instructor_id', Auth::id());
             })
             ->findOrFail($id);
-        
+
         $courses = Course::where('instructor_id', Auth::id())->get();
-        
+
         return view('instructor.quizzes.edit', compact('quiz', 'courses'));
     }
 
@@ -184,19 +184,19 @@ class QuizController extends Controller
             'is_published' => 'boolean',
             'max_attempts' => 'nullable|integer|min:1',
         ]);
-        
+
         if ($validator->fails()) {
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
         }
-        
+
         // Find the quiz and check if it belongs to the authenticated instructor
         $quiz = Quiz::whereHas('course', function ($query) {
                 $query->where('instructor_id', Auth::id());
             })
             ->findOrFail($id);
-        
+
         // Update the quiz
         $quiz->title = $request->title;
         $quiz->description = $request->description;
@@ -207,8 +207,8 @@ class QuizController extends Controller
         $quiz->end_date = $request->end_date;
         $quiz->max_attempts = $request->max_attempts;
         $quiz->save();
-        
-        return redirect()->route('instructor.quizzes.show', $quiz->quiz_id)
+
+        return redirect()->route('instructor.quizzes.show', $quiz->id)
             ->with('success', 'تم تحديث الاختبار بنجاح.');
     }
 
@@ -225,19 +225,19 @@ class QuizController extends Controller
         $validator = Validator::make($request->all(), [
             'questions' => 'required|array|min:1',
         ]);
-        
+
         if ($validator->fails()) {
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
         }
-        
+
         // Find the quiz and check if it belongs to the authenticated instructor
         $quiz = Quiz::whereHas('course', function ($query) {
                 $query->where('instructor_id', Auth::id());
             })
             ->findOrFail($id);
-        
+
         // Format questions with unique IDs for new questions
         $questions = [];
         foreach ($request->questions as $question) {
@@ -251,12 +251,12 @@ class QuizController extends Controller
                 'correct_answer' => $question['correct_answer'] ?? '',
             ];
         }
-        
+
         // Update the quiz questions
         $quiz->questions_json = $questions;
         $quiz->save();
-        
-        return redirect()->route('instructor.quizzes.show', $quiz->quiz_id)
+
+        return redirect()->route('instructor.quizzes.show', $quiz->id)
             ->with('success', 'تم تحديث أسئلة الاختبار بنجاح.');
     }
 
@@ -273,21 +273,21 @@ class QuizController extends Controller
                 $query->where('instructor_id', Auth::id());
             })
             ->findOrFail($id);
-        
+
         // Check if there are any attempts
         $attemptsCount = $quiz->attempts()->count();
         if ($attemptsCount > 0) {
             return redirect()->back()
                 ->with('error', 'لا يمكن حذف الاختبار لأنه يحتوي على ' . $attemptsCount . ' محاولة.');
         }
-        
+
         // Delete the quiz
         $quiz->delete();
-        
+
         return redirect()->route('instructor.quizzes.index')
             ->with('success', 'تم حذف الاختبار بنجاح.');
     }
-    
+
     /**
      * View quiz attempt details
      *
@@ -301,10 +301,10 @@ class QuizController extends Controller
                 $query->where('instructor_id', Auth::id());
             })
             ->findOrFail($attemptId);
-        
+
         return view('instructor.quizzes.attempt', compact('attempt'));
     }
-    
+
     /**
      * Provide feedback on a quiz attempt
      *
@@ -318,11 +318,11 @@ class QuizController extends Controller
                 $query->where('instructor_id', Auth::id());
             })
             ->findOrFail($attemptId);
-        
+
         $attempt->instructor_feedback = $request->feedback;
         $attempt->save();
-        
+
         return redirect()->back()
             ->with('success', 'تم حفظ الملاحظات بنجاح.');
     }
-} 
+}

@@ -41,6 +41,8 @@ class VerificationController extends Controller
             'cv_file' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
             'linkedin_profile' => 'nullable|url|max:255',
             'additional_info' => 'nullable|string',
+            'identification_type' => 'nullable|string|max:50',
+            'identification_number' => 'nullable|string|max:50',
             'payment_email' => 'required|email|max:255',
             'payment_phone' => 'required|string|max:20',
             'payment_bank_name' => 'nullable|string|max:255',
@@ -56,8 +58,12 @@ class VerificationController extends Controller
             'years_of_experience' => $request->years_of_experience,
             'linkedin_profile' => $request->linkedin_profile,
             'additional_info' => $request->additional_info,
+            'qualifications' => $request->education . ', ' . $request->expertise,
             'status' => 'pending',
             'submitted_at' => now(),
+            'identification_type' => $request->identification_type ?? 'passport',
+            'identification_number' => $request->identification_number ?? '',
+            'identification_image' => null,
         ];
 
         // Process payment account data
@@ -75,7 +81,8 @@ class VerificationController extends Controller
             $paymentDetails['account_number'] = $request->payment_account_number;
         }
 
-        $verificationData['payment_details'] = $paymentDetails;
+        // Convert payment details to JSON for storage
+        $verificationData['payment_details'] = json_encode($paymentDetails);
 
         // Handle certificate file upload
         if ($request->hasFile('certificate_file')) {
@@ -87,6 +94,12 @@ class VerificationController extends Controller
         if ($request->hasFile('cv_file')) {
             $cvPath = $request->file('cv_file')->store('instructor-cvs', 'public');
             $verificationData['cv_file'] = $cvPath;
+        }
+
+        // Handle identification image upload
+        if ($request->hasFile('identification_image')) {
+            $imagePath = $request->file('identification_image')->store('instructor-ids', 'public');
+            $verificationData['identification_image'] = $imagePath;
         }
 
         // Update or create verification record
@@ -103,7 +116,7 @@ class VerificationController extends Controller
             $user->instructorVerification->update($verificationData);
         } else {
             // Create new verification record
-            $user->instructorVerification()->create($verificationData);
+            InstructorVerification::create(array_merge($verificationData, ['user_id' => $user->user_id]));
         }
 
         return redirect()->route('instructor.verification.pending')

@@ -1,0 +1,72 @@
+# تحسين إعدادات PHP في XAMPP
+
+للحصول على أداء أفضل، يجب تحسين إعدادات PHP في ملف php.ini:
+
+1. افتح ملف php.ini (عادة في مجلد C:\xampp\php\php.ini)
+
+2. قم بتعديل الإعدادات التالية:
+
+```
+; تفعيل OPcache
+opcache.enable=1
+opcache.memory_consumption=128
+opcache.interned_strings_buffer=8
+opcache.max_accelerated_files=4000
+opcache.revalidate_freq=60
+opcache.fast_shutdown=1
+
+; تحسين المُؤقت
+memory_limit = 256M
+max_execution_time = 60
+post_max_size = 64M
+upload_max_filesize = 64M
+
+; تعطيل وظائف تصحيح الأخطاء في بيئة الإنتاج
+display_errors = Off
+display_startup_errors = Off
+log_errors = On
+error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT
+```
+
+3. قم بإعادة تشغيل خادم XAMPP بعد تعديل الإعدادات.
+
+## تحسينات مهمة أخرى:
+
+1. استخدم قاعدة بيانات أسرع أو تحسين أداء MySQL:
+   - قم بتعديل ملف my.ini في مجلد C:\xampp\mysql\bin\my.ini:
+   ```
+   innodb_buffer_pool_size = 256M
+   innodb_flush_log_at_trx_commit = 2
+   query_cache_size = 64M
+   query_cache_limit = 2M
+   ```
+
+2. تفعيل الضغط (compression) في Apache:
+   - قم بتعديل ملف httpd.conf في مجلد C:\xampp\apache\conf\httpd.conf:
+   ```
+   <IfModule mod_deflate.c>
+       AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/x-javascript application/json
+   </IfModule>
+   ```
+
+3. تفعيل التخزين المؤقت في المتصفح:
+   - قم بتعديل ملف .htaccess في المجلد العام لموقعك:
+   ```
+   <IfModule mod_expires.c>
+       ExpiresActive On
+       ExpiresByType image/jpg "access plus 1 year"
+       ExpiresByType image/jpeg "access plus 1 year"
+       ExpiresByType image/gif "access plus 1 year"
+       ExpiresByType image/png "access plus 1 year"
+       ExpiresByType text/css "access plus 1 month"
+       ExpiresByType application/pdf "access plus 1 month"
+       ExpiresByType text/javascript "access plus 1 month"
+       ExpiresByType application/javascript "access plus 1 month"
+       ExpiresByType application/x-javascript "access plus 1 month"
+       ExpiresByType application/x-shockwave-flash "access plus 1 month"
+       ExpiresByType image/x-icon "access plus 1 year"
+       ExpiresDefault "access plus 2 days"
+   </IfModule>
+   ```
+
+4. تقليل استدعاء الأصول (assets) من خلال دمج ملفات CSS و JavaScript. 
