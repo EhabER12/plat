@@ -10,6 +10,27 @@
 
 @section('content')
 <div class="container py-4" data-user-id="{{ Auth::id() }}">
+    @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
+    @if(session('warning'))
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        {{ session('warning') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
     <div class="chat-container">
         <!-- Contacts Sidebar -->
         <div class="contacts-sidebar">
@@ -28,7 +49,7 @@
                     </div>
                 @else
                     @foreach($contacts as $contact)
-                        <div class="contact-item{{ $selectedContact && $selectedContact->user_id == $contact->user_id ? ' active' : '' }}" 
+                        <div class="contact-item{{ $selectedContact && $selectedContact->user_id == $contact->user_id ? ' active' : '' }}"
                              data-id="{{ $contact->user_id }}"
                              onclick="window.location.href='{{ route('student.messages.show', $contact->user_id) }}'">
                             <div class="contact-avatar{{ rand(0,1) ? ' online' : '' }}">
@@ -79,7 +100,7 @@
                 </div>
 
                 <!-- Chat Messages -->
-                <div class="chat-messages" id="messagesContainer">
+                <div class="chat-messages" id="messagesContainer" data-initialized="true">
                     @if($messages->isEmpty())
                             <div class="empty-state">
                                 <div class="empty-state-icon">✉️</div>
@@ -89,21 +110,21 @@
                     @else
                             @php $prevDate = null; @endphp
                             @foreach($messages as $message)
-                                @php 
+                                @php
                                     $currDate = $message->created_at->format('Y-m-d');
                                     $showDate = $prevDate !== $currDate;
                                     $prevDate = $currDate;
                                     $isCurrentUser = $message->sender_id == Auth::user()->user_id;
                                 @endphp
-                                
+
                                 @if($showDate)
                                     <div class="date-divider">
                                         <span class="date-text">{{ $message->created_at->format('F j, Y') }}</span>
                                     </div>
                                 @endif
-                                
+
                                 <div class="message-group">
-                                    <div class="message {{ $isCurrentUser ? 'sent' : 'received' }} animate__animated {{ $isCurrentUser ? 'animate__fadeInRight' : 'animate__fadeInLeft' }}" 
+                                    <div class="message {{ $isCurrentUser ? 'sent' : 'received' }} {{ $message->is_filtered ? 'filtered' : '' }} animate__animated {{ $isCurrentUser ? 'animate__fadeInRight' : 'animate__fadeInLeft' }}"
                                         data-id="{{ $message->message_id }}">
                                     <p>{{ $message->content }}</p>
                                     <div class="message-time">{{ $message->created_at->format('g:i A') }}</div>
@@ -115,29 +136,22 @@
 
                 <!-- Message Input -->
                 <div class="chat-input">
-                    <form id="messageForm">
+                    <form id="directMessageForm" method="POST" action="{{ route('student.messages.send') }}">
+                        @csrf
                         <div class="chat-input-field">
-                            <textarea 
-                                id="messageInput" 
-                                placeholder="Type a message..." 
-                                rows="1" 
+                            <textarea
+                                id="messageInput"
+                                name="content"
+                                placeholder="Type a message..."
+                                rows="1"
                                 class="chat-input"
+                                required
                                 autofocus></textarea>
                             <!-- Hidden form fields -->
-                            <input type="hidden" id="receiver-id" value="{{ $selectedContact->user_id }}">
-                            <input type="hidden" id="current-user-id" value="{{ Auth::user()->user_id }}">
-                            <input type="hidden" id="user-role" value="student">
-                            @if($messages->isNotEmpty())
-                                <input type="hidden" id="last-message-id" value="{{ $messages->last()->message_id }}">
-                            @else
-                                <input type="hidden" id="last-message-id" value="0">
-                            @endif
+                            <input type="hidden" name="receiver_id" value="{{ $selectedContact->user_id }}">
                         </div>
                         <div class="chat-input-buttons">
-                            <button type="button" class="chat-input-button" title="Attach file">
-                                <i class="fas fa-paperclip"></i>
-                            </button>
-                            <button type="submit" id="sendButton" class="chat-input-button send-button">
+                            <button type="submit" class="chat-input-button send-button">
                                 <i class="fas fa-paper-plane"></i> Send
                             </button>
                         </div>
@@ -151,5 +165,5 @@
 
 @section('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
-<script src="{{ asset('js/messaging.js') }}"></script>
+<script src="{{ asset('js/simple-messaging.js') }}"></script>
 @endsection

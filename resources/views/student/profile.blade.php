@@ -363,6 +363,54 @@
                     </div>
                 </div>
 
+                <!-- Admin Messages Section -->
+                @if(isset($adminMessages) && count($adminMessages) > 0)
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card shadow-sm border-info mb-3 fade-in" style="animation-delay: 0.6s">
+                            <div class="card-header bg-info text-white d-flex align-items-center justify-content-between">
+                                <span><i class="fas fa-envelope me-2"></i> رسائل من الإدارة</span>
+                                <div>
+                                    @if($unreadAdminMessages > 0)
+                                        <span class="badge bg-danger me-2">{{ $unreadAdminMessages }} جديدة</span>
+                                    @endif
+                                    <a href="{{ route('student.messages.index') }}" class="btn btn-sm btn-light">
+                                        <i class="fas fa-external-link-alt me-1"></i> عرض كل الرسائل
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="list-group list-group-flush">
+                                    @foreach($adminMessages->take(3) as $message)
+                                        <a href="{{ route('student.messages.show', $message->sender->user_id) }}"
+                                           class="list-group-item list-group-item-action border-0 py-3 px-4 {{ !$message->is_read ? 'bg-light' : '' }}">
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-circle bg-primary text-white d-flex align-items-center justify-content-center me-3"
+                                                     style="width: 45px; height: 45px; border-radius: 50%;">
+                                                    <i class="fas fa-user-shield"></i>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <div class="d-flex justify-content-between align-items-start mb-1">
+                                                        <h6 class="mb-0 fw-bold">{{ $message->sender->name }}</h6>
+                                                        <div class="d-flex align-items-center">
+                                                            @if(!$message->is_read)
+                                                                <span class="badge bg-danger rounded-pill me-2">جديدة</span>
+                                                            @endif
+                                                            <small class="text-muted">{{ $message->created_at->diffForHumans() }}</small>
+                                                        </div>
+                                                    </div>
+                                                    <p class="mb-0 text-muted">{{ Str::limit($message->content, 80) }}</p>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
                 <div class="row">
                     <div class="col-md-8">
                         <!-- Courses Section -->

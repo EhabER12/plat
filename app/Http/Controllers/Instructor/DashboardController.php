@@ -143,6 +143,24 @@ class DashboardController extends Controller
         // Get top-performing students
         $topPerformingStudents = $this->getTopPerformingStudents($instructor->user_id);
 
+        // Get recent admin messages
+        $adminMessages = \App\Models\DirectMessage::where('receiver_id', $instructor->user_id)
+            ->whereHas('sender.roles', function($query) {
+                $query->where('role', 'admin');
+            })
+            ->with('sender')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        // Count unread admin messages
+        $unreadAdminMessages = \App\Models\DirectMessage::where('receiver_id', $instructor->user_id)
+            ->whereHas('sender.roles', function($query) {
+                $query->where('role', 'admin');
+            })
+            ->where('is_read', false)
+            ->count();
+
         return view('instructor.dashboard', [
             'totalCourses' => $totalCourses,
             'publishedCourses' => $publishedCourses,
@@ -158,7 +176,9 @@ class DashboardController extends Controller
             'totalRevenue' => $totalRevenue,
             'recentEnrollments' => $recentEnrollments,
             'recentRatings' => $recentRatings,
-            'topPerformingStudents' => $topPerformingStudents
+            'topPerformingStudents' => $topPerformingStudents,
+            'adminMessages' => $adminMessages,
+            'unreadAdminMessages' => $unreadAdminMessages
         ]);
     }
 

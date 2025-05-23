@@ -22,6 +22,9 @@ class DatabaseSeeder extends Seeder
         $this->call(BadgesSeeder::class);
         $this->call(AchievementsSeeder::class);
 
+        // Create banned words
+        $this->call(BannedWordsSeeder::class);
+
         // Create demo data
         $this->createDemoData();
     }

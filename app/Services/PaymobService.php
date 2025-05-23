@@ -84,7 +84,16 @@ class PaymobService
         $this->apiKey = config('paymob.api_key');
         $this->integrationId = config('paymob.integration_id');
         $this->iframeId = config('paymob.iframe_id');
-        $this->hmacSecret = config('services.paymob.hmac_secret');
+        $this->hmacSecret = config('paymob.hmac_secret');
+
+        // Log configuration for debugging
+        Log::info('PaymobService initialized with config', [
+            'baseUrl' => $this->baseUrl,
+            'apiKey_length' => strlen($this->apiKey),
+            'integrationId' => $this->integrationId,
+            'iframeId' => $this->iframeId,
+            'hmacSecret_exists' => !empty($this->hmacSecret)
+        ]);
 
         // Validate required configuration
         $this->validateConfig();
@@ -423,6 +432,13 @@ class PaymobService
         // Step 4: Generate iframe URL
         $iframeUrl = "https://accept.paymobsolutions.com/api/acceptance/iframes/{$this->iframeId}?payment_token={$paymentKey}";
 
+        // Log the iframe URL for debugging
+        Log::info('Generated Paymob iframe URL', [
+            'iframe_id' => $this->iframeId,
+            'payment_key_length' => strlen($paymentKey),
+            'iframe_url' => $iframeUrl
+        ]);
+
         return [
             'success' => true,
             'order_id' => $orderId,
@@ -453,7 +469,7 @@ class PaymobService
                 'data' => $data,
                 'hmac' => $hmac
             ]);
-            
+
             // For development/testing purposes, we can bypass HMAC verification
             // In production, you should remove this and properly validate the HMAC
             Log::warning('Bypassing HMAC verification for testing purposes');

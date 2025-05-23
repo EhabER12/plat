@@ -100,11 +100,11 @@ class PaymentController extends Controller
             // Check for applied coupon in session
             $appliedCoupon = null;
             $finalPrice = $course->price;
-            
+
             if (session()->has('applied_coupon_' . $courseId)) {
                 $couponId = session('applied_coupon_' . $courseId);
                 $appliedCoupon = \App\Models\Coupon::find($couponId);
-                
+
                 if ($appliedCoupon && $appliedCoupon->isValid()) {
                     $discount = $appliedCoupon->calculateDiscount($course->price);
                     $finalPrice = max(0, $course->price - $discount);
@@ -117,7 +117,7 @@ class PaymentController extends Controller
 
             // Initialize the payment iframe URL (empty by default until payment method is selected)
             $iframeUrl = null;
-            
+
             // If Paymob is set as default, prepare the iframe URL
             if ($defaultMethod === 'paymob' && !empty(config('services.paymob.iframe_id'))) {
                 try {
@@ -137,11 +137,11 @@ class PaymentController extends Controller
                         'floor' => 'NA',
                         'building' => 'NA',
                     ];
-                    
+
                     // Use final price after any discounts
                     $amountCents = (int)($finalPrice * 100);
                     $merchantOrderId = 'course_' . $course->course_id . '_user_' . $user->user_id . '_' . time();
-                    
+
                     $paymentData = [
                         'amount_cents' => $amountCents,
                         'currency' => 'EGP',
@@ -156,7 +156,7 @@ class PaymentController extends Controller
                         ],
                         'billing_data' => $billingData
                     ];
-                    
+
                     $result = $this->paymobService->processPayment($paymentData);
                     if ($result['success']) {
                         $iframeUrl = $result['iframe_url'];
@@ -171,10 +171,10 @@ class PaymentController extends Controller
 
             // For paid courses, proceed to payment
             return view('payments.checkout', compact(
-                'course', 
-                'user', 
-                'enabledPaymentMethods', 
-                'defaultMethod', 
+                'course',
+                'user',
+                'enabledPaymentMethods',
+                'defaultMethod',
                 'iframeUrl',
                 'appliedCoupon',
                 'finalPrice'
@@ -514,7 +514,7 @@ class PaymentController extends Controller
                 return redirect()->back()->with('error', 'Payment processing failed: ' . $result['message']);
             }
 
-            // Store order_id as the gateway_transaction_id 
+            // Store order_id as the gateway_transaction_id
             // This is the ID that Paymob will send back in the callback
             $orderIdFromPaymob = $result['order_id'] ?? null;
 
@@ -591,7 +591,7 @@ class PaymentController extends Controller
                     'hmac' => $hmac,
                     'data' => $data
                 ]);
-                
+
                 if ($request->expectsJson() || $request->ajax() || $request->header('Accept') === 'application/json') {
                 return response()->json(['status' => 'error', 'message' => 'Invalid signature'], 400);
                 } else {
@@ -603,7 +603,7 @@ class PaymentController extends Controller
             $transactionId = null;
             $orderId = null;
             $merchantOrderId = null;
-            
+
             // Try to extract transaction ID from different possible sources
             if (!empty($data['order']['id'])) {
                 // Standard webhook format
@@ -631,7 +631,7 @@ class PaymentController extends Controller
 
             if (!$transactionId && !$orderId && !$merchantOrderId) {
                 Log::error('Missing transaction/order ID in Paymob callback', $data);
-                
+
                 if ($request->expectsJson() || $request->ajax() || $request->header('Accept') === 'application/json') {
                     return response()->json(['status' => 'error', 'message' => 'Missing transaction/order ID'], 400);
                 } else {
@@ -647,17 +647,17 @@ class PaymentController extends Controller
 
             // Find the transaction in our database - try different possible IDs
             $transaction = null;
-            
+
             // First try gateway_transaction_id (should match order_id from Paymob)
             if ($orderId) {
                 $transaction = Transaction::where('gateway_transaction_id', $orderId)->first();
             }
-            
+
             // If not found, try by ID
             if (!$transaction && $transactionId) {
             $transaction = Transaction::where('gateway_transaction_id', $transactionId)->first();
             }
-            
+
             // If still not found, try by merchant order ID in gateway_response
             if (!$transaction && $merchantOrderId) {
                 $transactions = Transaction::where('payment_method', 'paymob')
@@ -665,7 +665,7 @@ class PaymentController extends Controller
                         $query->where('gateway_response->merchant_order_id', $merchantOrderId)
                             ->orWhere('description', 'like', "%{$merchantOrderId}%");
                     })->get();
-                
+
                 if ($transactions->count() == 1) {
                     $transaction = $transactions->first();
                 }
@@ -677,7 +677,7 @@ class PaymentController extends Controller
                     ->orderBy('created_at', 'desc')
                     ->limit(5)
                     ->get(['transaction_id', 'gateway_transaction_id', 'created_at', 'gateway_response']);
-                
+
                 Log::error('Paymob transaction not found', [
                     'transaction_id' => $transactionId,
                     'order_id' => $orderId,
@@ -685,11 +685,11 @@ class PaymentController extends Controller
                     'recent_transactions' => $possibleTransactions,
                     'data' => $data
                 ]);
-                
+
                 // Check if this is an API call or a browser redirect
                 if ($request->expectsJson() || $request->ajax() || $request->header('Accept') === 'application/json') {
                     return response()->json([
-                        'status' => 'error', 
+                        'status' => 'error',
                         'message' => 'Transaction not found',
                         'debug' => [
                             'transaction_id' => $transactionId,
@@ -701,11 +701,11 @@ class PaymentController extends Controller
                 } else {
                     // This is likely a browser redirect from Paymob - handle it for the user
                     $success = $data['success'] ?? $request->input('success') ?? false;
-                    
+
                     // Initialize variables
                     $courseId = null;
                     $userId = null;
-                    
+
                     // Try to extract course ID from merchant order ID if available
                     if ($merchantOrderId && strpos($merchantOrderId, 'course_') === 0) {
                         $parts = explode('_', $merchantOrderId);
@@ -714,7 +714,7 @@ class PaymentController extends Controller
                             $userId = $parts[3];
                         }
                     }
-                    
+
                     return redirect()->route('payment.unknown-transaction', [
                         'courseId' => $courseId,
                         'userId' => $userId,
@@ -733,7 +733,7 @@ class PaymentController extends Controller
                     'transaction_id' => $transaction->transaction_id,
                     'data' => $data
                 ]);
-                
+
                 if ($request->expectsJson() || $request->ajax() || $request->header('Accept') === 'application/json') {
                 return response()->json(['status' => 'error', 'message' => 'Payment not found'], 404);
                 } else {
@@ -745,18 +745,54 @@ class PaymentController extends Controller
 
             // Determine the transaction status
             $success = $data['success'] ?? $request->input('success') ?? false;
+            if (is_string($success)) {
+                $success = strtolower($success) === 'true';
+            }
+
             $isVoided = $data['is_voided'] ?? $request->input('is_voided') ?? false;
             $isRefunded = $data['is_refunded'] ?? $request->input('is_refunded') ?? false;
             $errorOccurred = $data['error_occured'] ?? $request->input('error_occured') ?? false;
 
-            if ($isVoided || $isRefunded || $errorOccurred || !$success) {
+            // Check for additional success indicators
+            $hasSuccessIndicator = false;
+
+            // Check for success in data.source_data_pan (flat format)
+            if (isset($data['source_data_pan']) && !empty($data['source_data_pan'])) {
+                $hasSuccessIndicator = true;
+                Log::info('Found source_data_pan which indicates successful payment', [
+                    'pan_masked' => $data['source_data_pan']
+                ]);
+            }
+
+            // Check for approved transaction response code
+            if (isset($data['txn_response_code']) && strtoupper($data['txn_response_code']) === 'APPROVED') {
+                $hasSuccessIndicator = true;
+                Log::info('Found APPROVED txn_response_code', [
+                    'txn_response_code' => $data['txn_response_code']
+                ]);
+            }
+
+            // Check for successful acquirer response code (00 means success)
+            if (isset($data['acq_response_code']) && $data['acq_response_code'] === '00') {
+                $hasSuccessIndicator = true;
+                Log::info('Found successful acq_response_code', [
+                    'acq_response_code' => $data['acq_response_code']
+                ]);
+            }
+
+            // Determine final status based on all indicators
+            $finalSuccess = $success || $hasSuccessIndicator;
+
+            if ($isVoided || $isRefunded || $errorOccurred || !$finalSuccess) {
                 $transaction->status = Transaction::STATUS_FAILED;
                 $payment->status = 'failed';
                 Log::info('Payment marked as failed', [
                     'transaction_id' => $transaction->transaction_id,
-                    'order_id' => $orderId
+                    'order_id' => $orderId,
+                    'success' => $success,
+                    'has_success_indicator' => $hasSuccessIndicator
                 ]);
-            } else if ($success) {
+            } else if ($finalSuccess) {
                 $transaction->status = Transaction::STATUS_COMPLETED;
                 $payment->status = 'completed';
 
@@ -776,13 +812,15 @@ class PaymentController extends Controller
 
                 // Record instructor earnings
                 $this->recordInstructorEarnings($payment);
-                
+
                 Log::info('Payment completed successfully and enrollment created', [
                     'transaction_id' => $transaction->transaction_id,
                     'payment_id' => $payment->payment_id,
                     'enrollment_id' => $enrollment->enrollment_id ?? null,
                     'student_id' => $payment->student_id,
-                    'course_id' => $payment->course_id
+                    'course_id' => $payment->course_id,
+                    'success' => $success,
+                    'has_success_indicator' => $hasSuccessIndicator
                 ]);
             }
 
@@ -813,7 +851,7 @@ class PaymentController extends Controller
                 'trace' => $e->getTraceAsString(),
                 'data' => $request->all()
             ]);
-            
+
             if ($request->expectsJson() || $request->ajax() || $request->header('Accept') === 'application/json') {
                 return response()->json(['status' => 'error', 'message' => 'Internal server error: ' . $e->getMessage()], 500);
             } else {
@@ -838,7 +876,7 @@ class PaymentController extends Controller
                 'status' => $status,
                 'data' => $request->all()
             ]);
-            
+
             $transactionId = $request->input('order');
             $merchantOrderId = $request->input('merchant_order_id');
 
@@ -852,12 +890,12 @@ class PaymentController extends Controller
 
             // Find the transaction with multiple fallback options
             $transaction = null;
-            
+
             // Try by gateway_transaction_id first
             if ($transactionId) {
             $transaction = Transaction::where('gateway_transaction_id', $transactionId)->first();
             }
-            
+
             // If not found, try by merchant_order_id in gateway_response
             if (!$transaction && $merchantOrderId) {
                 $transactions = Transaction::where('payment_method', 'paymob')
@@ -865,7 +903,7 @@ class PaymentController extends Controller
                         $query->where('gateway_response->merchant_order_id', $merchantOrderId)
                             ->orWhere('description', 'like', "%{$merchantOrderId}%");
                     })->get();
-                
+
                 if ($transactions->count() == 1) {
                     $transaction = $transactions->first();
                 }
@@ -877,7 +915,7 @@ class PaymentController extends Controller
                     'merchant_order_id' => $merchantOrderId,
                     'status' => $status
                 ]);
-                
+
                 // If transaction not found but status is success, try to create it
                 if ($status === 'success' && $merchantOrderId) {
                     // Extract course_id and user_id from merchant_order_id pattern: "course_{course_id}_user_{user_id}_timestamp"
@@ -885,7 +923,7 @@ class PaymentController extends Controller
                     if (count($parts) >= 4 && $parts[0] === 'course' && $parts[2] === 'user') {
                         $courseId = $parts[1];
                         $userId = $parts[3];
-                        
+
                         return redirect()->route('payment.unknown-transaction', [
                             'courseId' => $courseId,
                             'userId' => $userId,
@@ -895,7 +933,7 @@ class PaymentController extends Controller
                         ])->with('warning', 'نحن نتحقق من عملية الدفع الخاصة بك. سيتم تفعيل الوصول للدورة قريباً إذا تم تأكيد الدفع.');
                     }
                 }
-                
+
                 return redirect()->route('home')->with('error', 'لم يتم العثور على معاملة الدفع في النظام');
             }
 
@@ -918,14 +956,14 @@ class PaymentController extends Controller
                 // If the transaction is still pending, update it
                 if ($transaction->status === Transaction::STATUS_PENDING) {
                     DB::beginTransaction();
-                    
+
                     // Update transaction and payment status
                     $transaction->status = Transaction::STATUS_COMPLETED;
                     $transaction->save();
-                    
+
                     $payment->status = 'completed';
                     $payment->save();
-                    
+
                     // Create enrollment if not exists
                     $enrollment = Enrollment::firstOrCreate(
                         [
@@ -939,13 +977,13 @@ class PaymentController extends Controller
                             'payment_id' => $payment->payment_id,
                         ]
                     );
-                    
+
                     // Record instructor earnings
                     $this->recordInstructorEarnings($payment);
-                    
+
                     DB::commit();
                 }
-                
+
                 // Payment was successful - redirect to success page
                 return redirect()->route('payment.success', $payment->payment_id)
                     ->with('success', 'تم إتمام عملية الدفع بنجاح! تم تسجيلك في ' . $courseTitle);
@@ -954,11 +992,11 @@ class PaymentController extends Controller
                 if ($transaction->status === Transaction::STATUS_PENDING) {
                     $transaction->status = Transaction::STATUS_FAILED;
                     $transaction->save();
-                    
+
                     $payment->status = 'failed';
                     $payment->save();
                 }
-                
+
                 // Payment failed - redirect to failure page
                 return redirect()->route('payment.generic-failed', $payment->payment_id)
                     ->with('error', 'فشلت عملية الدفع. يرجى المحاولة مرة أخرى أو الاتصال بالدعم.');
@@ -1049,29 +1087,29 @@ class PaymentController extends Controller
     public function verifyVodafonePayment($reference)
     {
         Log::info('Verifying Vodafone Cash payment', ['reference' => $reference]);
-        
+
         try {
             // Verify payment with VodafoneCashService
             $verificationResult = $this->vodafoneCashService->verifyPayment($reference);
-            
+
             Log::info('Vodafone Cash verification result', $verificationResult);
-            
+
             if (!$verificationResult['success']) {
                 return redirect()->route('courses.index')
                     ->with('error', 'Failed to verify payment: ' . ($verificationResult['message'] ?? 'Unknown error'));
             }
-            
+
             // Find the transaction by gateway transaction ID
             $transaction = Transaction::where('gateway_transaction_id', $reference)->first();
-            
+
             if (!$transaction) {
                 return redirect()->route('courses.index')
                     ->with('error', 'Transaction not found');
             }
-            
+
             // Find the payment
             $payment = Payment::where('transaction_id', $transaction->transaction_id)->first();
-            
+
             if (!$payment) {
                 return redirect()->route('courses.index')
                     ->with('error', 'Payment not found');
@@ -1082,10 +1120,10 @@ class PaymentController extends Controller
                 $existingEnrollment = Enrollment::where('student_id', $payment->student_id)
                     ->where('course_id', $payment->course_id)
                     ->first();
-                
+
                 if (!$existingEnrollment) {
                     DB::beginTransaction();
-                    
+
                     try {
                         // Update transaction and payment status
                         $transaction->update([
@@ -1094,12 +1132,12 @@ class PaymentController extends Controller
                                 'verification' => $verificationResult
                             ])
                         ]);
-                        
+
                         $payment->update([
                             'status' => 'completed',
                             'payment_date' => now()
                         ]);
-                        
+
                         // Create an enrollment record
                         $enrollment = Enrollment::create([
                             'student_id' => $payment->student_id,
@@ -1109,19 +1147,19 @@ class PaymentController extends Controller
                             'status' => 'active',
                             'payment_id' => $payment->payment_id,
                         ]);
-                        
+
                         // Record instructor earnings
                         $this->recordInstructorEarnings($payment);
-                        
+
                         DB::commit();
-                        
+
                         return redirect()->route('payment.success', $payment->payment_id)
                             ->with('success', 'Payment verified successfully! You are now enrolled in the course.');
-                        
+
                     } catch (\Exception $e) {
                         DB::rollBack();
                         Log::error('Error completing Vodafone Cash payment: ' . $e->getMessage());
-                        
+
                         return redirect()->route('payment.generic-failed', $payment->payment_id)
                             ->with('error', 'Failed to complete enrollment: ' . $e->getMessage());
                     }
@@ -1134,10 +1172,10 @@ class PaymentController extends Controller
                 return redirect()->route('payment.pending', $payment->payment_id)
                     ->with('info', 'Your payment is still being processed. Please check back later.');
             }
-            
+
         } catch (\Exception $e) {
             Log::error('Vodafone Cash verification error: ' . $e->getMessage());
-            
+
             return redirect()->route('courses.index')
                 ->with('error', 'An error occurred while verifying your payment: ' . $e->getMessage());
         }
@@ -1155,12 +1193,12 @@ class PaymentController extends Controller
         try {
             $course = Course::findOrFail($courseId);
             $user = Auth::user();
-            
+
             // Check for applied coupon
             $couponId = null;
             $discountAmount = 0;
             $finalAmount = $course->price;
-            
+
             if (request()->has('coupon_id')) {
                 $couponId = request()->input('coupon_id');
                 $coupon = \App\Models\Coupon::find($couponId);
@@ -1168,7 +1206,7 @@ class PaymentController extends Controller
                 if ($coupon && $coupon->isValid()) {
                     $discountAmount = request()->input('discount_amount', 0);
                     $finalAmount = max(0, $course->price - $discountAmount);
-                    
+
                     // Increment coupon usage
                     $coupon->incrementUsed();
                 }
@@ -1327,7 +1365,7 @@ class PaymentController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             return response()->json([
                 'status' => 'error',
                 'message' => 'Error completing payment: ' . $e->getMessage()
@@ -1350,7 +1388,7 @@ class PaymentController extends Controller
             'merchantOrderId' => $request->input('merchantOrderId'),
             'status' => $request->input('status')
         ];
-        
+
         try {
             // Try to get course information
             if ($data['courseId']) {
@@ -1359,17 +1397,17 @@ class PaymentController extends Controller
                     $data['course'] = $course;
                 }
             }
-            
+
             // Check if this is a success status and we have all needed information
             if ($data['status'] === 'success' && $data['courseId'] && $data['userId']) {
                 $user = \App\Models\User::find($data['userId']);
-                
+
                 if ($user && $course) {
                     // Check if user is already enrolled
                     $existingEnrollment = Enrollment::where('student_id', $user->user_id)
                         ->where('course_id', $course->course_id)
                         ->first();
-                    
+
                     if ($existingEnrollment) {
                         $data['alreadyEnrolled'] = true;
                         $data['enrollmentId'] = $existingEnrollment->enrollment_id;
@@ -1379,17 +1417,17 @@ class PaymentController extends Controller
                     }
                 }
             }
-            
+
             // Log this event for investigation
             Log::warning('Unknown transaction payment response', $data);
-            
+
         } catch (\Exception $e) {
             Log::error('Error processing unknown transaction: ' . $e->getMessage());
         }
-        
+
         return view('payments.unknown-transaction', $data);
     }
-    
+
     /**
      * Process unknown transaction and create enrollment.
      *
@@ -1402,24 +1440,24 @@ class PaymentController extends Controller
         $userId = $request->input('userId');
         $orderId = $request->input('orderId');
         $merchantOrderId = $request->input('merchantOrderId');
-        
+
         try {
                 DB::beginTransaction();
-            
+
             // Get course and user
             $course = Course::findOrFail($courseId);
             $user = \App\Models\User::findOrFail($userId);
-            
+
             // Check if user is already enrolled
             $existingEnrollment = Enrollment::where('student_id', $user->user_id)
                 ->where('course_id', $courseId)
                 ->first();
-                
+
             if ($existingEnrollment) {
                 return redirect()->route('student.course-content', $courseId)
                     ->with('info', 'أنت مسجل بالفعل في هذه الدورة');
             }
-                
+
                 // Create a transaction record
                 $transaction = Transaction::create([
                 'user_id' => $userId,
@@ -1479,10 +1517,10 @@ class PaymentController extends Controller
                 'payment_id' => $payment->payment_id,
                 'enrollment_id' => $enrollment->enrollment_id
             ]);
-            
+
             return redirect()->route('student.course-content', $courseId)
                 ->with('success', 'تم تأكيد عملية الدفع بنجاح وتم تسجيلك في الدورة!');
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error processing unknown transaction manually: ' . $e->getMessage(), [
@@ -1509,40 +1547,40 @@ class PaymentController extends Controller
 
         $course = Course::findOrFail($courseId);
         $couponCode = $request->coupon_code;
-        
+
         // Find the coupon by code
         $coupon = \App\Models\Coupon::where('code', $couponCode)->first();
-        
+
         if (!$coupon) {
             return back()->with('coupon_error', 'Invalid coupon code. Please try again.');
         }
-        
+
         // Check if coupon is valid
         if (!$coupon->isValid()) {
             return back()->with('coupon_error', 'This coupon has expired or reached its usage limit.');
         }
-        
+
         // Check if coupon is applicable to this course
         if (!empty($coupon->courses_applicable) && !in_array($courseId, $coupon->courses_applicable)) {
             return back()->with('coupon_error', 'This coupon is not applicable to this course.');
         }
-        
+
         // Check minimum order amount
         if ($course->price < $coupon->minimum_order_amount) {
             return back()->with('coupon_error', 'This coupon requires a minimum purchase of $' . $coupon->minimum_order_amount);
         }
-        
+
         // Store coupon in session
         session(['applied_coupon_' . $courseId => $coupon->coupon_id]);
-        
+
         // Calculate discount for display
         $discount = $coupon->calculateDiscount($course->price);
         $finalPrice = max(0, $course->price - $discount);
-        
+
         return redirect()->route('payment.checkout', $courseId)
             ->with('success', 'Coupon applied successfully! You saved $' . number_format($discount, 2));
     }
-    
+
     /**
      * Remove a coupon from a course checkout.
      *
@@ -1554,7 +1592,7 @@ class PaymentController extends Controller
     {
         // Remove coupon from session
         session()->forget('applied_coupon_' . $courseId);
-        
+
         return redirect()->route('payment.checkout', $courseId)
             ->with('info', 'Coupon has been removed.');
     }

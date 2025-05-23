@@ -7,6 +7,7 @@ use App\Models\DirectMessage;
 use App\Models\User;
 use App\Models\Course;
 use App\Models\Enrollment;
+use App\Services\ContentFilterService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -251,100 +252,65 @@ class MessagesController extends Controller
      * Send a message to an instructor.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function send(Request $request)
     {
-        // Log the incoming request for diagnostics
-        Log::info('Student message send request received', [
-            'request_data' => $request->all(),
-            'is_ajax' => $request->ajax(),
-            'content_type' => $request->header('Content-Type')
-        ]);
-
-        // Validate request data
-        $validator = Validator::make($request->all(), [
+        // Validate the request
+        $request->validate([
             'receiver_id' => 'required|exists:users,user_id',
             'content' => 'required|string|max:10000',
             'course_id' => 'nullable|exists:courses,course_id'
         ]);
 
-        if ($validator->fails()) {
-            Log::warning('Student message validation failed', [
-                'errors' => $validator->errors()->toArray()
-            ]);
-
-            if ($request->ajax() || $request->wantsJson() || $request->header('Content-Type') === 'application/json') {
-                return response()->json([
-                    'success' => false,
-                    'errors' => $validator->errors()->all()
-                ], 422);
-            }
-
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
-
         try {
-            DB::beginTransaction();
-
             $student = Auth::user();
+            $receiverId = $request->input('receiver_id');
+            $content = $request->input('content');
+            $courseId = $request->input('course_id');
 
             // Create the message
             $message = new DirectMessage();
             $message->user_id = $student->user_id;
             $message->sender_id = $student->user_id;
-            $message->receiver_id = $request->receiver_id;
-            $message->content = $request->content;
-            $message->course_id = $request->course_id;
+            $message->receiver_id = $receiverId;
+            $message->content = $content;
+            $message->course_id = $courseId;
+            $message->chat_id = 0; // Default chat_id
             $message->is_read = false;
+
+            // El filtrado de contenido se realizará automáticamente en el modelo
+
             $message->save();
 
-            $message->load('sender');
-
-            DB::commit();
-
-            // Try to broadcast the event (non-critical)
-            try {
-                event(new NewMessageSent($message));
-            } catch (\Exception $e) {
-                Log::warning('Failed to broadcast message event', [
-                    'message_id' => $message->message_id,
-                    'error' => $e->getMessage()
-                ]);
-            }
-
+            // Log success
             Log::info('Student message sent successfully', [
-                'message_id' => $message->message_id
+                'message_id' => $message->message_id,
+                'sender_id' => $student->user_id,
+                'receiver_id' => $receiverId,
+                'contains_flagged_content' => $message->contains_flagged_content ?? false
             ]);
 
-            if ($request->ajax() || $request->wantsJson() || $request->header('Content-Type') === 'application/json') {
-                return response()->json([
-                    'success' => true,
-                    'message' => $message,
-                    'formatted_time' => $message->created_at->format('g:i A')
-                ]);
+            // Show warning if message was filtered
+            if ($message->is_filtered ?? false) {
+                return redirect()->route('student.messages.show', $receiverId)
+                                ->with('warning', 'تم إرسال الرسالة بنجاح ولكن تم تصفية بعض المحتوى المحظور.');
             }
 
-            return redirect()->route('student.messages.show', $request->receiver_id)
+            // Redirect back with success message
+            return redirect()->route('student.messages.show', $receiverId)
                             ->with('success', 'تم إرسال الرسالة بنجاح');
 
         } catch (\Exception $e) {
-            DB::rollBack();
-
-            Log::error('Student message send error', [
+            // Log error
+            Log::error('Error sending student message', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
 
-            if ($request->ajax() || $request->wantsJson() || $request->header('Content-Type') === 'application/json') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'حدث خطأ أثناء إرسال الرسالة: ' . $e->getMessage()
-                ], 500);
-            }
-
+            // Redirect back with error message
             return redirect()->back()
-                            ->with('error', 'حدث خطأ أثناء إرسال الرسالة')
+                            ->with('error', 'حدث خطأ أثناء إرسال الرسالة: ' . $e->getMessage())
                             ->withInput();
         }
     }
@@ -361,7 +327,8 @@ class MessagesController extends Controller
             // Log the incoming request
             Log::info('Get new student messages request received', [
                 'request_data' => $request->all(),
-                'content_type' => $request->header('Content-Type')
+                'content_type' => $request->header('Content-Type'),
+                'request_format' => $request->format()
             ]);
 
             // Validate request
@@ -383,13 +350,13 @@ class MessagesController extends Controller
 
             $student = Auth::user();
             $instructorId = $request->instructor_id;
-            $lastMessageId = $request->last_message_id;
+            $lastMessageId = $request->last_message_id ?? 0;
 
             // Get messages newer than last_message_id
             $query = DirectMessage::betweenUsers($student->user_id, $instructorId)
                                   ->orderBy('created_at');
 
-            if ($lastMessageId) {
+            if ($lastMessageId > 0) {
                 $query->where('message_id', '>', $lastMessageId);
             }
 
@@ -397,7 +364,9 @@ class MessagesController extends Controller
 
             Log::info('Retrieved new student messages', [
                 'count' => $messages->count(),
-                'last_message_id' => $lastMessageId
+                'last_message_id' => $lastMessageId,
+                'student_id' => $student->user_id,
+                'instructor_id' => $instructorId
             ]);
 
             // Mark received messages as read

@@ -44,34 +44,34 @@ class DashboardController extends Controller
                 $query->where('name', 'admin');
             })->count(),
         ];
-                
+
         // Load recent transactions, users, courses
         $latest_users = User::latest()->take(5)->get();
         $latest_courses = Course::with('instructor')->latest()->take(5)->get();
         $recentTransactions = Payment::latest()->take(10)->get();
-        
+
         // Get categorized revenue by payment method
         $revenueByMethod = Payment::where('status', 'completed')
             ->selectRaw('payment_method, SUM(amount) as total_amount')
             ->groupBy('payment_method')
             ->orderByRaw('SUM(amount) DESC')
             ->get();
-            
+
         // Get courses grouped by category for chart
         $course_categories = Category::withCount('courses')->take(8)->get();
-        
+
         // Get latest notifications
         $importantNotifications = \App\Models\AdminNotification::where('severity', 'high')
             ->where('is_read', false)
             ->latest()
             ->take(5)
             ->get();
-        
+
         return view('admin.dashboard', compact(
-            'stats', 
-            'latest_users', 
-            'latest_courses', 
-            'recentTransactions', 
+            'stats',
+            'latest_users',
+            'latest_courses',
+            'recentTransactions',
             'revenueByMethod',
             'course_categories',
             'importantNotifications'
@@ -308,7 +308,7 @@ class DashboardController extends Controller
                 $recentPayments = DB::table('payments')
                     ->join('users', 'payments.student_id', '=', 'users.id')
                     ->join('courses', 'payments.course_id', '=', 'courses.course_id')
-                    ->select('payments.id as payment_id', 'payments.amount', 'payments.payment_method', 'payments.payment_date', 'payments.status', 
+                    ->select('payments.id as payment_id', 'payments.amount', 'payments.payment_method', 'payments.payment_date', 'payments.status',
                             'payments.student_id', 'payments.course_id', 'users.name as student_name', 'courses.title as course_title')
                     ->where('payments.status', 'completed')
                     ->orderBy('payments.payment_date', 'desc')
@@ -340,11 +340,11 @@ class DashboardController extends Controller
                 }
 
                 return view('admin.reports', compact('data', 'reportType', 'timeframe', 'recentPayments'));
-        } 
+        }
         elseif ($reportType === 'users') {
                 $data = $this->getUsersReportData($timeframe);
                 return view('admin.reports', compact('data', 'reportType', 'timeframe'));
-        } 
+        }
         else { // enrollment
                 $data = $this->getEnrollmentReportData($timeframe);
                 $recentEnrollments = DB::table('enrollments')
@@ -428,13 +428,13 @@ class DashboardController extends Controller
     private function getRevenueReportData($timeframe)
     {
         $dateColumn = 'created_at';
-        
+
         // Get total revenue
         $totalRevenue = DB::table('transactions')
             ->where('status', 'completed')
             ->where('transaction_type', 'payment')
             ->sum('amount');
-            
+
         // Get payment method distribution
         $paymentMethods = DB::table('transactions')
             ->where('status', 'completed')
@@ -442,7 +442,7 @@ class DashboardController extends Controller
             ->select('payment_method', DB::raw('COUNT(*) as count'), DB::raw('SUM(amount) as total_amount'))
             ->groupBy('payment_method')
             ->get();
-            
+
         // Format payment methods data for chart
         $methodLabels = [];
         $methodData = [];
@@ -454,15 +454,15 @@ class DashboardController extends Controller
             'bank_transfer' => '#f39c12',
             'default' => '#95a5a6'
         ];
-        
+
         $paymentMethodsColors = [];
-        
+
         foreach ($paymentMethods as $method) {
             $methodLabels[] = ucfirst($method->payment_method);
             $methodData[] = $method->total_amount;
             $paymentMethodsColors[] = $methodColors[$method->payment_method] ?? $methodColors['default'];
         }
-        
+
         // Get revenue by date
         $query = DB::table('transactions')
             ->where('status', 'completed')
@@ -477,7 +477,7 @@ class DashboardController extends Controller
             ->groupBy('date')
             ->orderBy('date')
             ->get();
-            
+
         // Get recent payments
         $recentPayments = DB::table('transactions')
             ->where('status', 'completed')
@@ -485,7 +485,7 @@ class DashboardController extends Controller
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
-            
+
         // Prepare data for the view
         $labels = [];
         $data = [];
@@ -493,12 +493,12 @@ class DashboardController extends Controller
         // Fill in missing dates with zero values
         $dateRange = $this->getDateRangeForTimeframe($timeframe);
         $dateFormat = $this->getDateFormatPHP($timeframe);
-        
+
         $formattedResults = [];
         foreach ($results as $result) {
             $formattedResults[$result->date] = $result->total_amount;
         }
-        
+
         foreach ($dateRange as $date) {
             $formattedDate = $date->format($dateFormat);
             $labels[] = $formattedDate;
@@ -691,6 +691,74 @@ class DashboardController extends Controller
     }
 
     /**
+     * Show the admin profile page.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function profile()
+    {
+        $user = Auth::user();
+        return view('admin.profile', compact('user'));
+    }
+
+    /**
+     * Update the admin profile.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id . ',id',
+            'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+
+        if ($request->hasFile('profile_image')) {
+            // Store the new profile image
+            $imagePath = $request->file('profile_image')->store('profile_images', 'public');
+            $user->profile_image = $imagePath;
+        }
+
+        $user->save();
+
+        return redirect()->route('admin.profile')->with('success', 'Profile updated successfully');
+    }
+
+    /**
+     * Update the admin password.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function updatePassword(Request $request)
+    {
+        $validated = $request->validate([
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = Auth::user();
+
+        // Check if the current password matches
+        if (!Hash::check($validated['current_password'], $user->password)) {
+            return back()->withErrors(['current_password' => 'The current password is incorrect']);
+        }
+
+        // Update the password
+        $user->password = Hash::make($validated['password']);
+        $user->save();
+
+        return redirect()->route('admin.profile')->with('success', 'Password updated successfully');
+    }
+
+    /**
      * Update system settings.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -721,7 +789,7 @@ class DashboardController extends Controller
         try {
             // Get the current user ID if authenticated
             $userId = $request->user() ? $request->user()->user_id : null;
-            
+
             // Convert checkbox array to comma-separated string for payment methods
             $paymentMethods = $request->has('payment_methods') ? implode(',', $request->payment_methods) : 'credit_card';
 

@@ -649,6 +649,9 @@
         margin-left: 10px;
         margin-right: 0;
     }
+    .col-lg-6{
+        width: 100% !important;
+    }
 </style>
 
 <div class="auth-container">

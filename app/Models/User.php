@@ -373,6 +373,24 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the books that the user has purchased.
+     */
+    public function purchasedBooks()
+    {
+        return $this->belongsToMany(Book::class, 'book_purchases', 'user_id', 'book_id')
+                    ->withPivot('purchase_id', 'amount', 'status', 'purchased_at')
+                    ->withTimestamps();
+    }
+
+    /**
+     * Get the book purchases made by the user.
+     */
+    public function bookPurchases()
+    {
+        return $this->hasMany(BookPurchase::class, 'user_id', 'user_id');
+    }
+
+    /**
      * Get the badges earned by the user.
      */
     public function badges(): BelongsToMany

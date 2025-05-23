@@ -17,6 +17,17 @@
     </a>
     <a href="{{ route('student.messages.index') }}" class="sidebar-icon {{ request()->routeIs('student.messages.index') ? 'active' : '' }}">
         <i class="fas fa-envelope"></i>
+        @php
+            $unreadAdminMessages = \App\Models\DirectMessage::where('receiver_id', Auth::id())
+                ->whereHas('sender.roles', function($query) {
+                    $query->where('role', 'admin');
+                })
+                ->where('is_read', false)
+                ->count();
+        @endphp
+        @if($unreadAdminMessages > 0)
+            <span class="badge bg-warning position-absolute top-0 start-100 translate-middle" style="font-size: 0.6rem;" title="رسائل من الإدارة">A{{ $unreadAdminMessages }}</span>
+        @endif
         <div class="sidebar-tooltip">{{ app()->getLocale() == 'ar' ? 'الرسائل' : 'Messages' }}</div>
     </a>
 

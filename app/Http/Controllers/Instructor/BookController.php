@@ -19,23 +19,23 @@ class BookController extends Controller
     public function index(Request $request)
     {
         $user = User::find(Auth::id());
-        
+
         // Get filter and sort parameters
         $status = $request->get('status');
         $search = $request->get('search');
         $sort = $request->get('sort', 'created_at');
         $direction = $request->get('direction', 'desc');
-        
+
         // Base query
         $query = $user->books();
-        
+
         // Apply filters
         if ($status === 'published') {
             $query->where('is_published', true);
         } elseif ($status === 'draft') {
             $query->where('is_published', false);
         }
-        
+
         // Apply search
         if ($search) {
             $query->where(function($q) use ($search) {
@@ -44,7 +44,7 @@ class BookController extends Controller
                   ->orWhere('author', 'like', "%{$search}%");
             });
         }
-        
+
         // Apply sorting
         $allowedSortFields = ['title', 'price', 'created_at', 'updated_at'];
         if (in_array($sort, $allowedSortFields)) {
@@ -52,22 +52,22 @@ class BookController extends Controller
         } else {
             $query->latest(); // Default sort
         }
-        
+
         // Get paginated results
         $books = $query->paginate(10);
-        
+
         // Get counts for filters
         $totalBooks = $user->books()->count();
         $publishedBooks = $user->books()->where('is_published', true)->count();
         $draftBooks = $user->books()->where('is_published', false)->count();
-        
+
         return view('instructor.books.index', compact(
-            'books', 
-            'totalBooks', 
-            'publishedBooks', 
-            'draftBooks', 
-            'status', 
-            'search', 
+            'books',
+            'totalBooks',
+            'publishedBooks',
+            'draftBooks',
+            'status',
+            'search',
             'sort',
             'direction'
         ));
@@ -118,22 +118,72 @@ class BookController extends Controller
 
         // Handle cover image upload
         if ($request->hasFile('cover_image')) {
-            $image = $request->file('cover_image');
-            $coverImageName = 'cover.' . $image->getClientOriginalExtension();
-            $image->storeAs($bookFolderPath . '/cover', $coverImageName);
-            $book->cover_image = "instructors/{$instructorId}/books/{$book->id}/cover/{$coverImageName}";
+            try {
+                $image = $request->file('cover_image');
+
+                // Verify that the file is valid
+                if (!$image->isValid()) {
+                    Log::error('Cover Image Upload - Invalid file', [
+                        'instructor_id' => $instructorId,
+                        'book_id' => $book->id
+                    ]);
+                    return redirect()->back()->withErrors(['cover_image' => 'Invalid image file'])->withInput();
+                }
+
+                // Create a debug log to track the upload
+                Log::info('Cover Image Upload - Starting upload process', [
+                    'instructor_id' => $instructorId,
+                    'book_id' => $book->id,
+                    'original_name' => $image->getClientOriginalName(),
+                    'mime_type' => $image->getMimeType(),
+                    'size' => $image->getSize(),
+                    'extension' => $image->getClientOriginalExtension()
+                ]);
+
+                $coverImageName = 'cover.' . $image->getClientOriginalExtension();
+
+                // Make sure the directory exists
+                $coverDirectory = storage_path('app/' . $bookFolderPath . '/cover');
+                if (!file_exists($coverDirectory)) {
+                    if (!mkdir($coverDirectory, 0755, true)) {
+                        Log::error('Cover Image Upload - Failed to create directory', [
+                            'directory' => $coverDirectory
+                        ]);
+                        return redirect()->back()->withErrors(['cover_image' => 'Server error: Could not create directory'])->withInput();
+                    }
+                }
+
+                // Store the file directly using move
+                if ($image->move($coverDirectory, $coverImageName)) {
+                    Log::info('Cover Image Upload - File moved successfully', [
+                        'destination' => $coverDirectory . '/' . $coverImageName
+                    ]);
+                    $book->cover_image = "instructors/{$instructorId}/books/{$book->id}/cover/{$coverImageName}";
+                } else {
+                    Log::error('Cover Image Upload - Failed to move file', [
+                        'destination' => $coverDirectory . '/' . $coverImageName
+                    ]);
+                    return redirect()->back()->withErrors(['cover_image' => 'Failed to upload cover image'])->withInput();
+                }
+            } catch (\Exception $e) {
+                Log::error('Cover Image Upload - Exception', [
+                    'message' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                return redirect()->back()->withErrors(['cover_image' => 'Error uploading cover image: ' . $e->getMessage()])->withInput();
+            }
         }
 
         // Handle PDF file upload
         if ($request->hasFile('pdf_file')) {
             try {
                 $pdf = $request->file('pdf_file');
-                
+
                 // Verify that the file is valid
                 if (!$pdf->isValid()) {
                     return redirect()->back()->withErrors(['pdf_file' => 'Invalid PDF file'])->withInput();
                 }
-                
+
                 // Create a debug log to track the upload
                 Log::info('PDF Upload - Starting upload process', [
                     'instructor_id' => $instructorId,
@@ -143,9 +193,9 @@ class BookController extends Controller
                     'size' => $pdf->getSize(),
                     'extension' => $pdf->getClientOriginalExtension()
                 ]);
-                
+
                 $pdfFileName = 'book.' . $pdf->getClientOriginalExtension();
-                
+
                 // Make sure the directory exists
                 $pdfDirectory = storage_path('app/' . $bookFolderPath . '/pdf');
                 if (!file_exists($pdfDirectory)) {
@@ -156,7 +206,7 @@ class BookController extends Controller
                         return redirect()->back()->withErrors(['pdf_file' => 'Server error: Could not create directory'])->withInput();
                     }
                 }
-                
+
                 // Store the file directly using move
                 if ($pdf->move($pdfDirectory, $pdfFileName)) {
                     Log::info('PDF Upload - File moved successfully', [
@@ -228,15 +278,75 @@ class BookController extends Controller
 
         // Handle cover image upload
         if ($request->hasFile('cover_image')) {
-            // Delete old image if exists
-            if ($book->cover_image) {
-                Storage::delete('public/' . $book->cover_image);
-            }
+            try {
+                // Delete old image if exists
+                if ($book->cover_image) {
+                    $oldImagePath = 'public/' . $book->cover_image;
+                    if (Storage::exists($oldImagePath)) {
+                        Log::info('Cover Image Update - Deleting old image', [
+                            'path' => $oldImagePath
+                        ]);
+                        Storage::delete($oldImagePath);
+                    } else {
+                        Log::warning('Cover Image Update - Old image not found', [
+                            'path' => $oldImagePath
+                        ]);
+                    }
+                }
 
-            $image = $request->file('cover_image');
-            $coverImageName = 'cover.' . $image->getClientOriginalExtension();
-            $image->storeAs($bookFolderPath . '/cover', $coverImageName);
-            $book->cover_image = "instructors/{$instructorId}/books/{$book->id}/cover/{$coverImageName}";
+                $image = $request->file('cover_image');
+
+                // Verify that the file is valid
+                if (!$image->isValid()) {
+                    Log::error('Cover Image Update - Invalid file', [
+                        'instructor_id' => $instructorId,
+                        'book_id' => $book->id
+                    ]);
+                    return redirect()->back()->withErrors(['cover_image' => 'Invalid image file'])->withInput();
+                }
+
+                // Create a debug log to track the upload
+                Log::info('Cover Image Update - Starting upload process', [
+                    'instructor_id' => $instructorId,
+                    'book_id' => $book->id,
+                    'original_name' => $image->getClientOriginalName(),
+                    'mime_type' => $image->getMimeType(),
+                    'size' => $image->getSize(),
+                    'extension' => $image->getClientOriginalExtension()
+                ]);
+
+                $coverImageName = 'cover.' . $image->getClientOriginalExtension();
+
+                // Make sure the directory exists
+                $coverDirectory = storage_path('app/' . $bookFolderPath . '/cover');
+                if (!file_exists($coverDirectory)) {
+                    if (!mkdir($coverDirectory, 0755, true)) {
+                        Log::error('Cover Image Update - Failed to create directory', [
+                            'directory' => $coverDirectory
+                        ]);
+                        return redirect()->back()->withErrors(['cover_image' => 'Server error: Could not create directory'])->withInput();
+                    }
+                }
+
+                // Store the file directly using move
+                if ($image->move($coverDirectory, $coverImageName)) {
+                    Log::info('Cover Image Update - File moved successfully', [
+                        'destination' => $coverDirectory . '/' . $coverImageName
+                    ]);
+                    $book->cover_image = "instructors/{$instructorId}/books/{$book->id}/cover/{$coverImageName}";
+                } else {
+                    Log::error('Cover Image Update - Failed to move file', [
+                        'destination' => $coverDirectory . '/' . $coverImageName
+                    ]);
+                    return redirect()->back()->withErrors(['cover_image' => 'Failed to upload cover image'])->withInput();
+                }
+            } catch (\Exception $e) {
+                Log::error('Cover Image Update - Exception', [
+                    'message' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                return redirect()->back()->withErrors(['cover_image' => 'Error uploading cover image: ' . $e->getMessage()])->withInput();
+            }
         }
 
         // Handle PDF file upload
@@ -246,14 +356,14 @@ class BookController extends Controller
                 if ($book->pdf_file) {
                     Storage::delete('public/' . $book->pdf_file);
                 }
-                
+
                 $pdf = $request->file('pdf_file');
-                
+
                 // Verify that the file is valid
                 if (!$pdf->isValid()) {
                     return redirect()->back()->withErrors(['pdf_file' => 'Invalid PDF file'])->withInput();
                 }
-                
+
                 // Create a debug log to track the upload
                 Log::info('PDF Update - Starting upload process', [
                     'instructor_id' => $instructorId,
@@ -263,9 +373,9 @@ class BookController extends Controller
                     'size' => $pdf->getSize(),
                     'extension' => $pdf->getClientOriginalExtension()
                 ]);
-                
+
                 $pdfFileName = 'book.' . $pdf->getClientOriginalExtension();
-                
+
                 // Make sure the directory exists
                 $pdfDirectory = storage_path('app/' . $bookFolderPath . '/pdf');
                 if (!file_exists($pdfDirectory)) {
@@ -276,7 +386,7 @@ class BookController extends Controller
                         return redirect()->back()->withErrors(['pdf_file' => 'Server error: Could not create directory'])->withInput();
                     }
                 }
-                
+
                 // Store the file directly using move
                 if ($pdf->move($pdfDirectory, $pdfFileName)) {
                     Log::info('PDF Update - File moved successfully', [

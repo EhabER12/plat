@@ -180,18 +180,18 @@
         border: 1px solid #f0f0f0;
         margin-bottom: 4px;
     }
-    
+
     .student-analytics-item:hover {
         background-color: #f8f9fa;
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     }
-    
+
     .circular-chart {
         width: 100%;
         height: 100%;
     }
-    
+
     .percentage {
         fill: #555;
         font-family: sans-serif;
@@ -199,46 +199,46 @@
         text-anchor: middle;
         font-weight: bold;
     }
-    
+
     .circle-bg {
         fill: none;
         stroke-width: 2.8;
     }
-    
+
     .circle {
         fill: none;
         stroke-width: 2.8;
         stroke-linecap: round;
     }
-    
+
     .performance-label {
         color: #6c757d;
     }
-    
+
     .border-success {
         border-color: rgba(40, 167, 69, 0.3) !important;
     }
-    
+
     .border-info {
         border-color: rgba(23, 162, 184, 0.3) !important;
     }
-    
+
     .bg-success-subtle {
         background-color: rgba(40, 167, 69, 0.1);
     }
-    
+
     .bg-info-subtle {
         background-color: rgba(23, 162, 184, 0.1);
     }
-    
+
     .bg-warning-subtle {
         background-color: rgba(255, 193, 7, 0.1);
     }
-    
+
     .bg-danger-subtle {
         background-color: rgba(220, 53, 69, 0.1);
     }
-    
+
     .bg-primary-subtle {
         background-color: rgba(13, 110, 253, 0.1);
     }
@@ -324,7 +324,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Books Stats Section -->
     <div class="row mb-4">
         <div class="col-12">
@@ -424,6 +424,54 @@
                                 @endforeach
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Admin Messages Section -->
+    @if(isset($adminMessages) && count($adminMessages) > 0)
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-info mb-3 fade-in" style="animation-delay: 0.3s">
+                <div class="card-header bg-info text-white d-flex align-items-center justify-content-between">
+                    <span><i class="fas fa-envelope me-2"></i> رسائل من الإدارة</span>
+                    <div>
+                        @if($unreadAdminMessages > 0)
+                            <span class="badge bg-danger me-2">{{ $unreadAdminMessages }} جديدة</span>
+                        @endif
+                        <a href="{{ route('instructor.messages.index') }}" class="btn btn-sm btn-light">
+                            <i class="fas fa-external-link-alt me-1"></i> عرض كل الرسائل
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        @foreach($adminMessages->take(3) as $message)
+                            <a href="{{ route('instructor.messages.show', $message->sender->user_id) }}"
+                               class="list-group-item list-group-item-action border-0 py-3 px-4 {{ !$message->is_read ? 'bg-light' : '' }}">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle bg-primary text-white d-flex align-items-center justify-content-center me-3"
+                                         style="width: 45px; height: 45px; border-radius: 50%;">
+                                        <i class="fas fa-user-shield"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                            <h6 class="mb-0 fw-bold">{{ $message->sender->name }}</h6>
+                                            <div class="d-flex align-items-center">
+                                                @if(!$message->is_read)
+                                                    <span class="badge bg-danger rounded-pill me-2">جديدة</span>
+                                                @endif
+                                                <small class="text-muted">{{ $message->created_at->diffForHumans() }}</small>
+                                            </div>
+                                        </div>
+                                        <p class="mb-0 text-muted">{{ Str::limit($message->content, 80) }}</p>
+                                    </div>
+                                </div>
+                            </a>
+                        @endforeach
                     </div>
                 </div>
             </div>
@@ -595,7 +643,7 @@
                                                 <div class="performance-label small mb-1">مستوى الأداء</div>
                                                 <div class="d-flex align-items-center">
                                                     <div class="progress me-2" style="width: 80px; height: 8px; background-color: rgba(0,0,0,0.05);">
-                                                        <div class="progress-bar {{ $student->performance_score >= 80 ? 'bg-success' : ($student->performance_score >= 65 ? 'bg-info' : ($student->performance_score >= 50 ? 'bg-warning' : 'bg-danger')) }}" 
+                                                        <div class="progress-bar {{ $student->performance_score >= 80 ? 'bg-success' : ($student->performance_score >= 65 ? 'bg-info' : ($student->performance_score >= 50 ? 'bg-warning' : 'bg-danger')) }}"
                                                              role="progressbar" style="width: {{ $student->performance_score }}%"></div>
                                                     </div>
                                                     <div class="fw-bold {{ $student->performance_score >= 80 ? 'text-success' : ($student->performance_score >= 65 ? 'text-info' : ($student->performance_score >= 50 ? 'text-warning' : 'text-danger')) }}">
@@ -605,7 +653,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     <!-- Performance Metrics -->
                                     <div class="row g-3 mb-3">
                                         <div class="col-md-4">
@@ -620,9 +668,9 @@
                                                                     a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#eee" stroke-width="3" />
                                                                 <path class="circle" d="M18 2.0845
                                                                     a 15.9155 15.9155 0 0 1 0 31.831
-                                                                    a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" 
-                                                                    stroke="{{ $student->exams_taken > 0 ? ($student->exams_passed / $student->exams_taken >= 0.7 ? '#28a745' : ($student->exams_passed / $student->exams_taken >= 0.5 ? '#17a2b8' : '#ffc107')) : '#6c757d' }}" 
-                                                                    stroke-width="3" 
+                                                                    a 15.9155 15.9155 0 0 1 0 -31.831" fill="none"
+                                                                    stroke="{{ $student->exams_taken > 0 ? ($student->exams_passed / $student->exams_taken >= 0.7 ? '#28a745' : ($student->exams_passed / $student->exams_taken >= 0.5 ? '#17a2b8' : '#ffc107')) : '#6c757d' }}"
+                                                                    stroke-width="3"
                                                                     stroke-dasharray="{{ $student->exams_taken > 0 ? ($student->exams_passed / $student->exams_taken) * 100 : 0 }}, 100" />
                                                                 <text x="18" y="20.5" class="percentage">{{ $student->exams_taken > 0 ? number_format(($student->exams_passed / $student->exams_taken) * 100, 0) : 0 }}%</text>
                                                             </svg>
@@ -640,7 +688,7 @@
                                                 <div class="card-body p-2 text-center">
                                                     <div class="small text-muted mb-1">متوسط الدرجات</div>
                                                     <div class="d-flex align-items-center justify-content-center">
-                                                        <div class="score-badge me-2 rounded-circle d-flex align-items-center justify-content-center" 
+                                                        <div class="score-badge me-2 rounded-circle d-flex align-items-center justify-content-center"
                                                              style="width: 50px; height: 50px; background-color: {{ $student->avg_score >= 80 ? '#28a745' : ($student->avg_score >= 70 ? '#17a2b8' : ($student->avg_score >= 60 ? '#ffc107' : '#dc3545')) }}; color: white; font-weight: bold;">
                                                             {{ number_format($student->avg_score, 0) }}
                                                         </div>
@@ -691,7 +739,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     <!-- Student Detailed View Button -->
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
@@ -705,7 +753,7 @@
                                             @endif
                                             @if($student->avg_score > 0)
                                                 <span class="badge bg-info-subtle text-info border-info">
-                                                    <i class="fas fa-star me-1"></i>متوسط {{ number_format($student->avg_score, 1) }} 
+                                                    <i class="fas fa-star me-1"></i>متوسط {{ number_format($student->avg_score, 1) }}
                                                 </span>
                                             @endif
                                         </div>
@@ -714,18 +762,18 @@
                                             تفاصيل الأداء
                                         </button>
                                     </div>
-                                    
+
                                     <!-- Collapsible Detailed Performance Section -->
                                     <div class="collapse mt-3" id="studentDetails{{ $student->user_id }}">
                                         <div class="card card-body shadow-sm border-0">
                                             <h6 class="fw-bold mb-3 border-bottom pb-2">تحليل أداء الطالب بالتفصيل</h6>
-                                            
+
                                             <!-- Course Progress Section -->
                                             <div class="mb-3">
                                                 <h6 class="fw-bold small text-uppercase text-muted mb-2">
                                                     <i class="fas fa-book-reader me-1"></i> التقدم في الدورات
                                                 </h6>
-                                                
+
                                                 @if(isset($student->course_performance) && $student->course_performance->count() > 0)
                                             <div class="table-responsive">
                                                         <table class="table table-sm table-hover mb-0 border">
@@ -753,7 +801,7 @@
                                                                         <td>
                                                                             <div class="d-flex align-items-center">
                                                                                 <div class="progress flex-grow-1 me-2" style="height: 6px;">
-                                                                                    <div class="progress-bar bg-{{ $course['progress'] >= 80 ? 'success' : ($course['progress'] >= 50 ? 'info' : 'warning') }}" 
+                                                                                    <div class="progress-bar bg-{{ $course['progress'] >= 80 ? 'success' : ($course['progress'] >= 50 ? 'info' : 'warning') }}"
                                                                                          role="progressbar" style="width: {{ $course['progress'] }}%"></div>
                                                                                 </div>
                                                                                 <span class="small">{{ $course['progress'] }}%</span>
@@ -782,27 +830,27 @@
                                                     </div>
                                                 @endif
                                             </div>
-                                            
+
                                             <!-- Recommendations Section -->
                                             <div>
                                                 <h6 class="fw-bold small text-uppercase text-muted mb-2">
                                                     <i class="fas fa-lightbulb me-1"></i> توصيات لتحسين الأداء
                                                 </h6>
-                                                
+
                                                 <div class="alert alert-light border py-2">
                                                     @if($student->performance_score >= 80)
-                                                        <i class="fas fa-check-circle text-success me-1"></i> 
+                                                        <i class="fas fa-check-circle text-success me-1"></i>
                                                         أداء الطالب ممتاز، يمكن تشجيعه على مساعدة زملائه والمشاركة في محتوى متقدم.
                                                     @elseif($student->performance_score >= 60)
-                                                        <i class="fas fa-info-circle text-info me-1"></i> 
+                                                        <i class="fas fa-info-circle text-info me-1"></i>
                                                         أداء الطالب جيد، يحتاج إلى المزيد من التدريب على {{ $student->avg_score < 75 ? 'الاختبارات' : 'المشاركة في المزيد من الدورات' }}.
                                                     @else
-                                                        <i class="fas fa-exclamation-circle text-warning me-1"></i> 
+                                                        <i class="fas fa-exclamation-circle text-warning me-1"></i>
                                                         يحتاج الطالب إلى اهتمام إضافي ومتابعة دورية. يُوصى بالتواصل المباشر لمعرفة الصعوبات التي يواجهها.
                                                     @endif
                                                 </div>
                                             </div>
-                                            
+
                                             <!-- Action Buttons -->
                                             <div class="d-flex justify-content-end mt-3">
                                                 <button class="btn btn-sm btn-outline-secondary me-2">
@@ -882,7 +930,7 @@
         // تحديد الاتجاه للرسم البياني
         Chart.defaults.font.family = "'Tajawal', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif";
         Chart.defaults.font.size = 14;
-        
+
         // Parse the JSON safely with fallbacks
         let chartLabels = [];
         let chartData = [];

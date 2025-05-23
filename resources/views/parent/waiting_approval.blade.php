@@ -14,13 +14,13 @@
         border-radius: 10px;
         box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
     }
-    
+
     .status-icon {
         font-size: 4rem;
         color: #ffc107;
         margin-bottom: 20px;
     }
-    
+
     .status-message {
         background-color: #fff8e1;
         border: 1px solid #ffecb3;
@@ -28,24 +28,24 @@
         padding: 15px;
         margin-bottom: 20px;
     }
-    
+
     .action-buttons {
         margin-top: 30px;
     }
-    
+
     .verification-details {
         margin-top: 30px;
         border-top: 1px solid #eee;
         padding-top: 20px;
     }
-    
+
     .verification-card {
         border: 1px solid #ddd;
         border-radius: 5px;
         padding: 15px;
         margin-bottom: 15px;
     }
-    
+
     .verification-status {
         display: inline-block;
         padding: 5px 10px;
@@ -53,12 +53,12 @@
         font-size: 0.8rem;
         font-weight: bold;
     }
-    
+
     .status-pending {
         background-color: #fff8e1;
         color: #f57c00;
     }
-    
+
     .status-rejected {
         background-color: #ffebee;
         color: #d32f2f;
@@ -68,6 +68,28 @@
 
 @section('content')
 <div class="container waiting-container">
+    <!-- Success/Info Messages -->
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if(session('info'))
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="fas fa-info-circle me-2"></i>{{ session('info') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if(session('warning'))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>{{ session('warning') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <div class="text-center mb-4">
         <div class="status-icon">
             <i class="fas fa-clock"></i>
@@ -75,24 +97,24 @@
         <h1 class="mb-3">في انتظار الموافقة</h1>
         <p class="lead">مرحباً {{ Auth::user()->name }}، حسابك كولي أمر في انتظار التحقق من قبل الإدارة.</p>
     </div>
-    
+
     <div class="status-message">
         <p><i class="fas fa-info-circle me-2"></i> ستتمكن من الوصول إلى لوحة تحكم ولي الأمر بعد التحقق من هويتك ومراجعة المستندات المقدمة.</p>
     </div>
-    
+
     <div class="verification-details">
         <h4 class="mb-3">حالة طلبات التحقق</h4>
-        
+
         @php
             $pendingRelations = \App\Models\ParentStudentRelation::where('parent_id', Auth::id())
                 ->where('verification_status', 'pending')
                 ->get();
-                
+
             $rejectedRelations = \App\Models\ParentStudentRelation::where('parent_id', Auth::id())
                 ->where('verification_status', 'rejected')
                 ->get();
         @endphp
-        
+
         @if(count($pendingRelations) > 0)
             <h5 class="mt-4 mb-2">طلبات قيد المراجعة</h5>
             @foreach($pendingRelations as $relation)
@@ -111,7 +133,7 @@
                 </div>
             @endforeach
         @endif
-        
+
         @if(count($rejectedRelations) > 0)
             <h5 class="mt-4 mb-2">طلبات مرفوضة</h5>
             @foreach($rejectedRelations as $relation)
@@ -144,14 +166,14 @@
                 </div>
             @endforeach
         @endif
-        
+
         @if(count($pendingRelations) == 0 && count($rejectedRelations) == 0)
             <div class="alert alert-warning">
                 لم يتم العثور على أي طلبات تحقق. يمكنك تقديم طلب جديد.
             </div>
         @endif
     </div>
-    
+
     <div class="action-buttons text-center">
         <a href="{{ route('parent.link-request') }}" class="btn btn-primary">
             <i class="fas fa-link me-1"></i> تقديم طلب ربط جديد
@@ -161,4 +183,4 @@
         </a>
     </div>
 </div>
-@endsection 
+@endsection

@@ -1,5 +1,5 @@
 /* Messaging System Styles
-   Core styling and animations for the messaging system 
+   Core styling and animations for the messaging system
    For both student and instructor interfaces
 */
 
@@ -220,6 +220,19 @@
 .message p {
     margin: 0;
     word-break: break-word;
+}
+
+.message.filtered {
+    position: relative;
+}
+
+.message.filtered::after {
+    content: "⚠️ تم تصفية محتوى محظور";
+    display: block;
+    font-size: 10px;
+    color: #e74c3c;
+    margin-top: 4px;
+    text-align: right;
 }
 
 .message-time {
@@ -566,27 +579,27 @@ textarea.chat-input:focus {
         flex-direction: column;
         height: calc(100vh - 100px);
     }
-    
+
     .contacts-sidebar {
         width: 100%;
         height: 30%;
         min-height: 200px;
     }
-    
+
     .contact-item:hover {
         transform: none;
     }
-    
+
     .message {
         max-width: 85%;
     }
-    
+
     .message:hover {
         transform: none;
         box-shadow: none;
     }
-    
+
     .message-send, .message-receive {
         animation-duration: 0.2s;
     }
-} 
+}

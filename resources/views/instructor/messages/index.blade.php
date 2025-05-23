@@ -11,6 +11,27 @@
 
 @section('content')
 <div class="container-fluid py-2" data-user-id="{{ Auth::id() }}">
+    @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
+    @if(session('warning'))
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        {{ session('warning') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
     <div class="chat-container">
         <!-- Contacts Sidebar -->
         <div class="contacts-sidebar">
@@ -30,7 +51,7 @@
                 @else
                     @foreach($contacts as $contact)
                         <div class="contact-item {{ $selectedContact && $selectedContact->user_id == $contact->user_id ? 'active' : '' }}"
-                            data-id="{{ $contact->user_id }}" 
+                            data-id="{{ $contact->user_id }}"
                             onclick="window.location.href='{{ route('instructor.messages.show', $contact->user_id) }}'">
                             <div class="contact-avatar{{ rand(0,1) ? ' online' : '' }}">
                                 {{ strtoupper(substr($contact->name, 0, 1)) }}
@@ -80,7 +101,7 @@
                 </div>
 
                 <!-- Chat Messages -->
-                <div class="chat-messages" id="messagesContainer">
+                <div class="chat-messages" id="messagesContainer" data-initialized="true">
                     @if($messages->isEmpty())
                         <div class="empty-state">
                             <div class="empty-state-icon">✉️</div>
@@ -90,21 +111,21 @@
                     @else
                         @php $prevDate = null; @endphp
                         @foreach($messages as $message)
-                            @php 
+                            @php
                                 $currDate = $message->created_at->format('Y-m-d');
                                 $showDate = $prevDate !== $currDate;
                                 $prevDate = $currDate;
                                 $isCurrentUser = $message->sender_id == Auth::user()->user_id;
                             @endphp
-                            
+
                             @if($showDate)
                                 <div class="date-divider">
                                     <span class="date-text">{{ $message->created_at->format('F j, Y') }}</span>
                                 </div>
                             @endif
-                            
+
                             <div class="message-group">
-                                <div class="message {{ $isCurrentUser ? 'sent' : 'received' }} animate__animated {{ $isCurrentUser ? 'animate__fadeInRight' : 'animate__fadeInLeft' }}" 
+                                <div class="message {{ $isCurrentUser ? 'sent' : 'received' }} {{ $message->is_filtered ? 'filtered' : '' }} animate__animated {{ $isCurrentUser ? 'animate__fadeInRight' : 'animate__fadeInLeft' }}"
                                     data-id="{{ $message->message_id }}">
                                     <p>{{ $message->content }}</p>
                                     <div class="message-time {{ $isCurrentUser ? 'sent' : 'received' }}">
@@ -118,42 +139,25 @@
 
                 <!-- Message Input -->
                 <div class="chat-input">
-                    <form id="messageForm">
+                    <form id="directMessageForm" method="POST" action="{{ route('instructor.messages.send') }}">
+                        @csrf
                         <div class="chat-input-field">
-                            <textarea 
-                                id="messageInput" 
-                                placeholder="Type a message..." 
-                                rows="1" 
+                            <textarea
+                                id="messageInput"
+                                name="content"
+                                placeholder="Type a message..."
+                                rows="1"
                                 class="chat-input"
+                                required
                                 autofocus></textarea>
                             <!-- Hidden form fields -->
-                            <input type="hidden" id="receiver-id" value="{{ $selectedContact->user_id }}">
-                            <input type="hidden" id="current-user-id" value="{{ Auth::user()->user_id }}">
-                            <input type="hidden" id="user-role" value="instructor">
+                            <input type="hidden" name="receiver_id" value="{{ $selectedContact->user_id }}">
                             @if(isset($courses) && count($courses) > 0)
-                                <input type="hidden" id="course-id" value="{{ $courses->first()->course_id }}">
-                            @endif
-                            @if($messages->isNotEmpty())
-                                <input type="hidden" id="last-message-id" value="{{ $messages->last()->message_id }}">
-                            @else
-                                <input type="hidden" id="last-message-id" value="0">
+                                <input type="hidden" name="course_id" value="{{ $courses->first()->course_id }}">
                             @endif
                         </div>
-                        @if(isset($courses) && count($courses) > 0)
-                        <div>
-                            <select id="courseSelector" class="course-selector">
-                                <option value="">No specific course</option>
-                                @foreach($courses as $course)
-                                    <option value="{{ $course->course_id }}">{{ $course->title }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        @endif
                         <div class="chat-input-buttons">
-                            <button type="button" class="chat-input-button" title="Attach file">
-                                <i class="fas fa-paperclip"></i>
-                            </button>
-                            <button type="submit" id="sendButton" class="chat-input-button send-button pulse">
+                            <button type="submit" class="chat-input-button send-button pulse">
                                 <i class="fas fa-paper-plane"></i> Send
                             </button>
                         </div>
@@ -167,5 +171,5 @@
 
 @section('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
-<script src="{{ asset('js/messaging.js') }}"></script>
+<script src="{{ asset('js/simple-messaging.js') }}"></script>
 @endsection

@@ -19,7 +19,7 @@ class BookController extends Controller
         $books = Book::where('is_published', true)
             ->latest()
             ->paginate(12);
-        
+
         return view('books.index', compact('books'));
     }
 
@@ -43,7 +43,24 @@ class BookController extends Controller
             ->limit(4)
             ->get();
 
-        return view('books.show', compact('book', 'relatedBooks'));
+        // Check if the user is authenticated
+        $isOwner = false;
+        $hasPurchased = false;
+
+        if (Auth::check()) {
+            $user = Auth::user();
+            $isOwner = $user->user_id == $book->user_id;
+
+            // If not the owner, check if the user has purchased the book
+            if (!$isOwner) {
+                $hasPurchased = $user->bookPurchases()
+                    ->where('book_id', $book->id)
+                    ->where('status', 'completed')
+                    ->exists();
+            }
+        }
+
+        return view('books.show', compact('book', 'relatedBooks', 'isOwner', 'hasPurchased'));
     }
 
     /**
@@ -55,11 +72,11 @@ class BookController extends Controller
         if (!$book->cover_image) {
             abort(404);
         }
-        
+
         // Check if the path is in the newest format with instructor ID
         if (str_contains($book->cover_image, "instructors/")) {
             $path = storage_path('app/public/' . $book->cover_image);
-            
+
             if (!file_exists($path)) {
                 abort(404);
             }
@@ -67,19 +84,19 @@ class BookController extends Controller
         // Check if the path is in the older format with only book ID
         else if (str_contains($book->cover_image, "/{$book->id}/cover/")) {
             $path = storage_path('app/public/books/' . $book->cover_image);
-            
+
             if (!file_exists($path)) {
                 abort(404);
             }
-        } 
+        }
         // Very old format
         else {
             $path = storage_path('app/public/books/covers/' . $book->cover_image);
-            
+
             if (!file_exists($path)) {
                 // Try public path as fallback
                 $path = public_path('storage/books/covers/' . $book->cover_image);
-                
+
                 if (!file_exists($path)) {
                     abort(404);
                 }
@@ -113,10 +130,27 @@ class BookController extends Controller
             abort(404);
         }
 
+        // Check if the user is the book owner (instructor)
+        $user = Auth::user();
+        $isOwner = $user->user_id == $book->user_id;
+
+        // If not the owner, check if the user has purchased the book
+        if (!$isOwner) {
+            $hasPurchased = $user->bookPurchases()
+                ->where('book_id', $book->id)
+                ->where('status', 'completed')
+                ->exists();
+
+            if (!$hasPurchased) {
+                return redirect()->route('books.checkout', $book)
+                    ->with('warning', 'You need to purchase this book before you can view it.');
+            }
+        }
+
         // Check if the path is in the newest format with instructor ID
         if (str_contains($book->pdf_file, "instructors/")) {
             $path = storage_path('app/public/' . $book->pdf_file);
-            
+
             if (!file_exists($path)) {
                 abort(404);
             }
@@ -124,7 +158,7 @@ class BookController extends Controller
         // Check if the path is in the older format with only book ID
         else if (str_contains($book->pdf_file, "/{$book->id}/pdf/")) {
             $path = storage_path('app/public/books/' . $book->pdf_file);
-            
+
             if (!file_exists($path)) {
                 abort(404);
             }
@@ -132,11 +166,11 @@ class BookController extends Controller
         // Very old format
         else {
             $path = storage_path('app/public/books/pdf/' . $book->pdf_file);
-            
+
             if (!file_exists($path)) {
                 // Try public path as fallback
                 $path = public_path('storage/books/pdf/' . $book->pdf_file);
-                
+
                 if (!file_exists($path)) {
                     abort(404);
                 }
@@ -166,10 +200,32 @@ class BookController extends Controller
             return back()->with('error', 'No PDF file available for this book.');
         }
 
+        // Check if the user is authenticated
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'You must be logged in to download books.');
+        }
+
+        // Check if the user is the book owner (instructor)
+        $user = Auth::user();
+        $isOwner = $user->user_id == $book->user_id;
+
+        // If not the owner, check if the user has purchased the book
+        if (!$isOwner) {
+            $hasPurchased = $user->bookPurchases()
+                ->where('book_id', $book->id)
+                ->where('status', 'completed')
+                ->exists();
+
+            if (!$hasPurchased) {
+                return redirect()->route('books.checkout', $book)
+                    ->with('warning', 'You need to purchase this book before you can download it.');
+            }
+        }
+
         // Check if the path is in the newest format with instructor ID
         if (str_contains($book->pdf_file, "instructors/")) {
             $path = storage_path('app/public/' . $book->pdf_file);
-            
+
             if (!file_exists($path)) {
                 return back()->with('error', 'PDF file not found.');
             }
@@ -177,7 +233,7 @@ class BookController extends Controller
         // Check if the path is in the older format with only book ID
         else if (str_contains($book->pdf_file, "/{$book->id}/pdf/")) {
             $path = storage_path('app/public/books/' . $book->pdf_file);
-            
+
             if (!file_exists($path)) {
                 return back()->with('error', 'PDF file not found.');
             }
@@ -186,11 +242,11 @@ class BookController extends Controller
         else {
             // Try storage path first (old format)
             $path = storage_path('app/public/books/pdf/' . $book->pdf_file);
-            
+
             if (!file_exists($path)) {
                 // Try public path as fallback
                 $path = public_path('storage/books/pdf/' . $book->pdf_file);
-                
+
                 if (!file_exists($path)) {
                     return back()->with('error', 'PDF file not found.');
                 }
@@ -198,7 +254,7 @@ class BookController extends Controller
         }
 
         $filename = $book->title . '.pdf';
-        
+
         // Return as a downloadable file
         return response()->download($path, $filename);
     }

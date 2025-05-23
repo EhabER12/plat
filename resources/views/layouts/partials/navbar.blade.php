@@ -147,6 +147,12 @@
                                         <i class="fas fa-chalkboard me-2"></i> {{ __('Instructor Dashboard') }}
                                     </a>
                                 </li>
+                            @elseif(Auth::user()->hasRole('parent'))
+                                <li>
+                                    <a class="dropdown-item" style="color: white !important;" href="{{ route('parent.dashboard') }}">
+                                        <i class="fas fa-user-friends me-2"></i> لوحة تحكم ولي الأمر
+                                    </a>
+                                </li>
                             @else
                                 <li>
                                     <a class="dropdown-item" style="color: white !important;" href="{{ route('student.dashboard') }}">
@@ -164,6 +170,12 @@
                                 <li>
                                     <a class="dropdown-item" style="color: white !important;" href="{{ route('instructor.profile.index') }}">
                                         <i class="fas fa-user-tie me-2"></i> {{ __('Profile') }}
+                                    </a>
+                                </li>
+                            @elseif(Auth::user()->hasRole('parent'))
+                                <li>
+                                    <a class="dropdown-item" style="color: white !important;" href="{{ route('parent.profile') }}">
+                                        <i class="fas fa-user-friends me-2"></i> الملف الشخصي
                                     </a>
                                 </li>
                             @else

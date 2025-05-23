@@ -38,6 +38,24 @@ class ProfileController extends Controller
             return $course->progress < 100;
         });
 
+        // Get recent admin messages
+        $adminMessages = \App\Models\DirectMessage::where('receiver_id', $user->user_id)
+            ->whereHas('sender.roles', function($query) {
+                $query->where('role', 'admin');
+            })
+            ->with('sender')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        // Count unread admin messages
+        $unreadAdminMessages = \App\Models\DirectMessage::where('receiver_id', $user->user_id)
+            ->whereHas('sender.roles', function($query) {
+                $query->where('role', 'admin');
+            })
+            ->where('is_read', false)
+            ->count();
+
         $completedCoursesCount = $completedCourses->count();
         $inProgressCoursesCount = $inProgressCourses->count();
 
@@ -63,7 +81,9 @@ class ProfileController extends Controller
             'recentActivity',
             'statistics',
             'completedCourses',
-            'inProgressCourses'
+            'inProgressCourses',
+            'adminMessages',
+            'unreadAdminMessages'
         ));
     }
 

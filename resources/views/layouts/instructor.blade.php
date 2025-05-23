@@ -94,9 +94,18 @@
                                     $unreadMessages = App\Models\DirectMessage::where('receiver_id', Auth::id())
                                         ->where('is_read', false)
                                         ->count();
+                                    $unreadAdminMessages = App\Models\DirectMessage::where('receiver_id', Auth::id())
+                                        ->whereHas('sender.roles', function($query) {
+                                            $query->where('role', 'admin');
+                                        })
+                                        ->where('is_read', false)
+                                        ->count();
                                 @endphp
                                 @if($unreadMessages > 0)
                                     <span class="badge bg-danger rounded-pill ms-1" style="font-size: 0.7rem;">{{ $unreadMessages }}</span>
+                                @endif
+                                @if($unreadAdminMessages > 0)
+                                    <span class="badge bg-warning rounded-pill ms-1" style="font-size: 0.6rem;" title="رسائل من الإدارة">A{{ $unreadAdminMessages }}</span>
                                 @endif
                             </a>
                         </li>

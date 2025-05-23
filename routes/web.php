@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -11,12 +13,13 @@ use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\InstructorMiddleware;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\BookController;
+use App\Http\Controllers\BookPurchaseController;
 
 // Pages Routes
 Route::get('/', [PageController::class, 'home'])->name('home');
 Route::get('/about', [PageController::class, 'about']);
-Route::get('/contact', [PageController::class, 'contact']);
-Route::post('/contact', [PageController::class, 'submitContact']);
+Route::get('/contact', [PageController::class, 'contact'])->name('contact');
+Route::post('/contact', [PageController::class, 'submitContact'])->name('contact.submit');
 Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
 Route::get('/courses/{courseId}', [PageController::class, 'courseDetail'])->name('course.detail');
 
@@ -226,8 +229,34 @@ Route::middleware('auth')->group(function () {
 
     // Additional Paymob payment routes - These handle callbacks from Paymob to the default URL they expect
     // IMPORTANT: These routes receive the actual payment notifications from Paymob when users complete payment
-    Route::post('/api/acceptance/post_pay', [PaymentController::class, 'paymobCallback']);
-    Route::get('/api/acceptance/post_pay', [PaymentController::class, 'paymobCallback']);
+    Route::post('/api/acceptance/post_pay', function(Request $request) {
+        // Check if this is a book purchase transaction
+        $transactionId = $request->input('merchant_order_id', '');
+
+        if (Str::startsWith($transactionId, 'book_')) {
+            return app()->make(BookPurchaseController::class)->paymobCallback($request);
+        } else {
+            return app()->make(PaymentController::class)->paymobCallback($request);
+        }
+    });
+
+    Route::get('/api/acceptance/post_pay', function(Request $request) {
+        // Check if this is a book purchase transaction
+        $transactionId = $request->input('merchant_order_id', '');
+
+        if (Str::startsWith($transactionId, 'book_')) {
+            return app()->make(BookPurchaseController::class)->paymobCallback($request);
+        } else {
+            return app()->make(PaymentController::class)->paymobCallback($request);
+        }
+    });
+
+    // Book purchase routes
+    Route::prefix('books')->name('books.')->group(function () {
+        Route::get('/checkout/{book}', [BookPurchaseController::class, 'checkout'])->name('checkout');
+        Route::post('/purchase/paymob/{book}', [BookPurchaseController::class, 'processPaymobPayment'])->name('purchase.paymob');
+        Route::get('/purchase/confirmation/{book}', [BookPurchaseController::class, 'showConfirmation'])->name('purchase.confirmation');
+    });
 
     // Development-only route to manually complete a payment (only enable in development)
     Route::get('/payment/debug/complete/{transactionId}', [PaymentController::class, 'debugCompletePayment']);
@@ -390,6 +419,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/settings', [AdminDashboardController::class, 'settings'])->name('admin.settings');
         Route::post('/settings', [AdminDashboardController::class, 'updateSettings'])->name('admin.settings.update');
 
+        // Admin Profile
+        Route::get('/profile', [AdminDashboardController::class, 'profile'])->name('admin.profile');
+        Route::post('/profile', [AdminDashboardController::class, 'updateProfile'])->name('admin.profile.update');
+        Route::post('/profile/password', [AdminDashboardController::class, 'updatePassword'])->name('admin.profile.password');
+
         // Website Appearance Routes
         Route::get('/website-appearance', [App\Http\Controllers\Admin\WebsiteAppearanceController::class, 'index'])->name('admin.website-appearance');
         Route::post('/website-appearance/hero', [App\Http\Controllers\Admin\WebsiteAppearanceController::class, 'updateHero'])->name('admin.website-appearance.hero');
@@ -451,6 +485,16 @@ Route::middleware('auth')->group(function () {
         Route::get('notifications', [\App\Http\Controllers\Admin\NotificationsController::class, 'index'])->name('admin.notifications.index');
         Route::get('notifications/{id}', [\App\Http\Controllers\Admin\NotificationsController::class, 'show'])->name('admin.notifications.show');
         Route::post('notifications/{id}/mark-read', [\App\Http\Controllers\Admin\NotificationsController::class, 'markAsRead'])->name('admin.notifications.mark-read');
+
+        // Admin Messages routes
+        Route::prefix('messages')->name('admin.messages.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\MessagesController::class, 'index'])->name('index');
+            Route::get('/new', [\App\Http\Controllers\Admin\MessagesController::class, 'create'])->name('create');
+            Route::post('/new', [\App\Http\Controllers\Admin\MessagesController::class, 'store'])->name('store');
+            Route::get('/conversation/{userId}', [\App\Http\Controllers\Admin\MessagesController::class, 'conversation'])->name('conversation');
+            Route::post('/send', [\App\Http\Controllers\Admin\MessagesController::class, 'send'])->name('send');
+            Route::post('/get-new', [\App\Http\Controllers\Admin\MessagesController::class, 'getNewMessages'])->name('get-new');
+        });
         Route::post('notifications/mark-multiple-read', [\App\Http\Controllers\Admin\NotificationsController::class, 'markMultipleAsRead'])->name('admin.notifications.mark-multiple-read');
         Route::post('notifications/mark-all-read', [\App\Http\Controllers\Admin\NotificationsController::class, 'markAllAsRead'])->name('admin.notifications.mark-all-read');
         Route::delete('notifications/{id}', [\App\Http\Controllers\Admin\NotificationsController::class, 'destroy'])->name('admin.notifications.destroy');
@@ -541,6 +585,7 @@ Route::middleware(['auth', \App\Http\Middleware\RoleMiddleware::class.':parent',
     Route::get('/', [App\Http\Controllers\ParentDashboardController::class, 'index'])->name('parent.dashboard');
     Route::get('/student/{studentId}', [App\Http\Controllers\ParentDashboardController::class, 'studentActivity'])->name('parent.student-activity');
     Route::get('/activities', [App\Http\Controllers\ParentDashboardController::class, 'activities'])->name('parent.activities');
+    Route::get('/reports', [App\Http\Controllers\ParentDashboardController::class, 'reports'])->name('parent.reports');
 
     // Profile management - requires verification
     Route::match(['get', 'post'], '/profile', [App\Http\Controllers\ParentDashboardController::class, 'profile'])->name('parent.profile');

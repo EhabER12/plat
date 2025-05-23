@@ -33,11 +33,23 @@ class MessagingSystem {
         this.checkMessagesInterval = null;
         this.unreadCount = 0;
         this.isInstructor = window.location.href.includes('/instructor/');
+        this.messagesInitialized = false;
+
+        // Log important elements
+        console.log('MessagesContainer found:', !!this.messagesContainer);
+        console.log('MessageInput found:', !!this.messageInput);
+        console.log('SendButton found:', !!this.sendButton);
 
         // Initialize
         this.setupEventListeners();
         this.startMessagesPolling();
         this.scrollToBottom();
+
+        // Set flag to prevent message duplication
+        if (this.messagesContainer) {
+            this.messagesContainer.dataset.initialized = 'true';
+            this.messagesInitialized = true;
+        }
 
         console.log('Messaging system initialized with options:', this.options);
         console.log('User context:', this.isInstructor ? 'Instructor' : 'Student');
@@ -92,13 +104,25 @@ class MessagingSystem {
 
     // Message sending
     sendMessage() {
-        if (!this.messageInput || !this.messageInput.value.trim()) return;
+        if (!this.messageInput || !this.messageInput.value.trim()) {
+            console.log('No message to send');
+            return;
+        }
 
         const messageText = this.messageInput.value.trim();
         const receiverId = this.getReceiverId();
         const courseId = this.courseSelector ? this.courseSelector.value : '';
 
-        if (!receiverId) return;
+        if (!receiverId) {
+            console.error('No receiver ID found');
+            return;
+        }
+
+        console.log('Preparing to send message:', {
+            text: messageText,
+            to: receiverId,
+            courseId: courseId
+        });
 
         // Create and add new message to DOM with temporary display
         const tempMessageEl = this.addMessageToDOM(messageText, true);
@@ -112,7 +136,58 @@ class MessagingSystem {
             this.playSound('send');
         }
 
-        // Send to server using fetch API
+        // Try to send using the form directly first
+        const messageForm = document.getElementById('messageForm');
+        if (messageForm) {
+            try {
+                // Update form fields if needed
+                const receiverIdInput = messageForm.querySelector('[name="receiver_id"]');
+                const contentInput = messageForm.querySelector('[name="content"]');
+                const courseIdInput = messageForm.querySelector('[name="course_id"]');
+
+                if (receiverIdInput && contentInput) {
+                    receiverIdInput.value = receiverId;
+                    contentInput.value = messageText;
+
+                    if (courseIdInput && courseId) {
+                        courseIdInput.value = courseId;
+                    }
+
+                    // Create a hidden iframe for the form submission
+                    const iframe = document.createElement('iframe');
+                    iframe.name = 'message-submit-frame';
+                    iframe.style.display = 'none';
+                    document.body.appendChild(iframe);
+
+                    // Set form target to iframe
+                    const originalTarget = messageForm.target;
+                    messageForm.target = 'message-submit-frame';
+
+                    // Store original onsubmit
+                    const originalOnSubmit = messageForm.onsubmit;
+                    messageForm.onsubmit = null;
+
+                    // Submit the form
+                    messageForm.submit();
+
+                    // Restore original form properties
+                    setTimeout(() => {
+                        messageForm.target = originalTarget;
+                        messageForm.onsubmit = originalOnSubmit;
+                        document.body.removeChild(iframe);
+                    }, 1000);
+
+                    console.log('Message sent using form submission');
+                    return;
+                }
+            } catch (e) {
+                console.error('Error submitting form directly:', e);
+                // Fall back to the API method
+            }
+        }
+
+        // Fall back to API method if form submission fails
+        console.log('Falling back to API method for sending message');
         this.sendMessageToServer(receiverId, messageText, courseId);
     }
 
@@ -123,6 +198,11 @@ class MessagingSystem {
             : '/student/messages';
 
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        if (!csrfToken) {
+            console.error('CSRF token not found! Make sure the meta tag exists in the page.');
+            alert('CSRF token not found! Please refresh the page and try again.');
+            return;
+        }
 
         console.log('Sending message to server:', {
             receiverId,
@@ -133,72 +213,131 @@ class MessagingSystem {
             csrfToken: csrfToken ? 'Token exists' : 'No token!'
         });
 
-        // استخدام fetch API بدلاً من XMLHttpRequest
-        fetch(endpoint, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                receiver_id: receiverId,
-                content: messageText,
-                course_id: courseId || null
-            })
-        })
-        .then(response => {
-            console.log('Fetch Response Status:', response.status);
-            return response.json().catch(() => {
-                // إذا فشل تحليل JSON، نعيد كائن خطأ
-                throw new Error('Invalid JSON response');
-            });
-        })
-        .then(data => {
-            console.log('Response data:', data);
+        // Create a real form and submit it
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = endpoint;
+        form.style.display = 'none';
 
-            if (data && data.success) {
-                // Remove placeholder message if any and add the proper one
-                const messages = document.querySelectorAll('.message.sent:not([data-id])');
-                if (messages.length > 0) {
-                    const lastMessage = messages[messages.length - 1];
-                    if (lastMessage) {
-                        lastMessage.parentNode.removeChild(lastMessage);
-                    }
+        // Add CSRF token
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+
+        // Add receiver ID
+        const receiverInput = document.createElement('input');
+        receiverInput.type = 'hidden';
+        receiverInput.name = 'receiver_id';
+        receiverInput.value = receiverId;
+        form.appendChild(receiverInput);
+
+        // Add message content
+        const contentInput = document.createElement('input');
+        contentInput.type = 'hidden';
+        contentInput.name = 'content';
+        contentInput.value = messageText;
+        form.appendChild(contentInput);
+
+        // Add course ID if provided
+        if (courseId) {
+            const courseInput = document.createElement('input');
+            courseInput.type = 'hidden';
+            courseInput.name = 'course_id';
+            courseInput.value = courseId;
+            form.appendChild(courseInput);
+        }
+
+        // Add AJAX header
+        const ajaxInput = document.createElement('input');
+        ajaxInput.type = 'hidden';
+        ajaxInput.name = 'X-Requested-With';
+        ajaxInput.value = 'XMLHttpRequest';
+        form.appendChild(ajaxInput);
+
+        // Add to document, submit, and remove
+        document.body.appendChild(form);
+
+        // Create a temporary iframe to handle the form submission
+        const iframe = document.createElement('iframe');
+        iframe.name = 'message-submit-frame';
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+
+        // Set form target to iframe
+        form.target = 'message-submit-frame';
+
+        // Listen for iframe load event
+        iframe.onload = () => {
+            try {
+                const iframeContent = iframe.contentDocument || iframe.contentWindow.document;
+                const responseText = iframeContent.body.innerText;
+
+                console.log('Response received:', responseText);
+
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (e) {
+                    console.error('Failed to parse response:', e);
+                    data = { success: false, message: 'Invalid response format' };
                 }
 
-                // Add message with the correct message ID from server
-                const messageEl = this.addMessageToDOM(
-                    messageText,
-                    true,
-                    data.message.message_id,
-                    data.message.created_at
-                );
+                this.handleMessageResponse(data, messageText, receiverId);
 
-                // Update lastMessageId to include this message
-                this.lastMessageId = data.message.message_id;
-                if (document.getElementById('last-message-id')) {
-                    document.getElementById('last-message-id').value = data.message.message_id;
-                }
+                // Clean up
+                setTimeout(() => {
+                    document.body.removeChild(iframe);
+                    document.body.removeChild(form);
+                }, 1000);
 
-                // Update contact preview
-                this.updateContactPreview(receiverId, messageText);
-            } else {
-                console.error('Error sending message:', (data && data.message) || 'Unknown error');
+            } catch (e) {
+                console.error('Error processing iframe response:', e);
 
-                // Show error indicator on the message
-                const messages = document.querySelectorAll('.message.sent:not([data-id])');
-                if (messages.length > 0) {
-                    const lastMessage = messages[messages.length - 1];
-                    if (lastMessage) {
-                        lastMessage.classList.add('error');
-                        lastMessage.setAttribute('title', 'Error: ' + ((data && data.message) || 'Unknown error'));
-                    }
+                // Clean up
+                setTimeout(() => {
+                    document.body.removeChild(iframe);
+                    document.body.removeChild(form);
+                }, 1000);
+            }
+        };
+
+        // Submit the form
+        form.submit();
+    }
+
+    handleMessageResponse(data, messageText, receiverId) {
+        console.log('Response data:', data);
+
+        if (data && data.success) {
+            // Remove placeholder message if any and add the proper one
+            const messages = document.querySelectorAll('.message.sent:not([data-id])');
+            if (messages.length > 0) {
+                const lastMessage = messages[messages.length - 1];
+                if (lastMessage) {
+                    lastMessage.parentNode.removeChild(lastMessage);
                 }
             }
-        })
-        .catch(error => {
-            console.error('Fetch Error:', error);
+
+            // Add message with the correct message ID from server
+            const messageEl = this.addMessageToDOM(
+                messageText,
+                true,
+                data.message.message_id,
+                data.message.created_at
+            );
+
+            // Update lastMessageId to include this message
+            this.lastMessageId = data.message.message_id;
+            if (document.getElementById('last-message-id')) {
+                document.getElementById('last-message-id').value = data.message.message_id;
+            }
+
+            // Update contact preview
+            this.updateContactPreview(receiverId, messageText);
+        } else {
+            console.error('Error sending message:', (data && data.message) || 'Unknown error');
 
             // Show error indicator on the message
             const messages = document.querySelectorAll('.message.sent:not([data-id])');
@@ -206,18 +345,24 @@ class MessagingSystem {
                 const lastMessage = messages[messages.length - 1];
                 if (lastMessage) {
                     lastMessage.classList.add('error');
-                    lastMessage.setAttribute('title', 'Error sending message: ' + error.message);
+                    lastMessage.setAttribute('title', 'Error: ' + ((data && data.message) || 'Unknown error'));
                 }
             }
-        });
+        }
     }
 
     // DOM manipulation
     addMessageToDOM(messageText, isSent = true, messageId = null, createdAt = null) {
-        if (!this.messagesContainer) return;
+        if (!this.messagesContainer) {
+            console.error('messagesContainer not found');
+            return;
+        }
 
-        const messagesWrapper = this.messagesContainer.querySelector('.messages-container');
-        if (!messagesWrapper) return;
+        // Check if this message already exists in the DOM
+        if (messageId && document.querySelector(`.message[data-id="${messageId}"]`)) {
+            console.log(`Message ${messageId} already exists in DOM, skipping`);
+            return;
+        }
 
         // Create message elements
         const messageGroup = document.createElement('div');
@@ -242,15 +387,18 @@ class MessagingSystem {
         messageDiv.appendChild(messageTime);
         messageGroup.appendChild(messageDiv);
 
-        // Add to DOM
-        messagesWrapper.appendChild(messageGroup);
+        // Set message ID before adding to DOM
+        if (messageId) {
+            messageDiv.dataset.id = messageId;
+        }
+
+        // Add to DOM - directly to messagesContainer since that's the actual structure
+        this.messagesContainer.appendChild(messageGroup);
 
         // Scroll to bottom
         this.scrollToBottom();
 
-        if (messageId) {
-            messageDiv.dataset.id = messageId;
-        }
+        console.log(`Added message to DOM: ${messageId || 'temporary'}, sent by ${isSent ? 'current user' : 'other user'}`);
 
         return messageDiv;
     }
@@ -364,7 +512,16 @@ class MessagingSystem {
 
     checkForNewMessages() {
         const receiverId = this.getReceiverId();
-        if (!receiverId) return;
+        if (!receiverId) {
+            console.warn('No receiver ID found for polling');
+            return;
+        }
+
+        // Check if messages container is initialized
+        if (!this.messagesContainer) {
+            console.warn('Messages container not found, skipping polling');
+            return;
+        }
 
         // Determine the appropriate endpoint based on context
         const endpoint = this.isInstructor
@@ -372,16 +529,18 @@ class MessagingSystem {
             : '/student/messages/get-new';
 
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        if (!csrfToken) {
+            console.error('CSRF token not found for polling!');
+        }
 
         // Create the appropriate request body based on context
-        const requestData = {
-            last_message_id: this.lastMessageId
-        };
+        const formData = new FormData();
+        formData.append('last_message_id', this.lastMessageId || 0);
 
         if (this.isInstructor) {
-            requestData.student_id = receiverId;
+            formData.append('student_id', receiverId);
         } else {
-            requestData.instructor_id = receiverId;
+            formData.append('instructor_id', receiverId);
         }
 
         console.log('Checking for new messages:', {
@@ -391,28 +550,32 @@ class MessagingSystem {
             isInstructor: this.isInstructor
         });
 
-        // استخدام fetch API
+        // Use FormData for better compatibility
         fetch(endpoint, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
                 'Accept': 'application/json',
-                'Content-Type': 'application/json'
+                'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify(requestData)
+            body: formData
         })
         .then(response => {
             if (!response.ok) {
-                throw new Error('Network response was not ok: ' + response.status);
+                console.warn('Polling response not OK:', response.status);
             }
-            return response.json();
+            return response.json().catch(err => {
+                console.error('JSON parse error in polling:', err);
+                return { success: false, messages: [] };
+            });
         })
         .then(data => {
             console.log('New messages response:', data);
 
-            if (data && data.messages && data.messages.length > 0) {
+            if (data && data.success && data.messages && data.messages.length > 0) {
                 let addedMessages = 0;
 
+                // Process messages in order
                 data.messages.forEach(message => {
                     // Skip if message is already displayed
                     if (document.querySelector(`.message[data-id="${message.message_id}"]`)) {
@@ -442,6 +605,12 @@ class MessagingSystem {
                 if (data.messages.length > 0) {
                     this.lastMessageId = data.messages[data.messages.length - 1].message_id;
                     console.log('Updated lastMessageId to:', this.lastMessageId);
+
+                    // Also update the hidden input if it exists
+                    const lastMessageIdInput = document.getElementById('last-message-id');
+                    if (lastMessageIdInput) {
+                        lastMessageIdInput.value = this.lastMessageId;
+                    }
                 }
 
                 // Show notification if user has scrolled up
@@ -634,11 +803,8 @@ class MessagingSystem {
     addDateDividerIfNeeded(dateString) {
         if (!this.messagesContainer) return;
 
-        const messagesWrapper = this.messagesContainer.querySelector('.messages-container');
-        if (!messagesWrapper) return;
-
         const messageDate = new Date(dateString).toLocaleDateString();
-        const lastDivider = messagesWrapper.querySelector('.date-divider:last-of-type');
+        const lastDivider = this.messagesContainer.querySelector('.date-divider:last-of-type');
 
         // If no dividers yet, or if date is different from last divider, add new one
         if (!lastDivider ||
@@ -657,7 +823,9 @@ class MessagingSystem {
             });
 
             dateDivider.appendChild(dateText);
-            messagesWrapper.appendChild(dateDivider);
+            this.messagesContainer.appendChild(dateDivider);
+
+            console.log('Added date divider for:', messageDate);
         }
     }
 
@@ -710,17 +878,48 @@ class MessagingSystem {
 
 // Initialize the messaging system when the DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Set user ID for the messaging system
-    window.currentUserId = document.body.dataset.userId || null;
+    console.log('DOM loaded, initializing messaging system');
 
-    // Create the messaging system instance
-    window.messagingSystem = new MessagingSystem({
-        typingDelay: 2000,
-        checkNewMessagesInterval: 5000,
-        animateNewMessages: true,
-        showTypingIndicator: true,
-        enableSoundEffects: false // Set to true to enable sounds (requires sound files)
-    });
+    // Set user ID for the messaging system
+    const container = document.querySelector('.container[data-user-id], .container-fluid[data-user-id]');
+    window.currentUserId = container ? container.dataset.userId : null;
+
+    console.log('Current user ID from container:', window.currentUserId);
+
+    // Check if we're on a messaging page
+    const messagesContainer = document.getElementById('messagesContainer');
+    const messageInput = document.getElementById('messageInput');
+
+    // Check if messaging system is already initialized
+    if (messagesContainer && messagesContainer.dataset.initialized === 'true') {
+        console.log('Messaging system already initialized, skipping');
+        return;
+    }
+
+    if (messagesContainer && messageInput) {
+        console.log('Messaging elements found, creating messaging system');
+
+        // Clear any existing messages to prevent duplication on page refresh
+        if (messagesContainer.children.length > 0) {
+            console.log('Preserving server-rendered messages');
+            // We don't clear the container because we want to keep the server-rendered messages
+            // Just mark them as initialized
+            messagesContainer.dataset.initialized = 'true';
+        }
+
+        // Create the messaging system instance
+        window.messagingSystem = new MessagingSystem({
+            typingDelay: 2000,
+            checkNewMessagesInterval: 5000,
+            animateNewMessages: true,
+            showTypingIndicator: true,
+            enableSoundEffects: false // Set to true to enable sounds (requires sound files)
+        });
+
+        console.log('Messaging system initialized');
+    } else {
+        console.log('Not on a messaging page, skipping initialization');
+    }
 
     // Add dark/light mode toggle if found
     const themeToggle = document.getElementById('themeToggle');

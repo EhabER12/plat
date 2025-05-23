@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ParentRegistrationController extends Controller
 {
@@ -29,6 +30,12 @@ class ParentRegistrationController extends Controller
      */
     public function register(Request $request)
     {
+        Log::info('Parent registration attempt', [
+            'email' => $request->email,
+            'name' => $request->name,
+            'student_name' => $request->student_name
+        ]);
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
@@ -46,12 +53,23 @@ class ParentRegistrationController extends Controller
         DB::beginTransaction();
 
         try {
+            // Create directories if they don't exist
+            $profileDir = public_path('uploads/profile_images');
+            $documentsDir = public_path('uploads/parent_documents');
+
+            if (!file_exists($profileDir)) {
+                mkdir($profileDir, 0755, true);
+            }
+            if (!file_exists($documentsDir)) {
+                mkdir($documentsDir, 0755, true);
+            }
+
             // Handle profile image upload if provided
             $profileImagePath = null;
             if ($request->hasFile('profile_image')) {
                 $image = $request->file('profile_image');
                 $imageName = time() . '_' . $image->getClientOriginalName();
-                $image->move(public_path('uploads/profile_images'), $imageName);
+                $image->move($profileDir, $imageName);
                 $profileImagePath = 'uploads/profile_images/' . $imageName;
             }
 
@@ -73,35 +91,36 @@ class ParentRegistrationController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
-            
+
             // معالجة ملفات ولي الأمر
             $birthCertificatePath = null;
             if ($request->hasFile('birth_certificate')) {
                 $file = $request->file('birth_certificate');
                 $fileName = time() . '_birth_' . $file->getClientOriginalName();
-                $file->move(public_path('uploads/parent_documents'), $fileName);
+                $file->move($documentsDir, $fileName);
                 $birthCertificatePath = 'uploads/parent_documents/' . $fileName;
             }
-            
+
             $parentIdCardPath = null;
             if ($request->hasFile('parent_id_card')) {
                 $file = $request->file('parent_id_card');
                 $fileName = time() . '_id_' . $file->getClientOriginalName();
-                $file->move(public_path('uploads/parent_documents'), $fileName);
+                $file->move($documentsDir, $fileName);
                 $parentIdCardPath = 'uploads/parent_documents/' . $fileName;
             }
-            
+
             $additionalDocumentPath = null;
             if ($request->hasFile('additional_document')) {
                 $file = $request->file('additional_document');
                 $fileName = time() . '_additional_' . $file->getClientOriginalName();
-                $file->move(public_path('uploads/parent_documents'), $fileName);
+                $file->move($documentsDir, $fileName);
                 $additionalDocumentPath = 'uploads/parent_documents/' . $fileName;
             }
-            
+
             // إنشاء سجل في جدول parent_student_relations
             DB::table('parent_student_relations')->insert([
                 'parent_id' => $user->user_id,
+                'student_id' => null, // سيتم تحديده لاحقاً عند التحقق
                 'student_name' => $request->student_name,
                 'verification_status' => 'pending',
                 'birth_certificate' => $birthCertificatePath,
@@ -113,13 +132,26 @@ class ParentRegistrationController extends Controller
 
             DB::commit();
 
+            Log::info('Parent registration successful', [
+                'user_id' => $user->user_id,
+                'email' => $user->email,
+                'student_name' => $request->student_name
+            ]);
+
             // Log the user in
             Auth::login($user);
 
             return redirect('/')->with('success', 'تم إنشاء حسابك بنجاح. سيتم مراجعة طلب ربط الطالب من قبل الإدارة.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['email' => 'Registration failed. Please try again: ' . $e->getMessage()])->withInput();
+
+            Log::error('Parent registration failed', [
+                'email' => $request->email,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()->withErrors(['email' => 'فشل في التسجيل. الرجاء المحاولة مرة أخرى: ' . $e->getMessage()])->withInput();
         }
     }
-} 
+}

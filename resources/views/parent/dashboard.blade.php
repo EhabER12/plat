@@ -14,11 +14,11 @@
         --text-color: #1F1F1F;
         --border-color: #003366;
     }
-    
+
     .parent-dashboard {
         padding: 30px 0;
     }
-    
+
     .dashboard-header {
         background: linear-gradient(135deg, var(--primary-color) 0%, #002244 100%);
         color: white;
@@ -28,17 +28,17 @@
         position: relative;
         overflow: hidden;
     }
-    
+
     .dashboard-header h1 {
         font-weight: bold;
         margin-bottom: 10px;
     }
-    
+
     .dashboard-header p {
         font-size: 1.1rem;
         opacity: 0.8;
     }
-    
+
     .dashboard-header::after {
         content: '';
         position: absolute;
@@ -50,12 +50,12 @@
         border-radius: 50%;
         z-index: 1;
     }
-    
+
     .quick-actions {
         display: flex;
         margin-top: 20px;
     }
-    
+
     .quick-action-button {
         background-color: rgba(255, 255, 255, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.2);
@@ -69,16 +69,16 @@
         align-items: center;
         transition: all 0.3s ease;
     }
-    
+
     .quick-action-button:hover {
         background-color: rgba(255, 255, 255, 0.2);
         color: white;
     }
-    
+
     .quick-action-button i {
         margin-left: 5px;
     }
-    
+
     .student-card {
         background-color: white;
         border-radius: 10px;
@@ -89,12 +89,12 @@
         overflow: hidden;
         border: 1px solid #eee;
     }
-    
+
     .student-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
     }
-    
+
     .student-card .card-header {
         background-color: var(--primary-color);
         color: white;
@@ -104,17 +104,17 @@
         align-items: center;
         justify-content: space-between;
     }
-    
+
     .student-card .card-body {
         padding: 20px;
     }
-    
+
     .student-card .student-info {
         display: flex;
         align-items: center;
         margin-bottom: 15px;
     }
-    
+
     .student-card .student-avatar {
         width: 70px;
         height: 70px;
@@ -123,19 +123,19 @@
         margin-left: 15px;
         border: 3px solid var(--secondary-color);
     }
-    
+
     .student-card .student-avatar img {
         width: 100%;
         height: 100%;
         object-fit: cover;
     }
-    
+
     .student-card .student-details h3 {
         font-size: 1.3rem;
         margin-bottom: 5px;
         color: var(--primary-color);
     }
-    
+
     .student-card .stat-box {
         background-color: #f8f9fa;
         border-radius: 8px;
@@ -143,19 +143,19 @@
         text-align: center;
         margin-bottom: 15px;
     }
-    
+
     .student-card .stat-box .stat-value {
         font-size: 1.8rem;
         font-weight: bold;
         color: var(--primary-color);
         margin-bottom: 5px;
     }
-    
+
     .student-card .stat-box .stat-label {
         font-size: 0.9rem;
         color: #666;
     }
-    
+
     .latest-activity {
         background-color: white;
         border-radius: 10px;
@@ -163,7 +163,7 @@
         padding: 20px;
         margin-bottom: 25px;
     }
-    
+
     .latest-activity h3 {
         color: var(--primary-color);
         margin-bottom: 20px;
@@ -171,18 +171,18 @@
         border-bottom: 1px solid #eee;
         padding-bottom: 10px;
     }
-    
+
     .activity-item {
         padding: 12px 0;
         border-bottom: 1px solid #f5f5f5;
         display: flex;
         align-items: center;
     }
-    
+
     .activity-item:last-child {
         border-bottom: none;
     }
-    
+
     .activity-icon {
         width: 40px;
         height: 40px;
@@ -193,33 +193,33 @@
         margin-left: 15px;
         color: white;
     }
-    
+
     .activity-icon.login {
         background-color: #4CAF50;
     }
-    
+
     .activity-icon.course {
         background-color: #2196F3;
     }
-    
+
     .activity-icon.exam {
         background-color: #FF9800;
     }
-    
+
     .activity-details {
         flex-grow: 1;
     }
-    
+
     .activity-details p {
         margin-bottom: 3px;
         font-size: 0.95rem;
     }
-    
+
     .activity-time {
         color: #999;
         font-size: 0.85rem;
     }
-    
+
     .alert-indicator {
         width: 10px;
         height: 10px;
@@ -227,19 +227,19 @@
         display: inline-block;
         margin-right: 5px;
     }
-    
+
     .alert-indicator.high {
         background-color: #F44336;
     }
-    
+
     .alert-indicator.medium {
         background-color: #FF9800;
     }
-    
+
     .alert-indicator.low {
         background-color: #4CAF50;
     }
-    
+
     .alert-card {
         background-color: #FFF7E5;
         border-right: 4px solid #FF9800;
@@ -247,27 +247,27 @@
         padding: 15px;
         margin-bottom: 15px;
     }
-    
+
     .alert-card.high {
         background-color: #FFEBEE;
         border-right-color: #F44336;
     }
-    
+
     .alert-card.low {
         background-color: #E8F5E9;
         border-right-color: #4CAF50;
     }
-    
+
     .alert-card h4 {
         color: #333;
         font-size: 1.1rem;
         margin-bottom: 8px;
     }
-    
+
     .alerts-section {
         margin-bottom: 30px;
     }
-    
+
     .pending-verification {
         background-color: #FFFDE7;
         border: 1px dashed #FFC107;
@@ -275,7 +275,7 @@
         padding: 15px;
         margin-bottom: 20px;
     }
-    
+
     .rejected-verification {
         background-color: #FFEBEE;
         border: 1px dashed #F44336;
@@ -283,7 +283,7 @@
         padding: 15px;
         margin-bottom: 20px;
     }
-    
+
     .view-all-btn {
         display: block;
         text-align: center;
@@ -294,32 +294,32 @@
         transition: all 0.3s ease;
         text-decoration: none;
     }
-    
+
     .view-all-btn:hover {
         background-color: #e9e9e9;
         color: #333;
     }
-    
+
     .progress-title {
         display: flex;
         justify-content: space-between;
         margin-bottom: 8px;
     }
-    
+
     .progress-title .label {
         font-weight: 500;
     }
-    
+
     .progress-title .value {
         color: #666;
     }
-    
+
     .progress {
         height: 10px;
         border-radius: 5px;
         margin-bottom: 15px;
     }
-    
+
     .progress-bar {
         background-color: var(--primary-color);
     }
@@ -328,10 +328,32 @@
 
 @section('content')
 <div class="container parent-dashboard">
+    <!-- Success/Info Messages -->
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if(session('info'))
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="fas fa-info-circle me-2"></i>{{ session('info') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if(session('warning'))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>{{ session('warning') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <div class="dashboard-header">
         <h1>مرحباً بك، {{ Auth::user()->name }}</h1>
         <p>من هنا يمكنك متابعة أبنائك ورصد تقدمهم في الدراسة.</p>
-        
+
         <div class="quick-actions">
             <a href="{{ route('parent.profile') }}" class="quick-action-button">
                 <i class="fas fa-user-circle"></i> الملف الشخصي
@@ -342,9 +364,112 @@
             <a href="{{ route('parent.activities') }}" class="quick-action-button">
                 <i class="fas fa-clock"></i> سجل النشاطات
             </a>
+            <a href="{{ route('parent.reports') }}" class="quick-action-button">
+                <i class="fas fa-chart-line"></i> التقارير التفصيلية
+            </a>
         </div>
     </div>
-    
+
+    <!-- Overall Statistics Section -->
+    @if(count($students) > 0)
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-header bg-gradient" style="background: linear-gradient(135deg, var(--primary-color) 0%, #002244 100%); color: white;">
+                    <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i> إحصائيات شاملة لجميع الأبناء</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-2 col-6 mb-3">
+                            <div class="stat-box border-0 bg-light">
+                                <div class="stat-value text-primary">{{ $overallStats['total_students'] }}</div>
+                                <div class="stat-label">إجمالي الأبناء</div>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-6 mb-3">
+                            <div class="stat-box border-0 bg-light">
+                                <div class="stat-value text-info">{{ $overallStats['total_courses'] }}</div>
+                                <div class="stat-label">إجمالي الدورات</div>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-6 mb-3">
+                            <div class="stat-box border-0 bg-light">
+                                <div class="stat-value text-warning">{{ $overallStats['total_exams'] }}</div>
+                                <div class="stat-label">إجمالي الاختبارات</div>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-6 mb-3">
+                            <div class="stat-box border-0 bg-light">
+                                <div class="stat-value text-success">{{ $overallStats['total_certificates'] }}</div>
+                                <div class="stat-label">الشهادات المكتسبة</div>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-6 mb-3">
+                            <div class="stat-box border-0 bg-light">
+                                <div class="stat-value text-primary">{{ $overallStats['avg_progress'] }}%</div>
+                                <div class="stat-label">متوسط التقدم</div>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-6 mb-3">
+                            <div class="stat-box border-0 bg-light">
+                                <div class="stat-value text-secondary">{{ count($alerts) }}</div>
+                                <div class="stat-label">التنبيهات النشطة</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Admin Messages Section -->
+    @if(isset($adminMessages) && count($adminMessages) > 0)
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-info mb-3 fade-in" style="animation-delay: 0.3s">
+                <div class="card-header bg-info text-white d-flex align-items-center justify-content-between">
+                    <span><i class="fas fa-envelope me-2"></i> رسائل من الإدارة</span>
+                    <div>
+                        @if($unreadAdminMessages > 0)
+                            <span class="badge bg-danger me-2">{{ $unreadAdminMessages }} جديدة</span>
+                        @endif
+                        <a href="#" class="btn btn-sm btn-light">
+                            <i class="fas fa-external-link-alt me-1"></i> عرض كل الرسائل
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        @foreach($adminMessages->take(3) as $message)
+                            <div class="list-group-item border-0 py-3 px-4 {{ !$message->is_read ? 'bg-light' : '' }}">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle bg-primary text-white d-flex align-items-center justify-content-center me-3"
+                                         style="width: 45px; height: 45px; border-radius: 50%;">
+                                        <i class="fas fa-user-shield"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                            <h6 class="mb-0 fw-bold">{{ $message->sender->name }}</h6>
+                                            <div class="d-flex align-items-center">
+                                                @if(!$message->is_read)
+                                                    <span class="badge bg-danger rounded-pill me-2">جديدة</span>
+                                                @endif
+                                                <small class="text-muted">{{ $message->created_at->diffForHumans() }}</small>
+                                            </div>
+                                        </div>
+                                        <p class="mb-0 text-muted">{{ Str::limit($message->content, 80) }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     @if(count($pendingRelations) > 0)
     <div class="pending-verification mb-4">
         <h3><i class="fas fa-exclamation-circle text-warning me-2"></i> طلبات في انتظار التحقق</h3>
@@ -359,7 +484,7 @@
         </ul>
     </div>
     @endif
-    
+
     @if(count($rejectedRelations) > 0)
     <div class="rejected-verification mb-4">
         <h3><i class="fas fa-times-circle text-danger me-2"></i> طلبات مرفوضة</h3>
@@ -379,7 +504,7 @@
         </ul>
     </div>
     @endif
-    
+
     @if(count($students) > 0)
         <div class="alerts-section">
             <h3 class="section-title"><i class="fas fa-bell me-2"></i>تنبيهات هامة</h3>
@@ -400,7 +525,7 @@
                 @endforeach
             </div>
         </div>
-        
+
         <div class="row">
             @foreach($students as $student)
             <div class="col-md-6">
@@ -428,28 +553,69 @@
                                 @endif
                             </div>
                         </div>
-                        
-                        <div class="row">
-                            <div class="col-4">
+
+                        <!-- Enhanced Statistics Row -->
+                        <div class="row mb-3">
+                            <div class="col-6 col-md-3">
                                 <div class="stat-box">
                                     <div class="stat-value">{{ $studentStats[$student->user_id]['courses_count'] }}</div>
-                                    <div class="stat-label">الدورات</div>
+                                    <div class="stat-label">إجمالي الدورات</div>
                                 </div>
                             </div>
-                            <div class="col-4">
+                            <div class="col-6 col-md-3">
+                                <div class="stat-box">
+                                    <div class="stat-value">{{ $studentStats[$student->user_id]['completed_courses_count'] ?? 0 }}</div>
+                                    <div class="stat-label">دورات مكتملة</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
                                 <div class="stat-box">
                                     <div class="stat-value">{{ $studentStats[$student->user_id]['exams_count'] }}</div>
                                     <div class="stat-label">الاختبارات</div>
                                 </div>
                             </div>
-                            <div class="col-4">
+                            <div class="col-6 col-md-3">
                                 <div class="stat-box">
-                                    <div class="stat-value">{{ $studentStats[$student->user_id]['avg_progress'] }}%</div>
-                                    <div class="stat-label">التقدم</div>
+                                    <div class="stat-value">{{ $studentStats[$student->user_id]['passed_exams_count'] ?? 0 }}</div>
+                                    <div class="stat-label">اختبارات ناجحة</div>
                                 </div>
                             </div>
                         </div>
-                        
+
+                        <!-- Additional Statistics Row -->
+                        <div class="row mb-3">
+                            <div class="col-6 col-md-3">
+                                <div class="stat-box">
+                                    <div class="stat-value">{{ $studentStats[$student->user_id]['avg_progress'] }}%</div>
+                                    <div class="stat-label">متوسط التقدم</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="stat-box">
+                                    <div class="stat-value">{{ $studentStats[$student->user_id]['avg_exam_score'] ?? 0 }}%</div>
+                                    <div class="stat-label">متوسط الدرجات</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="stat-box">
+                                    <div class="stat-value">{{ $studentStats[$student->user_id]['certificates_earned'] ?? 0 }}</div>
+                                    <div class="stat-label">الشهادات</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="stat-box">
+                                    <div class="stat-value">{{ $studentStats[$student->user_id]['learning_streak'] ?? 0 }}</div>
+                                    <div class="stat-label">أيام متتالية</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Study Time This Week -->
+                        <div class="alert alert-info mb-3">
+                            <i class="fas fa-clock me-2"></i>
+                            <strong>وقت الدراسة هذا الأسبوع:</strong> {{ $studentStats[$student->user_id]['weekly_study_time'] ?? '0 دقيقة' }}
+                        </div>
+
                         <h4 class="mt-4 mb-3">آخر الدورات</h4>
                         @if(count($studentStats[$student->user_id]['recent_courses']) > 0)
                             @foreach($studentStats[$student->user_id]['recent_courses'] as $course)
@@ -472,12 +638,12 @@
             </div>
             @endforeach
         </div>
-        
+
         <div class="row">
             <div class="col-md-12">
                 <div class="latest-activity">
                     <h3><i class="fas fa-history me-2"></i>آخر الأنشطة</h3>
-                    
+
                     @if(count($recentActivities) > 0)
                         @foreach($recentActivities as $activity)
                         <div class="activity-item">
@@ -508,7 +674,7 @@
             <h4 class="alert-heading"><i class="fas fa-info-circle me-2"></i>لا يوجد طلاب مرتبطين</h4>
             <p>ليس لديك أي طلاب مرتبطين بحسابك حالياً. يرجى التواصل مع إدارة المنصة لربط حسابك بحسابات أبنائك الطلاب.</p>
         </div>
-        
+
         <div class="card mt-4">
             <div class="card-body">
                 <h4>كيفية ربط حسابك بحسابات الطلاب؟</h4>
@@ -529,4 +695,4 @@
 <script>
     // Any additional JavaScript can go here
 </script>
-@endsection 
+@endsection

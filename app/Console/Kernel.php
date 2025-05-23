@@ -22,6 +22,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\CleanVideoStorage::class,
         \App\Console\Commands\CreateTestCourseCommand::class,
         \App\Console\Commands\SeedBannedWords::class,
+        \App\Console\Commands\CheckStorageLink::class,
     ];
 
     /**
